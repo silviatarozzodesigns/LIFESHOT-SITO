@@ -3,14 +3,14 @@ import { SiteContent } from "@/models/SiteContent";
 import {
   DEFAULT_CONTENT,
   normalizeContent,
-  type SiteContentData,
+  type CmsData,
 } from "@/lib/content";
 
 /**
  * Contenuti PUBBLICATI — usati dalle pagine pubbliche e dai metadata.
  * Senza database o prima della prima pubblicazione: default del codice.
  */
-export async function getPublishedContent(): Promise<SiteContentData> {
+export async function getPublishedContent(): Promise<CmsData> {
   try {
     await connectDB();
     const doc = await SiteContent.findOne({ key: "site" })
@@ -27,7 +27,7 @@ export async function getPublishedContent(): Promise<SiteContentData> {
  * BOZZA per l'editor admin: se non esiste ancora, parte dal pubblicato
  * (o dai default). Da usare solo dietro requireAdmin().
  */
-export async function getDraftContent(): Promise<SiteContentData> {
+export async function getDraftContent(): Promise<CmsData> {
   try {
     await connectDB();
     const doc = await SiteContent.findOne({ key: "site" })

@@ -34,6 +34,7 @@ const ALLOWED_TYPES = new Set([
   "image/webp",
   "image/avif",
 ]);
+const ALLOWED_VIDEO_TYPES = new Set(["video/mp4", "video/webm"]);
 
 export async function POST(request: Request) {
   if (!(await isAdmin())) {
@@ -56,6 +57,40 @@ export async function POST(request: Request) {
   const eventId = String(form.get("eventId") ?? "");
   const kind = String(form.get("kind") ?? "photo");
   const file = form.get("file");
+
+  // kind === "video": clip del portfolio (nessun evento, nessun watermark)
+  if (kind === "video") {
+    if (!(file instanceof File) || file.size === 0) {
+      return NextResponse.json(
+        { ok: false, error: "Nessun file ricevuto." },
+        { status: 400 }
+      );
+    }
+    if (!ALLOWED_VIDEO_TYPES.has(file.type)) {
+      return NextResponse.json(
+        { ok: false, error: "Formato non supportato: usa .mp4 o .webm." },
+        { status: 415 }
+      );
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      return NextResponse.json(
+        { ok: false, error: "File troppo grande (max 200 MB in locale)." },
+        { status: 413 }
+      );
+    }
+    try {
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const key = buildStorageKey("videos", file.name);
+      const { url } = await getStorage().upload(buffer, key, file.type);
+      return NextResponse.json({ ok: true, url });
+    } catch (error) {
+      console.error("[lifeshot] upload video fallito:", error);
+      return NextResponse.json(
+        { ok: false, error: "Errore durante il caricamento." },
+        { status: 500 }
+      );
+    }
+  }
 
   if (!Types.ObjectId.isValid(eventId)) {
     return NextResponse.json(

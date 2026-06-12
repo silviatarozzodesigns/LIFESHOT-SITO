@@ -6,7 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
 import { getRecentEvents } from "@/lib/data/events";
 import { getPublishedContent } from "@/lib/data/content";
-import { HERO_SPACING, SECTION_SPACING } from "@/lib/content";
+import { getSpacingClass, getText } from "@/lib/content";
 import { cn, formatDate } from "@/lib/utils";
 
 // Eventi e contenuti CMS arrivano dal database: render a richiesta
@@ -17,7 +17,7 @@ export default async function HomePage() {
     getRecentEvents(6),
     getPublishedContent(),
   ]);
-  const { hero, events: eventsSection, spacing } = content;
+  const t = (key: string) => getText(content, "home", key);
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -29,22 +29,22 @@ export default async function HomePage() {
           <div
             className={cn(
               "container flex flex-col items-center text-center",
-              HERO_SPACING[spacing.hero]
+              getSpacingClass(content, "home", "hero")
             )}
           >
             <FadeIn>
               <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-primary">
-                {hero.eyebrow}
+                {t("hero.eyebrow")}
               </p>
               <h1 className="max-w-3xl text-balance text-5xl font-semibold tracking-tight sm:text-7xl">
-                {hero.titleLine1}
+                {t("hero.titleLine1")}
                 <br />
                 <span className="text-muted-foreground">
-                  {hero.titleLine2}
+                  {t("hero.titleLine2")}
                 </span>
               </h1>
               <p className="mx-auto mt-6 max-w-xl text-balance text-lg text-muted-foreground">
-                {hero.subtitle}
+                {t("hero.subtitle")}
               </p>
             </FadeIn>
 
@@ -58,7 +58,7 @@ export default async function HomePage() {
                 <input
                   name="numero"
                   inputMode="numeric"
-                  placeholder={hero.searchPlaceholder}
+                  placeholder={t("hero.searchPlaceholder")}
                   aria-label="Cerca per numero di gara"
                   className="h-10 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                 />
@@ -77,15 +77,18 @@ export default async function HomePage() {
         {/* Eventi recenti */}
         <section
           id="eventi"
-          className={cn("container", SECTION_SPACING[spacing.sections])}
+          className={cn(
+            "container",
+            getSpacingClass(content, "home", "sections")
+          )}
         >
           <FadeIn className="mb-8 flex items-end justify-between">
             <div>
               <h2 className="text-3xl font-semibold tracking-tight">
-                {eventsSection.title}
+                {t("events.title")}
               </h2>
               <p className="mt-2 text-muted-foreground">
-                {eventsSection.subtitle}
+                {t("events.subtitle")}
               </p>
             </div>
             <Link

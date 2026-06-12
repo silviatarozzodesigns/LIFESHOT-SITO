@@ -27,6 +27,8 @@ const ALLOWED_TYPES = new Set([
   "image/webp",
   "image/avif",
 ]);
+// Clip del portfolio video (riproduzione inline col player custom)
+const ALLOWED_VIDEO_TYPES = new Set(["video/mp4", "video/webm"]);
 
 export async function POST(request: Request) {
   if (!(await isAdmin())) {
@@ -53,7 +55,52 @@ export async function POST(request: Request) {
   }
 
   const { eventId = "", filename = "", contentType = "", size = 0 } = body;
-  const kind = body.kind === "cover" ? "cover" : "photo";
+  const kind =
+    body.kind === "cover" ? "cover" : body.kind === "video" ? "video" : "photo";
+
+  if (size > MAX_FILE_BYTES) {
+    return NextResponse.json(
+      { ok: false, error: "File troppo grande (max 5 GB)." },
+      { status: 413 }
+    );
+  }
+
+  // kind === "video": file del portfolio, nessun evento associato
+  if (kind === "video") {
+    if (!filename) {
+      return NextResponse.json(
+        { ok: false, error: "Nome file mancante." },
+        { status: 400 }
+      );
+    }
+    if (!ALLOWED_VIDEO_TYPES.has(contentType)) {
+      return NextResponse.json(
+        { ok: false, error: "Formato non supportato: usa .mp4 o .webm." },
+        { status: 415 }
+      );
+    }
+    try {
+      const storage = getStorage();
+      const key = buildStorageKey("videos", filename);
+      const uploadUrl = await storage.presignUpload(key, contentType);
+      if (!uploadUrl) {
+        return NextResponse.json({ ok: true, mode: "direct" });
+      }
+      return NextResponse.json({
+        ok: true,
+        mode: "presigned",
+        uploadUrl,
+        key,
+        publicUrl: storage.getPublicUrl(key),
+      });
+    } catch (error) {
+      console.error("[lifeshot] presign video fallita:", error);
+      return NextResponse.json(
+        { ok: false, error: "Errore nella preparazione dell'upload." },
+        { status: 500 }
+      );
+    }
+  }
 
   if (!Types.ObjectId.isValid(eventId)) {
     return NextResponse.json(
@@ -73,13 +120,6 @@ export async function POST(request: Request) {
       { status: 415 }
     );
   }
-  if (size > MAX_FILE_BYTES) {
-    return NextResponse.json(
-      { ok: false, error: "File troppo grande (max 5 GB)." },
-      { status: 413 }
-    );
-  }
-
   try {
     await connectDB();
     const event = await Event.findById(eventId).select("slug").lean();

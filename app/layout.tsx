@@ -10,9 +10,9 @@ const inter = Inter({
   display: "swap",
 });
 
-// SEO gestita dal micro-CMS (pannello admin → Contenuti)
+// SEO gestita dal Visual CMS (pannello admin → Contenuti)
 export async function generateMetadata(): Promise<Metadata> {
-  const { seo } = await getPublishedContent();
+  const { seo } = (await getPublishedContent()).pages.home;
   return {
     title: {
       default: seo.metaTitle,

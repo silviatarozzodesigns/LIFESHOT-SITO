@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { connectDB } from "@/lib/db";
 import { SiteContent } from "@/models/SiteContent";
 import { isAdmin } from "@/lib/auth";
-import { normalizeContent, type SiteContentData } from "@/lib/content";
+import { normalizeContent, type CmsData } from "@/lib/content";
 
 /**
  * Server Actions del micro-CMS.
@@ -15,7 +15,7 @@ import { normalizeContent, type SiteContentData } from "@/lib/content";
  */
 
 export type ContentActionResult =
-  | { ok: true; content: SiteContentData }
+  | { ok: true; content: CmsData }
   | { ok: false; error: string };
 
 const UNAUTHORIZED = {
@@ -25,7 +25,7 @@ const UNAUTHORIZED = {
 
 /** Salva la bozza: visibile solo nell'editor, produzione intatta. */
 export async function saveDraft(
-  input: SiteContentData
+  input: CmsData
 ): Promise<ContentActionResult> {
   if (!(await isAdmin())) return UNAUTHORIZED;
 
@@ -49,7 +49,7 @@ export async function saveDraft(
  * corrente dell'editor, poi le pagine pubbliche vengono rigenerate.
  */
 export async function publishContent(
-  input: SiteContentData
+  input: CmsData
 ): Promise<ContentActionResult> {
   if (!(await isAdmin())) return UNAUTHORIZED;
 

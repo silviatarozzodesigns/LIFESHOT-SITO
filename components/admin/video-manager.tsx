@@ -12,6 +12,7 @@ import {
   Youtube,
 } from "lucide-react";
 import { createVideo, deleteVideo } from "@/app/actions/videos";
+import { uploadVideoFile } from "@/lib/upload-client";
 import type { VideoDTO } from "@/lib/data/videos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,19 +42,36 @@ export function VideoManager({ videos }: { videos: VideoDTO[] }) {
   const [isPending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      const result = await createVideo({ title, url });
+      let videoUrl = url;
+      // File caricato → riproduzione inline col player custom (senza
+      // embed Instagram: il play resta sul sito, full-width)
+      if (file) {
+        try {
+          videoUrl = await uploadVideoFile(file);
+        } catch (uploadError) {
+          setError(
+            uploadError instanceof Error
+              ? uploadError.message
+              : "Caricamento del file fallito."
+          );
+          return;
+        }
+      }
+      const result = await createVideo({ title, url: videoUrl });
       if (!result.ok) {
         setError(result.error);
         return;
       }
       setTitle("");
       setUrl("");
+      setFile(null);
       router.refresh();
     });
   }
@@ -86,19 +104,39 @@ export function VideoManager({ videos }: { videos: VideoDTO[] }) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="video-url">Link del video *</Label>
+          <Label htmlFor="video-url">Link del video {file ? "" : "*"}</Label>
           <Input
             id="video-url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            required
+            required={!file}
+            disabled={Boolean(file)}
             type="url"
-            placeholder="https://youtu.be/… · https://www.instagram.com/reel/… · https://…/clip.webm"
+            placeholder="https://youtu.be/… · https://www.instagram.com/reel/… · https://…/clip.mp4"
           />
           <p className="text-xs text-muted-foreground">
-            YouTube e Vimeo → player cinematico custom · Reel Instagram →
-            embed nativo · .webm/.mp4 → micro-clip in loop. Nessun file viene
-            caricato su R2.
+            YouTube/Vimeo → player custom · Reel Instagram → embed nativo (il
+            play apre Instagram: restrizione di Meta, vale per tutti i siti).
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="video-file">
+            …oppure carica il file della clip (consigliato per i reel)
+          </Label>
+          <Input
+            id="video-file"
+            type="file"
+            accept="video/mp4,video/webm"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          />
+          <p className="text-xs text-muted-foreground">
+            .mp4 o .webm fino a 5 GB, direttamente su R2: si riproduce{" "}
+            <strong className="font-medium text-foreground">
+              inline sul sito
+            </strong>{" "}
+            col player full-width, senza loghi né redirect — l&apos;unica via
+            per avere il video di un reel dentro la pagina.
           </p>
         </div>
         {error && (

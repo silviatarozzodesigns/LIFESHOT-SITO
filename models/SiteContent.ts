@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Model } from "mongoose";
-import type { SiteContentData } from "@/lib/content";
+import type { CmsData } from "@/lib/content";
 
 /**
  * Documento singleton (key: "site") con il doppio stato del micro-CMS:
@@ -30,8 +30,8 @@ const SiteContentSchema = new Schema(
 export interface SiteContentDoc {
   _id: mongoose.Types.ObjectId;
   key: string;
-  draft: SiteContentData | null;
-  published: SiteContentData | null;
+  draft: CmsData | null;
+  published: CmsData | null;
 }
 
 export const SiteContent: Model<SiteContentDoc> =

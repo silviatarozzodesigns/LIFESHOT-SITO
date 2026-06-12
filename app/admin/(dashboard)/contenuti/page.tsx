@@ -1,8 +1,8 @@
 import { getDraftContent } from "@/lib/data/content";
-import { ContentStudio } from "@/components/admin/content-studio";
+import { VisualStudio } from "@/components/admin/studio/visual-studio";
 import { FadeIn } from "@/components/motion/fade-in";
 
-export const metadata = { title: "Contenuti del sito" };
+export const metadata = { title: "Visual Studio — Contenuti" };
 
 export default async function AdminContentPage() {
   const draft = await getDraftContent();
@@ -10,18 +10,21 @@ export default async function AdminContentPage() {
   return (
     <div>
       <FadeIn>
-        <h1 className="text-3xl font-semibold tracking-tight">Contenuti</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">
+          Visual Studio
+        </h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
-          Modifica testi, SEO e spaziature con anteprima in tempo reale. Le
-          modifiche restano in bozza finché non premi{" "}
+          Clicca i testi direttamente nell&apos;anteprima per modificarli,
+          regola spaziature e SEO dalla sidebar. Tutto resta in bozza finché
+          non premi{" "}
           <strong className="font-medium text-foreground">
-            Salva e pubblica
+            Pubblica modifiche
           </strong>
           .
         </p>
       </FadeIn>
       <FadeIn delay={0.1} className="mt-8">
-        <ContentStudio initial={draft} />
+        <VisualStudio initial={draft} />
       </FadeIn>
     </div>
   );

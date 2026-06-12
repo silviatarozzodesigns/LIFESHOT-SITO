@@ -24,6 +24,57 @@ async function parseJson(response: Response) {
   return payload;
 }
 
+const VIDEO_TYPES = ["video/mp4", "video/webm"];
+
+/**
+ * Carica una clip video del portfolio (.mp4/.webm) e restituisce l'URL
+ * pubblico da salvare sul documento Video. In produzione: PUT diretto
+ * su R2 (fino a 5 GB); in locale: POST multipart.
+ */
+export async function uploadVideoFile(file: File): Promise<string> {
+  if (!VIDEO_TYPES.includes(file.type)) {
+    throw new Error("Formato non supportato: esporta la clip in .mp4 o .webm.");
+  }
+  if (file.size > MAX_UPLOAD_BYTES) {
+    throw new Error("File troppo grande (max 5 GB).");
+  }
+
+  const presign = await parseJson(
+    await fetch("/api/admin/presign", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        kind: "video",
+        filename: file.name,
+        contentType: file.type,
+        size: file.size,
+      }),
+    })
+  );
+
+  if (presign.mode === "direct") {
+    const formData = new FormData();
+    formData.set("kind", "video");
+    formData.set("file", file);
+    const payload = await parseJson(
+      await fetch("/api/admin/upload", { method: "POST", body: formData })
+    );
+    return payload.url;
+  }
+
+  const put = await fetch(presign.uploadUrl, {
+    method: "PUT",
+    headers: { "content-type": file.type },
+    body: file,
+  });
+  if (!put.ok) {
+    throw new Error(
+      `Upload su storage fallito (${put.status}). Verifica la configurazione CORS del bucket R2.`
+    );
+  }
+  return presign.publicUrl;
+}
+
 export async function uploadFile(
   eventId: string,
   file: File,

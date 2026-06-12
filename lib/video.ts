@@ -13,9 +13,16 @@ export interface ParsedVideo {
 }
 
 export function parseVideoUrl(rawUrl: string): ParsedVideo | null {
+  const trimmed = rawUrl.trim();
+
+  // Path relativo del nostro storage locale (es. /uploads/videos/clip.mp4)
+  if (trimmed.startsWith("/") && /\.(webm|mp4)$/i.test(trimmed)) {
+    return { provider: "file", embedId: trimmed };
+  }
+
   let url: URL;
   try {
-    url = new URL(rawUrl.trim());
+    url = new URL(trimmed);
   } catch {
     return null;
   }

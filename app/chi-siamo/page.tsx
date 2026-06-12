@@ -4,12 +4,24 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
 import { LogoMark } from "@/components/brand/logo";
+import { getPublishedContent } from "@/lib/data/content";
+import { getSpacingClass, getText } from "@/lib/content";
+import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Chi siamo",
-  description:
-    "Lifeshot è l'agenzia creativa di Alberto, Lorenzo e Silvia Tarozzo: fotografia, video e grafica con un'anima sola.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { seo } = (await getPublishedContent()).pages["chi-siamo"];
+  return {
+    title: { absolute: seo.metaTitle },
+    description: seo.metaDescription,
+    openGraph: {
+      title: seo.metaTitle,
+      description: seo.metaDescription,
+      ...(seo.ogImage ? { images: [seo.ogImage] } : {}),
+    },
+  };
+}
+
+export const dynamic = "force-dynamic";
 
 const team = [
   {
@@ -35,27 +47,33 @@ const team = [
   },
 ];
 
-export default function ChiSiamoPage() {
+export default async function ChiSiamoPage() {
+  const content = await getPublishedContent();
+  const t = (key: string) => getText(content, "chi-siamo", key);
+
   return (
     <div className="flex min-h-dvh flex-col">
       <SiteHeader />
 
       <main className="flex-1">
         {/* Intro d'impatto */}
-        <section className="container py-24 text-center sm:py-32">
+        <section
+          className={cn(
+            "container text-center",
+            getSpacingClass(content, "chi-siamo", "intro")
+          )}
+        >
           <FadeIn>
             <LogoMark className="mx-auto h-16 w-auto text-primary" />
             <h1 className="mx-auto mt-8 max-w-3xl text-balance text-4xl font-semibold tracking-tight sm:text-6xl">
-              Tre sguardi.
+              {t("intro.titleLine1")}
               <br />
-              <span className="text-muted-foreground">Una sola visione.</span>
+              <span className="text-muted-foreground">
+                {t("intro.titleLine2")}
+              </span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-balance text-lg text-muted-foreground">
-              Lifeshot nasce dalla passione di tre fratelli per l&apos;immagine
-              in tutte le sue forme. Dalla polvere delle piste da cross ai set
-              più curati, raccontiamo storie attraverso fotografia, video e
-              grafica — con la stessa ossessione per il dettaglio e per il
-              momento giusto.
+              {t("intro.subtitle")}
             </p>
           </FadeIn>
         </section>
@@ -63,9 +81,11 @@ export default function ChiSiamoPage() {
         {/* Team */}
         <section className="container pb-24">
           <FadeIn className="mb-10 text-center">
-            <h2 className="text-3xl font-semibold tracking-tight">Il team</h2>
+            <h2 className="text-3xl font-semibold tracking-tight">
+              {t("team.title")}
+            </h2>
             <p className="mt-2 text-muted-foreground">
-              Le persone dietro ogni scatto, clip e pixel.
+              {t("team.subtitle")}
             </p>
           </FadeIn>
 

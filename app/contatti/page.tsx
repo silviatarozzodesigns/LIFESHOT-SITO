@@ -5,12 +5,24 @@ import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
 import { ContactForm } from "@/components/contact/contact-form";
 import { site } from "@/lib/site";
+import { getPublishedContent } from "@/lib/data/content";
+import { getSpacingClass, getText } from "@/lib/content";
+import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Contatti",
-  description:
-    "Scrivici dal form o su Instagram: foto degli eventi, video personalizzati e progetti grafici.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { seo } = (await getPublishedContent()).pages.contatti;
+  return {
+    title: { absolute: seo.metaTitle },
+    description: seo.metaDescription,
+    openGraph: {
+      title: seo.metaTitle,
+      description: seo.metaDescription,
+      ...(seo.ogImage ? { images: [seo.ogImage] } : {}),
+    },
+  };
+}
+
+export const dynamic = "force-dynamic";
 
 const socials = [
   {
@@ -27,24 +39,33 @@ const socials = [
   },
 ];
 
-export default function ContattiPage() {
+export default async function ContattiPage() {
+  const content = await getPublishedContent();
+  const t = (key: string) => getText(content, "contatti", key);
+
   return (
     <div className="flex min-h-dvh flex-col">
       <SiteHeader />
 
-      <main className="container flex-1 py-16 sm:py-24">
+      <main
+        className={cn(
+          "container flex-1",
+          getSpacingClass(content, "contatti", "intro")
+        )}
+      >
         <FadeIn className="text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">
-            Parliamone
+            {t("intro.eyebrow")}
           </p>
           <h1 className="mx-auto mt-4 max-w-2xl text-balance text-4xl font-semibold tracking-tight sm:text-6xl">
-            Raccontaci cosa
+            {t("intro.titleLine1")}
             <br />
-            <span className="text-muted-foreground">vuoi raccontare.</span>
+            <span className="text-muted-foreground">
+              {t("intro.titleLine2")}
+            </span>
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-balance text-lg text-muted-foreground">
-            Foto della tua gara, un video personalizzato o l&apos;identità
-            visiva del tuo progetto: compila il form e ti rispondiamo noi.
+            {t("intro.subtitle")}
           </p>
         </FadeIn>
 

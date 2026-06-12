@@ -5,33 +5,52 @@ import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
 import { VideoPlayer } from "@/components/video/video-player";
 import { getPublishedVideos } from "@/lib/data/videos";
+import { getPublishedContent } from "@/lib/data/content";
+import { getSpacingClass, getText } from "@/lib/content";
 import { site } from "@/lib/site";
+import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Video",
-  description:
-    "Il portfolio video di Lifeshot: montaggi delle gare, reel e clip cinematiche.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { seo } = (await getPublishedContent()).pages.video;
+  return {
+    title: { absolute: seo.metaTitle },
+    description: seo.metaDescription,
+    openGraph: {
+      title: seo.metaTitle,
+      description: seo.metaDescription,
+      ...(seo.ogImage ? { images: [seo.ogImage] } : {}),
+    },
+  };
+}
 
 export const dynamic = "force-dynamic";
 
 export default async function VideoPage() {
-  const videos = await getPublishedVideos();
+  const [videos, content] = await Promise.all([
+    getPublishedVideos(),
+    getPublishedContent(),
+  ]);
+  const t = (key: string) => getText(content, "video", key);
 
   return (
     <div className="flex min-h-dvh flex-col">
       <SiteHeader />
 
-      <main className="container flex-1 py-12 sm:py-16">
+      <main
+        className={cn(
+          "container flex-1",
+          getSpacingClass(content, "video", "header")
+        )}
+      >
         <FadeIn>
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">
-            Portfolio
+            {t("header.eyebrow")}
           </p>
           <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
-            Video
+            {t("header.title")}
           </h1>
           <p className="mt-3 max-w-xl text-muted-foreground">
-            Montaggi delle gare, reel e clip cinematiche firmate Lifeshot.
+            {t("header.subtitle")}
           </p>
         </FadeIn>
 
@@ -57,8 +76,7 @@ export default async function VideoPage() {
                     className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary transition-opacity hover:opacity-80"
                   >
                     <Instagram className="h-4 w-4" />
-                    Vuoi un video personalizzato o una clip della tua prossima
-                    gara? Contattaci in DM!
+                    {t("cta.label")}
                   </a>
                 </article>
               </FadeIn>
