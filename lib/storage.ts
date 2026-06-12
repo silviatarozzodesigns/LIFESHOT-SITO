@@ -24,6 +24,15 @@ export interface StorageAdapter {
   delete(key: string): Promise<void>;
   /** URL pubblico per una chiave esistente */
   getPublicUrl(key: string): string;
+  /** Legge un file dallo storage (per post-processing server-side) */
+  download(key: string): Promise<Buffer>;
+  /**
+   * URL prefirmato per upload diretto dal browser (PUT), bypassando il
+   * limite di body (~4,5 MB) delle funzioni Vercel. R2 accetta fino a
+   * 5 GB per singolo PUT. Restituisce null se il backend è locale
+   * (in locale si usa l'upload diretto via API route).
+   */
+  presignUpload(key: string, contentType: string): Promise<string | null>;
 }
 
 function isR2Configured(): boolean {
@@ -57,6 +66,15 @@ class LocalStorageAdapter implements StorageAdapter {
 
   getPublicUrl(key: string): string {
     return `/uploads/${key}`;
+  }
+
+  async download(key: string): Promise<Buffer> {
+    return fs.readFile(path.join(UPLOADS_DIR, key));
+  }
+
+  async presignUpload(): Promise<null> {
+    // In locale il browser non può scrivere sul filesystem: upload diretto
+    return null;
   }
 }
 
@@ -114,6 +132,31 @@ class R2StorageAdapter implements StorageAdapter {
       );
     }
     return `${base}/${key}`;
+  }
+
+  async download(key: string): Promise<Buffer> {
+    const { GetObjectCommand } = await import("@aws-sdk/client-s3");
+    const client = await this.getClient();
+    const response = await client.send(
+      new GetObjectCommand({ Bucket: this.bucket, Key: key })
+    );
+    if (!response.Body) throw new Error(`Oggetto vuoto: ${key}`);
+    return Buffer.from(await response.Body.transformToByteArray());
+  }
+
+  async presignUpload(key: string, contentType: string): Promise<string> {
+    const { PutObjectCommand } = await import("@aws-sdk/client-s3");
+    const { getSignedUrl } = await import("@aws-sdk/s3-request-presigner");
+    const client = await this.getClient();
+    return getSignedUrl(
+      client,
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        ContentType: contentType,
+      }),
+      { expiresIn: 600 }
+    );
   }
 }
 

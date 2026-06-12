@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Loader2, Save } from "lucide-react";
 import { createEvent, updateEvent, type EventInput } from "@/app/actions/events";
+import { uploadFile } from "@/lib/upload-client";
 import type { EventDTO } from "@/lib/data/events";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,19 +47,13 @@ export function EventForm({ event }: EventFormProps) {
       // Copertina caricata a parte (l'evento deve esistere per avere id/slug)
       const coverFile = coverInputRef.current?.files?.[0];
       if (coverFile) {
-        const coverData = new FormData();
-        coverData.set("eventId", result.id);
-        coverData.set("kind", "cover");
-        coverData.set("file", coverFile);
-        const response = await fetch("/api/admin/upload", {
-          method: "POST",
-          body: coverData,
-        });
-        const payload = await response.json().catch(() => null);
-        if (!payload?.ok) {
+        try {
+          await uploadFile(result.id, coverFile, "cover");
+        } catch (uploadError) {
           setError(
-            payload?.error ??
-              "Evento salvato, ma il caricamento della copertina è fallito."
+            uploadError instanceof Error
+              ? `Evento salvato, ma copertina non caricata: ${uploadError.message}`
+              : "Evento salvato, ma il caricamento della copertina è fallito."
           );
           return;
         }

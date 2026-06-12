@@ -25,6 +25,11 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "50mb",
     },
   },
+  // I binari nativi di sharp (libvips) devono finire nel bundle delle
+  // funzioni serverless che generano le preview filigranate
+  outputFileTracingIncludes: {
+    "/api/admin/**": ["./node_modules/@img/**/*"],
+  },
 };
 
 export default nextConfig;

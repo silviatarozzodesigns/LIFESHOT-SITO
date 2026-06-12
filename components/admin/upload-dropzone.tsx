@@ -10,6 +10,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { extractRaceNumber } from "@/lib/parse-filename";
+import { uploadFile, MAX_UPLOAD_BYTES } from "@/lib/upload-client";
 import { cn } from "@/lib/utils";
 
 type UploadStatus = "pending" | "uploading" | "done" | "error";
@@ -56,20 +57,11 @@ export function UploadDropzone({ eventId }: { eventId: string }) {
       activeUploads.current += 1;
       setItemState(item.id, { status: "uploading" });
 
-      const formData = new FormData();
-      formData.set("eventId", eventId);
-      formData.set("kind", "photo");
-      formData.set("file", item.file);
-
-      fetch("/api/admin/upload", { method: "POST", body: formData })
-        .then(async (response) => {
-          const payload = await response.json().catch(() => null);
-          if (!payload?.ok) {
-            throw new Error(payload?.error ?? `Errore ${response.status}`);
-          }
+      uploadFile(eventId, item.file, "photo")
+        .then((photo) => {
           setItemState(item.id, {
             status: "done",
-            raceNumber: payload.photo?.raceNumber ?? item.raceNumber,
+            raceNumber: photo.raceNumber ?? item.raceNumber,
           });
         })
         .catch((error: Error) => {
@@ -90,7 +82,10 @@ export function UploadDropzone({ eventId }: { eventId: string }) {
   const enqueue = useCallback(
     (files: FileList | File[]) => {
       const items: QueueItem[] = Array.from(files)
-        .filter((file) => ACCEPTED.includes(file.type))
+        .filter(
+          (file) =>
+            ACCEPTED.includes(file.type) && file.size <= MAX_UPLOAD_BYTES
+        )
         .map((file) => ({
           id: `${file.name}-${file.size}-${crypto.randomUUID()}`,
           file,
@@ -147,8 +142,8 @@ export function UploadDropzone({ eventId }: { eventId: string }) {
             Trascina qui le foto, o clicca per selezionarle
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            JPG, PNG, WebP o AVIF · max 30 MB · il numero di gara viene letto
-            dal nome file (es.{" "}
+            JPG, PNG, WebP o AVIF · fino a 5 GB per file · il numero di gara
+            viene letto dal nome file (es.{" "}
             <code className="rounded bg-secondary px-1.5 py-0.5 text-xs">
               evento_45_01.jpg
             </code>{" "}

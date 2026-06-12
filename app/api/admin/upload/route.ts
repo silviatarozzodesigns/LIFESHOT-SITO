@@ -25,7 +25,9 @@ import { createWatermarkedPreview, createCoverImage } from "@/lib/watermark";
 
 export const runtime = "nodejs";
 
-const MAX_FILE_BYTES = 30 * 1024 * 1024; // 30 MB
+// Route usata solo con storage LOCALE (in produzione i file salgono
+// direttamente su R2 via presigned URL, vedi /api/admin/presign)
+const MAX_FILE_BYTES = 200 * 1024 * 1024; // 200 MB
 const ALLOWED_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -75,7 +77,7 @@ export async function POST(request: Request) {
   }
   if (file.size > MAX_FILE_BYTES) {
     return NextResponse.json(
-      { ok: false, error: "File troppo grande (max 30 MB)." },
+      { ok: false, error: "File troppo grande (max 200 MB in locale)." },
       { status: 413 }
     );
   }
