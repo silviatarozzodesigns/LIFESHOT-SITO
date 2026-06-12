@@ -30,10 +30,11 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "50mb",
     },
   },
-  // I binari nativi di sharp (libvips) devono finire nel bundle delle
-  // funzioni serverless che generano le preview filigranate
+  // I binari nativi di sharp (libvips) devono finire nel bundle di TUTTE
+  // le funzioni API che elaborano immagini (upload admin e watermark
+  // on-the-fly di /api/images)
   outputFileTracingIncludes: {
-    "/api/admin/**": ["./node_modules/@img/**/*"],
+    "/api/**": ["./node_modules/@img/**/*"],
   },
 };
 
