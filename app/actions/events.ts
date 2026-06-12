@@ -7,15 +7,17 @@ import { Event } from "@/models/Event";
 import { Photo } from "@/models/Photo";
 import { getStorage } from "@/lib/storage";
 import { slugify } from "@/lib/parse-filename";
+import { isAdmin } from "@/lib/auth";
 
 /**
  * Server Actions CRUD per la gestione degli Eventi.
- *
- * ⚠️ SICUREZZA: queste action verranno richiamate solo dalla dashboard
- * amministratore. Prima di esporre la UI admin va attivata la protezione
- * (vedi `assertAdmin` qui sotto, oggi basata su ADMIN_PASSWORD via cookie —
- * da collegare nel prossimo step con la pagina di login).
+ * Richiamabili solo con sessione admin attiva (cookie verificato).
  */
+
+const UNAUTHORIZED = {
+  ok: false as const,
+  error: "Non autorizzato: effettua il login admin.",
+};
 
 export interface EventInput {
   name: string;
@@ -62,6 +64,7 @@ function revalidatePublicPages() {
 }
 
 export async function createEvent(input: EventInput): Promise<ActionResult> {
+  if (!(await isAdmin())) return UNAUTHORIZED;
   const invalid = validate(input);
   if (invalid) return { ok: false, error: invalid };
 
@@ -88,6 +91,7 @@ export async function updateEvent(
   id: string,
   input: EventInput
 ): Promise<ActionResult> {
+  if (!(await isAdmin())) return UNAUTHORIZED;
   if (!Types.ObjectId.isValid(id)) return { ok: false, error: "ID non valido." };
   const invalid = validate(input);
   if (invalid) return { ok: false, error: invalid };
@@ -122,6 +126,7 @@ export async function updateEvent(
  * (locale o R2, in base all'ambiente).
  */
 export async function deleteEvent(id: string): Promise<ActionResult> {
+  if (!(await isAdmin())) return UNAUTHORIZED;
   if (!Types.ObjectId.isValid(id)) return { ok: false, error: "ID non valido." };
 
   try {
