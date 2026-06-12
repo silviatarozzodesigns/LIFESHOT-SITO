@@ -3,53 +3,54 @@
 @tailwind utilities;
 
 /*
- * Tema Lifeshot — dark mode pulita, stile Apple.
- * Variabili compatibili con Shadcn UI (baseColor: neutral).
+ * Tema Lifeshot — identità cinematografica.
+ * Blu notte profondo per sfondi e profondità, giallo cinema caldo per
+ * azioni principali, hover, link e dettagli. Variabili compatibili Shadcn UI.
  */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 6%;
+    --background: 220 30% 98%;
+    --foreground: 224 47% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 6%;
+    --card-foreground: 224 47% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 6%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 42%;
-    --accent: 0 0% 94%;
-    --accent-foreground: 0 0% 9%;
+    --popover-foreground: 224 47% 10%;
+    --primary: 45 96% 50%;
+    --primary-foreground: 226 50% 8%;
+    --secondary: 222 25% 93%;
+    --secondary-foreground: 224 47% 12%;
+    --muted: 222 25% 93%;
+    --muted-foreground: 222 15% 42%;
+    --accent: 222 25% 90%;
+    --accent-foreground: 224 47% 12%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 9%;
-    --radius: 0.75rem;
+    --border: 222 20% 87%;
+    --input: 222 20% 87%;
+    --ring: 45 96% 45%;
+    --radius: 1rem;
   }
 
   .dark {
-    --background: 0 0% 4%;
-    --foreground: 0 0% 96%;
-    --card: 0 0% 7%;
-    --card-foreground: 0 0% 96%;
-    --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 96%;
-    --primary: 0 0% 96%;
-    --primary-foreground: 0 0% 6%;
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 96%;
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 62%;
-    --accent: 0 0% 14%;
-    --accent-foreground: 0 0% 96%;
-    --destructive: 0 62% 50%;
+    --background: 224 47% 5%;
+    --foreground: 215 30% 95%;
+    --card: 224 42% 8%;
+    --card-foreground: 215 30% 95%;
+    --popover: 224 42% 8%;
+    --popover-foreground: 215 30% 95%;
+    --primary: 45 96% 55%;
+    --primary-foreground: 226 50% 7%;
+    --secondary: 223 35% 13%;
+    --secondary-foreground: 215 30% 95%;
+    --muted: 223 35% 13%;
+    --muted-foreground: 219 18% 64%;
+    --accent: 223 35% 17%;
+    --accent-foreground: 215 30% 95%;
+    --destructive: 0 62% 52%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14%;
-    --input: 0 0% 14%;
-    --ring: 0 0% 82%;
+    --border: 223 32% 15%;
+    --input: 223 32% 15%;
+    --ring: 45 96% 55%;
   }
 
   * {
@@ -62,12 +63,12 @@
   }
 
   ::selection {
-    @apply bg-foreground text-background;
+    @apply bg-primary text-primary-foreground;
   }
 }
 
 @layer utilities {
-  /* Skeleton loader con effetto shimmer per le immagini in caricamento */
+  /* Skeleton loader con shimmer caldo per le immagini in caricamento */
   .skeleton {
     @apply relative overflow-hidden bg-muted;
   }
@@ -76,8 +77,24 @@
     background: linear-gradient(
       90deg,
       transparent,
-      hsl(var(--foreground) / 0.06),
+      hsl(var(--primary) / 0.07),
       transparent
+    );
+  }
+
+  /* Bagliori cinematografici di sfondo (hero, sezioni) */
+  .glow-primary {
+    background: radial-gradient(
+      ellipse at center,
+      hsl(var(--primary) / 0.14),
+      transparent 70%
+    );
+  }
+  .glow-blue {
+    background: radial-gradient(
+      ellipse at center,
+      hsl(222 90% 40% / 0.22),
+      transparent 70%
     );
   }
 }

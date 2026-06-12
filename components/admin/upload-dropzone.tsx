@@ -128,18 +128,18 @@ export function UploadDropzone({ eventId }: { eventId: string }) {
           enqueue(e.dataTransfer.files);
         }}
         className={cn(
-          "flex w-full flex-col items-center gap-3 rounded-2xl border-2 border-dashed px-6 py-14 text-center transition-all",
-          "hover:border-foreground/40 hover:bg-accent/40",
+          "flex w-full flex-col items-center gap-3 rounded-2xl border-2 border-dashed px-6 py-14 text-center transition-all duration-300",
+          "hover:border-primary/50 hover:bg-primary/5",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           isDragging
-            ? "scale-[1.01] border-foreground/60 bg-accent/60"
+            ? "scale-[1.01] border-primary bg-primary/10 shadow-[0_0_50px_-12px_hsl(var(--primary)/0.4)]"
             : "border-border"
         )}
       >
         <CloudUpload
           className={cn(
             "h-8 w-8 transition-colors",
-            isDragging ? "text-foreground" : "text-muted-foreground"
+            isDragging ? "text-primary" : "text-muted-foreground"
           )}
         />
         <div>
@@ -185,7 +185,7 @@ export function UploadDropzone({ eventId }: { eventId: string }) {
                 className="flex items-center gap-3 rounded-xl border bg-card px-4 py-2.5 text-sm"
               >
                 {item.status === "done" && (
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-foreground" />
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
                 )}
                 {item.status === "error" && (
                   <TriangleAlert className="h-4 w-4 shrink-0 text-destructive" />
@@ -210,7 +210,7 @@ export function UploadDropzone({ eventId }: { eventId: string }) {
                     className={cn(
                       "inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
                       item.raceNumber
-                        ? "bg-secondary"
+                        ? "bg-primary/15 text-primary"
                         : "text-muted-foreground"
                     )}
                   >

@@ -21,21 +21,21 @@ export default async function AdminLayout({
             aria-label="Dashboard admin"
           >
             <Logo />
-            <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
+            <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-xs font-semibold text-primary">
               Admin
             </span>
           </Link>
           <nav className="flex items-center gap-5 text-sm text-muted-foreground">
             <Link
               href="/admin"
-              className="transition-colors hover:text-foreground"
+              className="transition-colors hover:text-primary"
             >
               Eventi
             </Link>
             <Link
               href="/"
               target="_blank"
-              className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"
+              className="inline-flex items-center gap-1.5 transition-colors hover:text-primary"
             >
               Vedi sito
               <ExternalLink className="h-3.5 w-3.5" />
@@ -43,7 +43,7 @@ export default async function AdminLayout({
             <form action={logout}>
               <button
                 type="submit"
-                className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"
+                className="inline-flex items-center gap-1.5 transition-colors hover:text-primary"
               >
                 <LogOut className="h-3.5 w-3.5" />
                 Esci

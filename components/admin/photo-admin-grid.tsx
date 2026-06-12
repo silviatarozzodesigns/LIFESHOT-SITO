@@ -105,7 +105,7 @@ function PhotoAdminCard({ photo }: { photo: AdminPhotoDTO }) {
             aria-label="Numero di gara"
             className="h-7 w-full min-w-0 rounded-md border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
           />
-          {saved && <Check className="h-3.5 w-3.5 shrink-0 text-foreground" />}
+          {saved && <Check className="h-3.5 w-3.5 shrink-0 text-primary" />}
         </div>
       </figcaption>
     </figure>

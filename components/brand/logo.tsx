@@ -1,37 +1,34 @@
 import { cn } from "@/lib/utils";
 
 /**
- * ╔══════════════════════════════════════════════════════════╗
- * ║  PLACEHOLDER LOGO LIFESHOT                                ║
- * ║  Sostituire l'SVG qui sotto con il logo ufficiale.       ║
- * ║  Mantenere `currentColor` per supportare chiaro/scuro.   ║
- * ╚══════════════════════════════════════════════════════════╝
+ * Logo ufficiale Lifeshot.
+ * L'icona usa `currentColor`, quindi si adatta al colore del testo
+ * (bianco su dark, blu notte su chiaro). Il lockup completo con wordmark
+ * è disponibile in public/brand/logo-completo.svg.
  */
+export function LogoMark({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 2527 1788"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden
+    >
+      <path d="M1346.908,1119.459c29.837,-1.388 222.416,-10.348 372.506,-25.406c760.752,-76.324 852.169,-94.134 791.423,-75.298c-126.144,39.113 -258.495,72.87 -281.124,78.642c-480.117,122.459 -632.611,175.772 -764.461,207.962c-301.287,73.556 -619.748,193.61 -604.598,-61.458c5.087,-85.648 107.409,-293.645 147.504,-353.264c252.211,-375.031 554.589,-890.883 560.889,-890.636c14.692,0.575 -211.69,589.584 -294.32,863.901c-53.426,177.366 -87.004,257.729 72.182,255.558Z" />
+      <path d="M128.496,1501.538c-55.791,4.955 -117.289,7.719 -125.547,5.723c-21.938,-5.304 76.38,-25.175 367.456,-144.331c186.052,-76.163 289.177,-109.017 292.309,-183.194c1.803,-42.709 7.534,-50.144 -141.39,-355.441c-112.348,-230.317 -178.842,-352.896 -151.569,-327.226c204.053,192.058 362.03,361.296 466.009,436.891c18.335,13.33 9.878,19.169 -18.562,88.211c-14.513,35.231 -169.915,412.484 -186.307,438.34c-8.771,13.834 -14.474,0.124 -203.902,18.672c-188.375,18.445 -274.565,21.507 -298.496,22.357Z" />
+      <path d="M1265.247,1459.846c14.149,-3.594 142.853,-36.291 177.867,-40.747c4.699,-0.598 8.358,-1.182 10.756,-0.632c5.065,1.163 5.386,4.975 4.196,7.472c-1.08,2.267 -4.392,3.604 -4.811,3.759c-25.281,9.373 -113.737,40.641 -155.553,56.303c-257.115,96.304 -319.822,142.071 -352.135,163.557c-104.081,69.207 -123.055,147.08 -138.599,136.66c-11.13,-7.461 -9.28,-9.053 -78.085,-148.177c-23.354,-47.222 4.942,-49.686 65.379,-64.227c433.487,-104.294 433.211,-105.257 470.986,-113.97Z" />
+    </svg>
+  );
+}
+
 export function Logo({ className }: { className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-2", className)}>
-      {/* ── INIZIO PLACEHOLDER SVG ── */}
-      <svg
-        viewBox="0 0 32 32"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-7 w-7"
-        aria-hidden
-      >
-        <rect
-          x="2"
-          y="6"
-          width="28"
-          height="20"
-          rx="5"
-          stroke="currentColor"
-          strokeWidth="2.5"
-        />
-        <circle cx="16" cy="16" r="5.5" stroke="currentColor" strokeWidth="2.5" />
-        <circle cx="24.5" cy="11.5" r="1.5" fill="currentColor" />
-      </svg>
-      {/* ── FINE PLACEHOLDER SVG ── */}
-      <span className="text-lg font-semibold tracking-tight">Lifeshot</span>
+    <span className={cn("inline-flex items-center gap-2.5", className)}>
+      <LogoMark className="h-6 w-auto shrink-0" />
+      <span className="text-base font-semibold tracking-[0.22em]">
+        LIFESHOT
+      </span>
     </span>
   );
 }

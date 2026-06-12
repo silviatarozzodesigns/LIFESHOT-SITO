@@ -47,7 +47,7 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
         <FadeIn>
           <Link
             href={backHref}
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
           >
             <ArrowLeft className="h-4 w-4" />
             Torna alla galleria
@@ -78,7 +78,7 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
             <aside className="lg:sticky lg:top-24">
               <div className="rounded-2xl border bg-card p-6">
                 {photo.raceNumber && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-sm font-medium">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-sm font-semibold text-primary">
                     <Hash className="h-3.5 w-3.5" />
                     {photo.raceNumber}
                   </span>
