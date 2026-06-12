@@ -11,11 +11,7 @@ export default async function AdminLoginPage() {
   if (await isAdmin()) redirect("/admin");
 
   return (
-    <main className="relative flex min-h-dvh items-center justify-center overflow-hidden px-6">
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="glow-primary absolute left-1/2 top-[-25%] h-[30rem] w-[50rem] -translate-x-1/2" />
-        <div className="glow-blue absolute bottom-[-35%] right-[-15%] h-[26rem] w-[40rem]" />
-      </div>
+    <main className="flex min-h-dvh items-center justify-center px-6">
       <FadeIn className="w-full max-w-sm">
         <div className="flex flex-col items-center text-center">
           <LogoMark className="h-14 w-auto" />

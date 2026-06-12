@@ -30,11 +30,17 @@ export async function deletePhoto(id: string): Promise<PhotoActionResult> {
     const photo = await Photo.findById(id);
     if (!photo) return { ok: false, error: "Foto non trovata." };
 
-    try {
-      await getStorage().delete(photo.storageKey);
-    } catch (error) {
-      // Il file potrebbe essere già stato rimosso: non blocca la pulizia del DB
-      console.warn("[lifeshot] file non eliminato dallo storage:", error);
+    // Elimina sia la preview filigranata sia l'originale pulito
+    const keys = [photo.storageKey, photo.originalKey].filter(
+      (k): k is string => Boolean(k)
+    );
+    for (const key of keys) {
+      try {
+        await getStorage().delete(key);
+      } catch (error) {
+        // Il file potrebbe essere già stato rimosso: non blocca la pulizia del DB
+        console.warn("[lifeshot] file non eliminato dallo storage:", error);
+      }
     }
 
     await photo.deleteOne();

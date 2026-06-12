@@ -18,14 +18,8 @@ export default async function HomePage() {
       <SiteHeader />
 
       <main className="flex-1">
-        {/* Hero */}
-        <section className="relative overflow-hidden">
-          {/* Bagliori cinematografici di sfondo */}
-          <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-            <div className="glow-primary absolute left-1/2 top-[-30%] h-[34rem] w-[60rem] -translate-x-1/2" />
-            <div className="glow-blue absolute bottom-[-40%] left-[-10%] h-[28rem] w-[44rem]" />
-          </div>
-
+        {/* Hero — i bagliori di sfondo sono full-frame nel layout root */}
+        <section className="relative">
           <div className="container flex flex-col items-center py-24 text-center sm:py-32">
             <FadeIn>
               <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-primary">

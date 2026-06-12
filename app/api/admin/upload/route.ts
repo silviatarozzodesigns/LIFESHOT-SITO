@@ -7,6 +7,7 @@ import { Photo } from "@/models/Photo";
 import { getStorage } from "@/lib/storage";
 import { isAdmin } from "@/lib/auth";
 import { buildStorageKey, extractRaceNumber } from "@/lib/parse-filename";
+import { createWatermarkedPreview, createCoverImage } from "@/lib/watermark";
 
 /**
  * Upload admin (bulk foto + copertina evento).
@@ -90,25 +91,47 @@ export async function POST(request: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const prefix = kind === "cover" ? `cover-${event.slug}` : event.slug;
-    const key = buildStorageKey(prefix, file.name);
-    const { url } = await getStorage().upload(buffer, key, file.type);
+    const storage = getStorage();
 
     if (kind === "cover") {
+      const coverBuffer = await createCoverImage(buffer);
+      const key = buildStorageKey(`cover-${event.slug}`, file.name).replace(
+        /\.[^.]+$/,
+        ".jpg"
+      );
+      const { url } = await storage.upload(coverBuffer, key, "image/jpeg");
       event.coverImage = url;
       await event.save();
       revalidatePath("/");
       return NextResponse.json({ ok: true, url });
     }
 
-    // kind === "photo": estrazione automatica del numero di gara dal nome file
+    // kind === "photo":
+    // 1. l'originale pulito va in events/<slug>/original/ (per la vendita)
+    // 2. la preview filigranata (watermark impresso nei pixel con sharp)
+    //    va in events/<slug>/preview/ ed è l'unica esposta al pubblico
+    const originalKey = buildStorageKey(`${event.slug}/original`, file.name);
+    const previewKey = originalKey
+      .replace("/original/", "/preview/")
+      .replace(/\.[^.]+$/, ".jpg");
+
+    const preview = await createWatermarkedPreview(buffer);
+    const [, { url }] = await Promise.all([
+      storage.upload(buffer, originalKey, file.type),
+      storage.upload(preview.buffer, previewKey, "image/jpeg"),
+    ]);
+
+    // Estrazione automatica del numero di gara dal nome file
     const raceNumber = extractRaceNumber(file.name);
     const photo = await Photo.create({
       event: event._id,
       originalFilename: file.name,
-      storageKey: key,
+      storageKey: previewKey,
       url,
+      originalKey,
       raceNumber,
+      width: preview.width,
+      height: preview.height,
       sizeBytes: file.size,
       mimeType: file.type,
     });

@@ -134,15 +134,22 @@ export async function deleteEvent(id: string): Promise<ActionResult> {
     const event = await Event.findById(id);
     if (!event) return { ok: false, error: "Evento non trovato." };
 
-    const photos = await Photo.find({ event: id }).select("storageKey").lean();
+    const photos = await Photo.find({ event: id })
+      .select("storageKey originalKey")
+      .lean();
     const storage = getStorage();
+    const keys = photos.flatMap((photo) =>
+      [photo.storageKey, photo.originalKey].filter((k): k is string =>
+        Boolean(k)
+      )
+    );
     const results = await Promise.allSettled(
-      photos.map((photo) => storage.delete(photo.storageKey))
+      keys.map((key) => storage.delete(key))
     );
     const failed = results.filter((r) => r.status === "rejected").length;
     if (failed > 0) {
       console.warn(
-        `[lifeshot] deleteEvent: ${failed}/${photos.length} file non eliminati dallo storage`
+        `[lifeshot] deleteEvent: ${failed}/${keys.length} file non eliminati dallo storage`
       );
     }
 

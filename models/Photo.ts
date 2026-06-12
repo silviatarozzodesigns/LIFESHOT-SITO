@@ -19,16 +19,22 @@ const PhotoSchema = new Schema(
       required: true,
       trim: true,
     },
-    // Chiave nello storage (path locale o key R2), univoca
+    // Chiave della PREVIEW pubblica filigranata (path locale o key R2)
     storageKey: {
       type: String,
       required: true,
       unique: true,
     },
-    // URL pubblico dell'immagine (locale: /uploads/...; prod: https://...r2...)
+    // URL pubblico della preview filigranata
     url: {
       type: String,
       required: true,
+    },
+    // Chiave dell'ORIGINALE pulito ad alta risoluzione (consegnato
+    // dopo l'acquisto; mai esposto pubblicamente)
+    originalKey: {
+      type: String,
+      default: null,
     },
     // Numero di gara estratto dal nome file; stringa per supportare "045", "A12"
     raceNumber: {

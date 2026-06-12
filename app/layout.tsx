@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { CinematicBackdrop } from "@/components/cinematic-backdrop";
 import "./globals.css";
 
 const inter = Inter({
@@ -25,7 +26,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="it" className={`dark ${inter.variable}`} suppressHydrationWarning>
-      <body className="min-h-dvh font-sans">{children}</body>
+      <body className="min-h-dvh font-sans">
+        <CinematicBackdrop />
+        {children}
+      </body>
     </html>
   );
 }

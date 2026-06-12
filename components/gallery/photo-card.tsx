@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { WatermarkOverlay } from "@/components/gallery/watermark-overlay";
 import { cn } from "@/lib/utils";
 
 interface PhotoCardProps {
@@ -51,8 +50,6 @@ export function PhotoCard({
           loaded ? "opacity-100" : "opacity-0"
         )}
       />
-
-      <WatermarkOverlay />
 
       {/* Velo + badge numero di gara on hover */}
       <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />

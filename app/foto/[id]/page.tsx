@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, Hash, MapPin, ShoppingBag } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { WatermarkOverlay } from "@/components/gallery/watermark-overlay";
 import { FadeIn } from "@/components/motion/fade-in";
 import { Button } from "@/components/ui/button";
 import { getPhotoById } from "@/lib/data/photos";
@@ -69,7 +68,6 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
                 sizes="(max-width: 1024px) 100vw, 70vw"
                 className="h-auto w-full object-contain"
               />
-              <WatermarkOverlay />
             </div>
           </FadeIn>
 
