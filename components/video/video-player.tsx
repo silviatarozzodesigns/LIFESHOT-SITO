@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Play } from "lucide-react";
 import type { VideoDTO } from "@/lib/data/videos";
 import { InstagramEmbed } from "@/components/video/instagram-embed";
+import { InlineVideoPlayer } from "@/components/video/inline-video-player";
 import { cn } from "@/lib/utils";
 
 /**
@@ -40,16 +41,12 @@ export function VideoPlayer({ video }: { video: VideoDTO }) {
   }
 
   if (video.provider === "file") {
+    // File .mp4/.webm diretto (R2, Vercel Blob, Cloudinary…): player
+    // inline custom, full-width con effetto cover, senza loghi esterni
     return (
-      <video
-        src={video.embedId}
-        className="aspect-video w-full rounded-2xl bg-black object-cover"
-        autoPlay
-        muted
-        loop
-        playsInline
-        controls={false}
-      />
+      <div className="aspect-video w-full overflow-hidden rounded-2xl">
+        <InlineVideoPlayer src={video.embedId} title={video.title} />
+      </div>
     );
   }
 

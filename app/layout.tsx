@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { CinematicBackdrop } from "@/components/cinematic-backdrop";
+import { getPublishedContent } from "@/lib/data/content";
 import "./globals.css";
 
 const inter = Inter({
@@ -9,17 +10,25 @@ const inter = Inter({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Lifeshot — Fotografia, Video e Grafica",
-    template: "%s · Lifeshot",
-  },
-  description:
-    "Lifeshot è l'agenzia creativa specializzata in fotografia sportiva, video e grafica. Trova e acquista le foto dei tuoi eventi.",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
-  ),
-};
+// SEO gestita dal micro-CMS (pannello admin → Contenuti)
+export async function generateMetadata(): Promise<Metadata> {
+  const { seo } = await getPublishedContent();
+  return {
+    title: {
+      default: seo.metaTitle,
+      template: "%s · Lifeshot",
+    },
+    description: seo.metaDescription,
+    metadataBase: new URL(
+      process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+    ),
+    openGraph: {
+      title: seo.metaTitle,
+      description: seo.metaDescription,
+      ...(seo.ogImage ? { images: [seo.ogImage] } : {}),
+    },
+  };
+}
 
 export default function RootLayout({
   children,

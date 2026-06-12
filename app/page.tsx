@@ -5,13 +5,19 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
 import { getRecentEvents } from "@/lib/data/events";
-import { formatDate } from "@/lib/utils";
+import { getPublishedContent } from "@/lib/data/content";
+import { HERO_SPACING, SECTION_SPACING } from "@/lib/content";
+import { cn, formatDate } from "@/lib/utils";
 
-// Gli eventi recenti arrivano dal database: render a richiesta
+// Eventi e contenuti CMS arrivano dal database: render a richiesta
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const events = await getRecentEvents(6);
+  const [events, content] = await Promise.all([
+    getRecentEvents(6),
+    getPublishedContent(),
+  ]);
+  const { hero, events: eventsSection, spacing } = content;
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -20,21 +26,25 @@ export default async function HomePage() {
       <main className="flex-1">
         {/* Hero — i bagliori di sfondo sono full-frame nel layout root */}
         <section className="relative">
-          <div className="container flex flex-col items-center py-24 text-center sm:py-32">
+          <div
+            className={cn(
+              "container flex flex-col items-center text-center",
+              HERO_SPACING[spacing.hero]
+            )}
+          >
             <FadeIn>
               <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-primary">
-                Fotografia · Video · Grafica
+                {hero.eyebrow}
               </p>
               <h1 className="max-w-3xl text-balance text-5xl font-semibold tracking-tight sm:text-7xl">
-                I tuoi momenti,
+                {hero.titleLine1}
                 <br />
                 <span className="text-muted-foreground">
-                  scattati per durare.
+                  {hero.titleLine2}
                 </span>
               </h1>
               <p className="mx-auto mt-6 max-w-xl text-balance text-lg text-muted-foreground">
-                Cerca le foto del tuo evento con il tuo numero di gara e
-                portale a casa in pochi clic.
+                {hero.subtitle}
               </p>
             </FadeIn>
 
@@ -48,7 +58,7 @@ export default async function HomePage() {
                 <input
                   name="numero"
                   inputMode="numeric"
-                  placeholder="Il tuo numero di gara…"
+                  placeholder={hero.searchPlaceholder}
                   aria-label="Cerca per numero di gara"
                   className="h-10 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                 />
@@ -65,14 +75,17 @@ export default async function HomePage() {
         </section>
 
         {/* Eventi recenti */}
-        <section id="eventi" className="container pb-24">
+        <section
+          id="eventi"
+          className={cn("container", SECTION_SPACING[spacing.sections])}
+        >
           <FadeIn className="mb-8 flex items-end justify-between">
             <div>
               <h2 className="text-3xl font-semibold tracking-tight">
-                Eventi recenti
+                {eventsSection.title}
               </h2>
               <p className="mt-2 text-muted-foreground">
-                Gli ultimi eventi coperti da Lifeshot.
+                {eventsSection.subtitle}
               </p>
             </div>
             <Link
