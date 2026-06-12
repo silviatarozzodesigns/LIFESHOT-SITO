@@ -4,12 +4,12 @@
  */
 export const site = {
   /** Profilo Instagram pubblico */
-  instagramUrl: "https://www.instagram.com/lifeshot.it/",
+  instagramUrl: "https://www.instagram.com/lifeshot.media/",
   /** Link diretto ai DM Instagram */
-  instagramDmUrl: "https://ig.me/m/lifeshot.it",
+  instagramDmUrl: "https://ig.me/m/lifeshot.media",
   /** Handle mostrato nelle pagine */
-  instagramHandle: "@lifeshot.it",
+  instagramHandle: "@lifeshot.media",
   youtubeUrl: "https://www.youtube.com/@lifeshot",
-  email: "info@lifeshot.it",
-  emailCommerciale: "commerciale@lifeshot.it",
+  email: "lifeshotmedia@gmail.com",
+  emailCommerciale: "lifeshotmedia@gmail.com",
 } as const;
