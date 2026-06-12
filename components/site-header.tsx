@@ -36,12 +36,24 @@ export function SiteHeader() {
         >
           <Logo />
         </Link>
-        <nav className="flex items-center gap-6 text-sm text-muted-foreground">
+        <nav className="flex items-center gap-4 text-sm text-muted-foreground sm:gap-6">
           <Link href="/galleria" className="transition-colors hover:text-primary">
             Galleria
           </Link>
-          <Link href="/#eventi" className="transition-colors hover:text-primary">
-            Eventi
+          <Link href="/video" className="transition-colors hover:text-primary">
+            Video
+          </Link>
+          <Link
+            href="/chi-siamo"
+            className="transition-colors hover:text-primary"
+          >
+            Chi siamo
+          </Link>
+          <Link
+            href="/contatti"
+            className="transition-colors hover:text-primary"
+          >
+            Contatti
           </Link>
         </nav>
       </div>

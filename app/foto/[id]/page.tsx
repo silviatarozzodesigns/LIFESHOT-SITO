@@ -2,7 +2,18 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Calendar, Hash, MapPin, ShoppingBag } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  Hash,
+  Instagram,
+  MapPin,
+  ShoppingBag,
+  User,
+} from "lucide-react";
+import { site } from "@/lib/site";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
@@ -57,8 +68,9 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
           {/* Immagine ingrandita con filigrana */}
           <FadeIn delay={0.05}>
             <div className="relative overflow-hidden rounded-2xl bg-muted">
+              {/* Sempre la rotta watermark protetta, mai l'URL del bucket */}
               <Image
-                src={photo.url}
+                src={`/api/images/${photo.id}`}
                 alt={
                   photo.event ? `Foto — ${photo.event.name}` : "Foto Lifeshot"
                 }
@@ -87,6 +99,12 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
                 </h1>
 
                 <dl className="mt-4 space-y-2 text-sm text-muted-foreground">
+                  {photo.pilotName && (
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 shrink-0" />
+                      <dd>{photo.pilotName}</dd>
+                    </div>
+                  )}
                   {photo.event && (
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 shrink-0" />
@@ -116,6 +134,20 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
                   <ShoppingBag />
                   Acquista — presto disponibile
                 </Button>
+
+                <a
+                  href={site.instagramDmUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "lg" }),
+                    "mt-3 w-full whitespace-normal border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
+                  )}
+                >
+                  <Instagram />
+                  Richiedi il pacchetto completo o altri scatti di questo
+                  evento in DM
+                </a>
               </div>
             </aside>
           </FadeIn>

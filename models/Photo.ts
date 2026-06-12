@@ -43,6 +43,13 @@ const PhotoSchema = new Schema(
       default: null,
       index: true,
     },
+    // Nome del pilota (taggato manualmente dalla dashboard)
+    pilotName: {
+      type: String,
+      trim: true,
+      default: null,
+      index: true,
+    },
     width: { type: Number, default: null },
     height: { type: Number, default: null },
     sizeBytes: { type: Number, default: null },

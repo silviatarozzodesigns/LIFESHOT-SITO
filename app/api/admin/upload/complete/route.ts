@@ -7,7 +7,7 @@ import { Photo } from "@/models/Photo";
 import { getStorage } from "@/lib/storage";
 import { isAdmin } from "@/lib/auth";
 import { extractRaceNumber } from "@/lib/parse-filename";
-import { createWatermarkedPreview, createCoverImage } from "@/lib/watermark";
+import { createCoverImage, getPreviewDimensions } from "@/lib/watermark";
 
 /**
  * Step 2 dell'upload presigned: il file originale è già su R2; qui viene
@@ -104,27 +104,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, url });
     }
 
-    // kind === "photo": preview filigranata nei pixel + originale conservato
-    const previewKey = key
-      .replace("/original/", "/preview/")
-      .replace(/\.[^.]+$/, ".jpg");
-    const preview = await createWatermarkedPreview(original);
-    const { url } = await storage.upload(
-      preview.buffer,
-      previewKey,
-      "image/jpeg"
-    );
-
+    // kind === "photo": l'originale resta privato su R2; la versione
+    // pubblica filigranata viene generata al volo da /api/images/<id>
+    const dimensions = await getPreviewDimensions(original);
     const raceNumber = extractRaceNumber(filename);
+    const photoId = new Types.ObjectId();
     const photo = await Photo.create({
+      _id: photoId,
       event: event._id,
       originalFilename: filename,
-      storageKey: previewKey,
-      url,
+      storageKey: key,
+      url: `/api/images/${photoId}`,
       originalKey: key,
       raceNumber,
-      width: preview.width,
-      height: preview.height,
+      width: dimensions.width,
+      height: dimensions.height,
       sizeBytes: size || original.length,
       mimeType: body.contentType ?? "image/jpeg",
     });
@@ -137,7 +131,7 @@ export async function POST(request: Request) {
       ok: true,
       photo: {
         id: String(photo._id),
-        url,
+        url: photo.url,
         raceNumber,
         originalFilename: filename,
       },

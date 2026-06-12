@@ -7,16 +7,17 @@ interface GalleryPaginationProps {
   page: number;
   totalPages: number;
   /** Parametri filtro correnti da preservare nei link di pagina */
-  searchParams: { evento?: string; numero?: string };
+  searchParams: { evento?: string; numero?: string; pilota?: string };
 }
 
 function pageHref(
   page: number,
-  { evento, numero }: GalleryPaginationProps["searchParams"]
+  { evento, numero, pilota }: GalleryPaginationProps["searchParams"]
 ) {
   const params = new URLSearchParams();
   if (evento) params.set("evento", evento);
   if (numero) params.set("numero", numero);
+  if (pilota) params.set("pilota", pilota);
   if (page > 1) params.set("pagina", String(page));
   const query = params.toString();
   return `/galleria${query ? `?${query}` : ""}`;

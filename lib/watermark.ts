@@ -96,6 +96,20 @@ export async function createWatermarkedPreview(
   return { buffer, width, height };
 }
 
+/**
+ * Dimensioni che avrà la preview servita da /api/images (max 1600px),
+ * calcolate senza generare l'immagine: servono al layout della galleria.
+ */
+export async function getPreviewDimensions(
+  input: Buffer
+): Promise<{ width: number; height: number }> {
+  const meta = await sharp(input).rotate().metadata();
+  const w = meta.width ?? PREVIEW_MAX_WIDTH;
+  const h = meta.height ?? Math.round((PREVIEW_MAX_WIDTH * 2) / 3);
+  const scale = Math.min(1, PREVIEW_MAX_WIDTH / w);
+  return { width: Math.round(w * scale), height: Math.round(h * scale) };
+}
+
 /** Ridimensiona una copertina per il web, senza watermark. */
 export async function createCoverImage(input: Buffer): Promise<Buffer> {
   return sharp(input)

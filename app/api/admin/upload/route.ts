@@ -7,7 +7,7 @@ import { Photo } from "@/models/Photo";
 import { getStorage } from "@/lib/storage";
 import { isAdmin } from "@/lib/auth";
 import { buildStorageKey, extractRaceNumber } from "@/lib/parse-filename";
-import { createWatermarkedPreview, createCoverImage } from "@/lib/watermark";
+import { createCoverImage, getPreviewDimensions } from "@/lib/watermark";
 
 /**
  * Upload admin (bulk foto + copertina evento).
@@ -108,32 +108,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, url });
     }
 
-    // kind === "photo":
-    // 1. l'originale pulito va in events/<slug>/original/ (per la vendita)
-    // 2. la preview filigranata (watermark impresso nei pixel con sharp)
-    //    va in events/<slug>/preview/ ed è l'unica esposta al pubblico
+    // kind === "photo": si salva SOLO l'originale (privato); la versione
+    // pubblica filigranata viene generata al volo da /api/images/<id>
     const originalKey = buildStorageKey(`${event.slug}/original`, file.name);
-    const previewKey = originalKey
-      .replace("/original/", "/preview/")
-      .replace(/\.[^.]+$/, ".jpg");
+    await storage.upload(buffer, originalKey, file.type);
 
-    const preview = await createWatermarkedPreview(buffer);
-    const [, { url }] = await Promise.all([
-      storage.upload(buffer, originalKey, file.type),
-      storage.upload(preview.buffer, previewKey, "image/jpeg"),
-    ]);
-
-    // Estrazione automatica del numero di gara dal nome file
+    const dimensions = await getPreviewDimensions(buffer);
     const raceNumber = extractRaceNumber(file.name);
+    const photoId = new Types.ObjectId();
     const photo = await Photo.create({
+      _id: photoId,
       event: event._id,
       originalFilename: file.name,
-      storageKey: previewKey,
-      url,
+      storageKey: originalKey,
+      url: `/api/images/${photoId}`,
       originalKey,
       raceNumber,
-      width: preview.width,
-      height: preview.height,
+      width: dimensions.width,
+      height: dimensions.height,
       sizeBytes: file.size,
       mimeType: file.type,
     });
@@ -146,7 +138,7 @@ export async function POST(request: Request) {
       ok: true,
       photo: {
         id: String(photo._id),
-        url,
+        url: photo.url,
         raceNumber,
         originalFilename: file.name,
       },

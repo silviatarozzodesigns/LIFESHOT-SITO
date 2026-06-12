@@ -7,6 +7,7 @@ export interface PhotoDTO {
   id: string;
   url: string;
   raceNumber: string | null;
+  pilotName: string | null;
   originalFilename: string;
   width: number | null;
   height: number | null;
@@ -25,6 +26,8 @@ export interface PhotoSearchParams {
   eventSlug?: string;
   /** Numero di gara digitato dall'utente */
   raceNumber?: string;
+  /** Nome (anche parziale) del pilota */
+  pilotName?: string;
   page?: number;
   perPage?: number;
 }
@@ -55,6 +58,7 @@ function toDTO(doc: {
   _id: unknown;
   url: string;
   raceNumber?: string | null;
+  pilotName?: string | null;
   originalFilename: string;
   width?: number | null;
   height?: number | null;
@@ -75,6 +79,7 @@ function toDTO(doc: {
     id: String(doc._id),
     url: doc.url,
     raceNumber: doc.raceNumber ?? null,
+    pilotName: doc.pilotName ?? null,
     originalFilename: doc.originalFilename,
     width: doc.width ?? null,
     height: doc.height ?? null,
@@ -90,6 +95,7 @@ function toDTO(doc: {
 export async function searchPhotos({
   eventSlug,
   raceNumber,
+  pilotName,
   page = 1,
   perPage = 24,
 }: PhotoSearchParams): Promise<PhotoSearchResult> {
@@ -117,6 +123,14 @@ export async function searchPhotos({
       } else {
         filter.raceNumber = trimmed;
       }
+    }
+
+    if (pilotName?.trim()) {
+      // Match parziale case-insensitive sul nome del pilota
+      const escaped = pilotName
+        .trim()
+        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      filter.pilotName = { $regex: escaped, $options: "i" };
     }
 
     const currentPage = Math.max(1, page);

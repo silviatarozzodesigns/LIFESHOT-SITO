@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "**.r2.dev",
       },
+      // Thumbnail del lite-player YouTube nel portfolio video
+      {
+        protocol: "https",
+        hostname: "i.ytimg.com",
+      },
       // Aggiungere qui il dominio custom del bucket R2 (es. media.lifeshot.it)
       ...(process.env.R2_PUBLIC_URL
         ? [

@@ -1,18 +1,21 @@
 import type { Metadata } from "next";
-import { ImageOff } from "lucide-react";
+import { ImageOff, Instagram } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { GalleryFilters } from "@/components/gallery/filters";
 import { PhotoCard } from "@/components/gallery/photo-card";
 import { GalleryPagination } from "@/components/gallery/pagination";
 import { FadeIn } from "@/components/motion/fade-in";
+import { buttonVariants } from "@/components/ui/button";
 import { getEventsForFilter } from "@/lib/data/events";
 import { searchPhotos } from "@/lib/data/photos";
+import { site } from "@/lib/site";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Galleria",
   description:
-    "Cerca le foto del tuo evento per nome o numero di gara e acquista i tuoi scatti.",
+    "Cerca le foto del tuo evento per numero di gara o nome pilota e acquista i tuoi scatti.",
 };
 
 // Le foto cambiano a ogni upload: render sempre a richiesta (serverless)
@@ -22,20 +25,26 @@ interface GalleryPageProps {
   searchParams: Promise<{
     evento?: string;
     numero?: string;
+    pilota?: string;
     pagina?: string;
   }>;
 }
 
 export default async function GalleryPage({ searchParams }: GalleryPageProps) {
-  const { evento = "", numero = "", pagina } = await searchParams;
+  const { evento = "", numero = "", pilota = "", pagina } = await searchParams;
   const page = Math.max(1, Number(pagina) || 1);
 
   const [events, result] = await Promise.all([
     getEventsForFilter(),
-    searchPhotos({ eventSlug: evento, raceNumber: numero, page }),
+    searchPhotos({
+      eventSlug: evento,
+      raceNumber: numero,
+      pilotName: pilota,
+      page,
+    }),
   ]);
 
-  const hasFilters = Boolean(evento || numero);
+  const hasFilters = Boolean(evento || numero || pilota);
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -47,8 +56,8 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
             Galleria
           </h1>
           <p className="mt-3 max-w-xl text-muted-foreground">
-            Seleziona il tuo evento e inserisci il numero di gara per trovare i
-            tuoi scatti.
+            Seleziona il tuo evento, poi cerca per numero di gara o nome
+            pilota — anche insieme.
           </p>
         </FadeIn>
 
@@ -57,6 +66,7 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
             events={events.map(({ slug, name }) => ({ slug, name }))}
             selectedEvent={evento}
             raceNumber={numero}
+            pilotName={pilota}
           />
         </FadeIn>
 
@@ -73,7 +83,6 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
                   <FadeIn key={photo.id} delay={Math.min(index * 0.04, 0.4)}>
                     <PhotoCard
                       id={photo.id}
-                      url={photo.url}
                       raceNumber={photo.raceNumber}
                       eventName={photo.event?.name}
                       priority={index < 4}
@@ -84,9 +93,37 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
               <GalleryPagination
                 page={result.page}
                 totalPages={result.totalPages}
-                searchParams={{ evento, numero }}
+                searchParams={{ evento, numero, pilota }}
               />
             </>
+          ) : hasFilters ? (
+            /* Fallback Instagram: zero risultati con filtri attivi */
+            <FadeIn
+              delay={0.15}
+              className="relative overflow-hidden rounded-3xl border bg-card px-6 py-16 text-center sm:px-12"
+            >
+              <div
+                aria-hidden
+                className="glow-primary pointer-events-none absolute left-1/2 top-[-60%] h-[28rem] w-[40rem] -translate-x-1/2"
+              />
+              <Instagram className="mx-auto h-10 w-10 text-primary" />
+              <h2 className="mx-auto mt-6 max-w-xl text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
+                Non trovi il tuo numero in pista?
+              </h2>
+              <p className="mx-auto mt-3 max-w-md text-balance text-muted-foreground">
+                Scrivici in DM su Instagram: abbiamo migliaia di scatti
+                inediti che non sono ancora online.
+              </p>
+              <a
+                href={site.instagramDmUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(buttonVariants({ size: "lg" }), "mt-8")}
+              >
+                <Instagram />
+                Scrivici in DM su Instagram
+              </a>
+            </FadeIn>
           ) : (
             <FadeIn
               delay={0.15}
@@ -94,15 +131,9 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
             >
               <ImageOff className="h-8 w-8 text-muted-foreground" />
               <div>
-                <p className="font-medium">
-                  {hasFilters
-                    ? "Nessuna foto trovata con questi filtri"
-                    : "Nessuna foto ancora pubblicata"}
-                </p>
+                <p className="font-medium">Nessuna foto ancora pubblicata</p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {hasFilters
-                    ? "Prova a cambiare evento o a controllare il numero di gara."
-                    : "Le foto degli eventi appariranno qui appena caricate."}
+                  Le foto degli eventi appariranno qui appena caricate.
                 </p>
               </div>
             </FadeIn>

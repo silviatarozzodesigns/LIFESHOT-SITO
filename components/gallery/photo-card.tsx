@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 
 interface PhotoCardProps {
   id: string;
-  url: string;
   raceNumber: string | null;
   eventName?: string;
   /** Per il preload delle prime card above-the-fold */
@@ -20,7 +19,6 @@ interface PhotoCardProps {
  */
 export function PhotoCard({
   id,
-  url,
   raceNumber,
   eventName,
   priority = false,
@@ -38,8 +36,9 @@ export function PhotoCard({
         !loaded && "skeleton"
       )}
     >
+      {/* SEMPRE la rotta watermark protetta, mai l'URL diretto del bucket */}
       <Image
-        src={url}
+        src={`/api/images/${id}`}
         alt={eventName ? `Foto — ${eventName}` : "Foto Lifeshot"}
         fill
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"

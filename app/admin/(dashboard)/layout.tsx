@@ -33,6 +33,12 @@ export default async function AdminLayout({
               Eventi
             </Link>
             <Link
+              href="/admin/video"
+              className="transition-colors hover:text-primary"
+            >
+              Video
+            </Link>
+            <Link
               href="/"
               target="_blank"
               className="inline-flex items-center gap-1.5 transition-colors hover:text-primary"

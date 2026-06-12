@@ -4,13 +4,14 @@ import { useState, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Check, Loader2, Trash2 } from "lucide-react";
-import { deletePhoto, updatePhotoRaceNumber } from "@/app/actions/photos";
+import { deletePhoto, updatePhotoMeta } from "@/app/actions/photos";
 import type { AdminPhotoDTO } from "@/lib/data/admin";
 import { cn } from "@/lib/utils";
 
 /**
- * Griglia foto della dashboard: numero di gara modificabile inline
- * (per i file senza tag automatico) e cancellazione singola.
+ * Griglia foto della dashboard: numero di gara e nome pilota modificabili
+ * inline, cancellazione singola. Le anteprime passano dalla rotta
+ * watermark (/api/images), mai dall'URL diretto del bucket.
  */
 export function PhotoAdminGrid({ photos }: { photos: AdminPhotoDTO[] }) {
   if (!photos.length) {
@@ -34,14 +35,20 @@ function PhotoAdminCard({ photo }: { photo: AdminPhotoDTO }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [number, setNumber] = useState(photo.raceNumber ?? "");
+  const [pilot, setPilot] = useState(photo.pilotName ?? "");
   const [saved, setSaved] = useState(false);
 
-  const dirty = number.trim() !== (photo.raceNumber ?? "");
+  const dirty =
+    number.trim() !== (photo.raceNumber ?? "") ||
+    pilot.trim() !== (photo.pilotName ?? "");
 
-  function saveNumber() {
+  function saveMeta() {
     if (!dirty) return;
     startTransition(async () => {
-      const result = await updatePhotoRaceNumber(photo.id, number);
+      const result = await updatePhotoMeta(photo.id, {
+        raceNumber: number,
+        pilotName: pilot,
+      });
       if (result.ok) {
         setSaved(true);
         setTimeout(() => setSaved(false), 1500);
@@ -58,6 +65,9 @@ function PhotoAdminCard({ photo }: { photo: AdminPhotoDTO }) {
     });
   }
 
+  const fieldClasses =
+    "h-7 w-full min-w-0 rounded-md border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring";
+
   return (
     <figure
       className={cn(
@@ -67,7 +77,7 @@ function PhotoAdminCard({ photo }: { photo: AdminPhotoDTO }) {
     >
       <div className="relative aspect-[3/2] bg-muted">
         <Image
-          src={photo.url}
+          src={`/api/images/${photo.id}`}
           alt={photo.originalFilename}
           fill
           sizes="(max-width: 640px) 50vw, 20vw"
@@ -95,17 +105,31 @@ function PhotoAdminCard({ photo }: { photo: AdminPhotoDTO }) {
           {photo.originalFilename}
         </p>
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-muted-foreground">#</span>
+          <span className="w-3 shrink-0 text-xs text-muted-foreground">#</span>
           <input
             value={number}
             onChange={(e) => setNumber(e.target.value)}
-            onBlur={saveNumber}
-            onKeyDown={(e) => e.key === "Enter" && saveNumber()}
+            onBlur={saveMeta}
+            onKeyDown={(e) => e.key === "Enter" && saveMeta()}
             placeholder="n. gara"
             aria-label="Numero di gara"
-            className="h-7 w-full min-w-0 rounded-md border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+            className={fieldClasses}
           />
           {saved && <Check className="h-3.5 w-3.5 shrink-0 text-primary" />}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-3 shrink-0 text-center text-[10px] text-muted-foreground">
+            P
+          </span>
+          <input
+            value={pilot}
+            onChange={(e) => setPilot(e.target.value)}
+            onBlur={saveMeta}
+            onKeyDown={(e) => e.key === "Enter" && saveMeta()}
+            placeholder="pilota"
+            aria-label="Nome pilota"
+            className={fieldClasses}
+          />
         </div>
       </figcaption>
     </figure>

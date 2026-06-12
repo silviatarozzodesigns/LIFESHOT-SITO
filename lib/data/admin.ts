@@ -60,6 +60,7 @@ export interface AdminPhotoDTO {
   id: string;
   url: string;
   raceNumber: string | null;
+  pilotName: string | null;
   originalFilename: string;
   createdAt: string;
 }
@@ -77,6 +78,7 @@ export async function getPhotosByEventAdmin(
       id: String(doc._id),
       url: doc.url,
       raceNumber: doc.raceNumber ?? null,
+      pilotName: doc.pilotName ?? null,
       originalFilename: doc.originalFilename,
       createdAt: doc.createdAt?.toISOString() ?? new Date().toISOString(),
     }));
