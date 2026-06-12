@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Play } from "lucide-react";
 import type { VideoDTO } from "@/lib/data/videos";
+import { InstagramEmbed } from "@/components/video/instagram-embed";
 import { cn } from "@/lib/utils";
 
 /**
@@ -20,18 +21,7 @@ export function VideoPlayer({ video }: { video: VideoDTO }) {
   const [activated, setActivated] = useState(false);
 
   if (video.provider === "instagram") {
-    return (
-      <div className="mx-auto w-full max-w-sm overflow-hidden rounded-2xl bg-black">
-        <iframe
-          src={`https://www.instagram.com/reel/${video.embedId}/embed/`}
-          title={video.title}
-          className="aspect-[9/16] w-full border-0"
-          loading="lazy"
-          allow="encrypted-media"
-          allowFullScreen
-        />
-      </div>
-    );
+    return <InstagramEmbed shortcode={video.embedId} title={video.title} />;
   }
 
   if (video.provider === "vimeo") {

@@ -25,7 +25,7 @@ export default async function AdminLayout({
               Admin
             </span>
           </Link>
-          <nav className="flex items-center gap-5 text-sm text-muted-foreground">
+          <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-sm text-muted-foreground sm:gap-x-5">
             <Link
               href="/admin"
               className="transition-colors hover:text-primary"

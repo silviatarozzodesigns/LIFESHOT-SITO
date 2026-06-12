@@ -140,13 +140,18 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(
-                    buttonVariants({ variant: "outline", size: "lg" }),
-                    "mt-3 w-full whitespace-normal border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
+                    buttonVariants({ variant: "outline" }),
+                    // Testo su più righe: altezza fluida e contenuto centrato,
+                    // niente overflow fuori dalla pillola
+                    "mt-3 h-auto min-h-12 w-full items-center justify-center gap-2.5 whitespace-normal rounded-2xl px-5 py-3 text-center leading-snug",
+                    "border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
                   )}
                 >
-                  <Instagram />
-                  Richiedi il pacchetto completo o altri scatti di questo
-                  evento in DM
+                  <Instagram className="shrink-0" />
+                  <span>
+                    Richiedi il pacchetto completo o altri scatti di questo
+                    evento in DM
+                  </span>
                 </a>
               </div>
             </aside>

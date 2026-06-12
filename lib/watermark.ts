@@ -35,13 +35,15 @@ export interface WatermarkOptions {
   opacity?: number;
   /** Larghezza di ogni marchio rispetto all'immagine (0–1) */
   markScale?: number;
+  /** Colore del marchio (default scuro: ben visibile sulle foto chiare) */
+  color?: string;
 }
 
 /** SVG full-size con il wordmark ripetuto in diagonale */
 function watermarkSvg(
   width: number,
   height: number,
-  { opacity = 0.16, markScale = 0.3 }: WatermarkOptions
+  { opacity = 0.24, markScale = 0.3, color = "#0a0e1a" }: WatermarkOptions
 ): string {
   const markWidth = width * markScale;
   const scale = markWidth / WORDMARK_VIEWBOX.width;
@@ -60,7 +62,7 @@ function watermarkSvg(
   }
 
   return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <defs><g id="lswm" fill="#ffffff" fill-opacity="${opacity}">${WORDMARK_PATHS}</g></defs>
+  <defs><g id="lswm" fill="${color}" fill-opacity="${opacity}">${WORDMARK_PATHS}</g></defs>
   <g transform="rotate(-27 ${width / 2} ${height / 2})">${uses}</g>
 </svg>`;
 }
