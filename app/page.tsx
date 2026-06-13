@@ -35,7 +35,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <SiteHeader />
+      <SiteHeader floating />
 
       <main className="flex-1">
         {/* HERO 3D — prossimo evento (CMS-editable) */}

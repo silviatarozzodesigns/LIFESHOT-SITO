@@ -179,7 +179,13 @@ export async function POST(request: Request) {
 
     const dimensions = await getPreviewDimensions(buffer);
     const raceNumber = extractRaceNumber(file.name);
-    const { settings } = await getPublishedContent();
+    // Filigrana: valore esplicito dal form, altrimenti default globale dal CMS
+    const wmField = form.get("watermark");
+    const watermark =
+      wmField === "true" || wmField === "false"
+        ? wmField === "true"
+        : (await getPublishedContent()).settings.watermarkEnabled;
+    const featured = form.get("featured") === "true";
     const photoId = new Types.ObjectId();
     const photo = await Photo.create({
       _id: photoId,
@@ -193,7 +199,8 @@ export async function POST(request: Request) {
       height: dimensions.height,
       sizeBytes: file.size,
       mimeType: file.type,
-      watermark: settings.watermarkEnabled,
+      watermark,
+      featured,
     });
     await Event.updateOne({ _id: event._id }, { $inc: { photoCount: 1 } });
 

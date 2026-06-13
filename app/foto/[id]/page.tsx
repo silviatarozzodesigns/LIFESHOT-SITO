@@ -12,7 +12,7 @@ import {
   User,
 } from "lucide-react";
 import { site } from "@/lib/site";
-import { cn } from "@/lib/utils";
+import { cn, photoSrc } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -80,7 +80,7 @@ export default async function PhotoPage({
             <div className="relative overflow-hidden rounded-2xl bg-muted">
               {/* Sempre la rotta watermark protetta, mai l'URL del bucket */}
               <Image
-                src={`/api/images/${photo.id}`}
+                src={photoSrc(photo.id)}
                 alt={
                   photo.event ? `Foto — ${photo.event.name}` : "Foto Lifeshot"
                 }

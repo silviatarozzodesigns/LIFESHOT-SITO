@@ -39,6 +39,8 @@ export async function POST(request: Request) {
     contentType?: string;
     size?: number;
     kind?: string;
+    watermark?: boolean;
+    featured?: boolean;
   };
   try {
     body = await request.json();
@@ -109,7 +111,12 @@ export async function POST(request: Request) {
     // pubblica filigranata viene generata al volo da /api/images/<id>
     const dimensions = await getPreviewDimensions(original);
     const raceNumber = extractRaceNumber(filename);
-    const { settings } = await getPublishedContent();
+    // Filigrana: valore esplicito dal client, altrimenti default globale dal CMS
+    const watermark =
+      typeof body.watermark === "boolean"
+        ? body.watermark
+        : (await getPublishedContent()).settings.watermarkEnabled;
+    const featured = body.featured === true;
     const photoId = new Types.ObjectId();
     const photo = await Photo.create({
       _id: photoId,
@@ -123,7 +130,8 @@ export async function POST(request: Request) {
       height: dimensions.height,
       sizeBytes: size || original.length,
       mimeType: body.contentType ?? "image/jpeg",
-      watermark: settings.watermarkEnabled,
+      watermark,
+      featured,
     });
     await Event.updateOne({ _id: event._id }, { $inc: { photoCount: 1 } });
 

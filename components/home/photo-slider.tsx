@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { photoSrc } from "@/lib/utils";
 
 interface SliderItem {
   id: string;
@@ -122,7 +123,7 @@ export function PhotoSlider({ items }: { items: SliderItem[] }) {
             className="group relative aspect-[3/4] w-60 shrink-0 snap-center overflow-hidden rounded-3xl bg-muted shadow-[0_30px_60px_-30px_rgba(0,0,0,0.7)] ring-1 ring-border transition-[transform,opacity] duration-300 ease-out hover:ring-primary/50 sm:w-72"
           >
             <Image
-              src={`/api/images/${item.id}`}
+              src={photoSrc(item.id)}
               alt={item.raceNumber ? `Scatto #${item.raceNumber}` : "Scatto Lifeshot"}
               fill
               sizes="(max-width: 640px) 15rem, 18rem"

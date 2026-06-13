@@ -124,14 +124,24 @@ export async function uploadVideoFile(file: File): Promise<string> {
   return presign.publicUrl;
 }
 
+export interface PhotoUploadOptions {
+  /** Applica la filigrana a questa foto (default true) */
+  watermark?: boolean;
+  /** Marca la foto come "Dietro l'obiettivo" (default false) */
+  featured?: boolean;
+}
+
 export async function uploadFile(
   eventId: string,
   file: File,
-  kind: "photo" | "cover" = "photo"
+  kind: "photo" | "cover" = "photo",
+  opts: PhotoUploadOptions = {}
 ): Promise<UploadedPhoto> {
   if (file.size > MAX_UPLOAD_BYTES) {
     throw new Error("File troppo grande (max 5 GB).");
   }
+  const watermark = opts.watermark !== false;
+  const featured = opts.featured === true;
 
   const presign = await parseJson(
     await fetch("/api/admin/presign", {
@@ -152,6 +162,8 @@ export async function uploadFile(
     const formData = new FormData();
     formData.set("eventId", eventId);
     formData.set("kind", kind);
+    formData.set("watermark", String(watermark));
+    formData.set("featured", String(featured));
     formData.set("file", file);
     const payload = await parseJson(
       await fetch("/api/admin/upload", { method: "POST", body: formData })
@@ -182,6 +194,8 @@ export async function uploadFile(
         contentType: file.type,
         size: file.size,
         kind,
+        watermark,
+        featured,
       }),
     })
   );

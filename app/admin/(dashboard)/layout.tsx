@@ -33,6 +33,12 @@ export default async function AdminLayout({
               Eventi
             </Link>
             <Link
+              href="/admin/dietro-lobiettivo"
+              className="transition-colors hover:text-primary"
+            >
+              Dietro l&apos;obiettivo
+            </Link>
+            <Link
               href="/admin/video"
               className="transition-colors hover:text-primary"
             >

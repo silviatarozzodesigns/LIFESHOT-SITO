@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 import { connectDB } from "@/lib/db";
 import { Event } from "@/models/Event";
 import { Photo } from "@/models/Photo";
+import { BEHIND_LENS_SLUG } from "@/lib/site";
 
 export interface PhotoDTO {
   id: string;
@@ -110,6 +111,12 @@ export async function searchPhotos({
         .lean();
       if (!event) return EMPTY_RESULT;
       filter.event = event._id;
+    } else {
+      // Galleria generale: escludi l'evento di sistema "Dietro l'obiettivo"
+      const sys = await Event.findOne({ slug: BEHIND_LENS_SLUG })
+        .select("_id")
+        .lean();
+      if (sys) filter.event = { $ne: sys._id };
     }
 
     if (raceNumber?.trim()) {
@@ -195,8 +202,8 @@ export async function searchPhotosByQuery(
 
 /**
  * Foto curate per la sezione homepage "Dietro l'obiettivo".
- * Mostra SOLO gli scatti marcati come `featured` dall'admin; se non ce n'è
- * ancora nessuno, ripiega sulle più recenti per non lasciare la sezione vuota.
+ * Mostra ESCLUSIVAMENTE gli scatti marcati come `featured` dall'admin
+ * (stella o upload diretto): se non ce n'è nessuno la sezione resta vuota.
  */
 export async function getFeaturedPhotos(limit = 12): Promise<PhotoDTO[]> {
   try {
@@ -206,8 +213,7 @@ export async function getFeaturedPhotos(limit = 12): Promise<PhotoDTO[]> {
       .limit(limit)
       .populate<{ event: PopulatedEvent }>("event", "name slug date location")
       .lean();
-    if (docs.length > 0) return docs.map(toDTO);
-    return getMarqueePhotos(limit);
+    return docs.map(toDTO);
   } catch (error) {
     console.error("[lifeshot] foto featured fallito:", error);
     return [];

@@ -12,3 +12,11 @@ export const site = {
   /** Email ufficiale unica */
   email: "lifeshotmedia@gmail.com",
 } as const;
+
+/**
+ * Slug dell'evento di sistema "Dietro l'obiettivo": contenitore degli
+ * scatti caricati direttamente nella sezione curata della homepage.
+ * Non pubblicato → invisibile in liste/filtri pubblici. Prefisso "__"
+ * per escluderlo anche dalla lista eventi dell'admin.
+ */
+export const BEHIND_LENS_SLUG = "__dietro-l-obiettivo";

@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 import { connectDB } from "@/lib/db";
 import { Event } from "@/models/Event";
 import { Photo } from "@/models/Photo";
+import { BEHIND_LENS_SLUG } from "@/lib/site";
 import type { EventDTO } from "@/lib/data/events";
 
 /**
@@ -36,10 +37,54 @@ function eventToDTO(doc: {
 export async function getAllEventsAdmin(): Promise<EventDTO[]> {
   try {
     await connectDB();
-    const docs = await Event.find().sort({ date: -1 }).lean();
+    // Esclude l'evento di sistema "Dietro l'obiettivo" dalla lista eventi
+    const docs = await Event.find({ slug: { $ne: BEHIND_LENS_SLUG } })
+      .sort({ date: -1 })
+      .lean();
     return docs.map(eventToDTO);
   } catch (error) {
     console.error("[lifeshot] getAllEventsAdmin fallita:", error);
+    return [];
+  }
+}
+
+/**
+ * Ritorna (creandolo se serve) l'evento di sistema "Dietro l'obiettivo",
+ * contenitore degli scatti curati caricati direttamente in homepage.
+ */
+export async function getOrCreateBehindLensEventId(): Promise<string> {
+  await connectDB();
+  const existing = await Event.findOne({ slug: BEHIND_LENS_SLUG })
+    .select("_id")
+    .lean();
+  if (existing) return String(existing._id);
+  const created = await Event.create({
+    name: "Dietro l'obiettivo",
+    slug: BEHIND_LENS_SLUG,
+    date: new Date(),
+    published: false,
+  });
+  return String(created._id);
+}
+
+/** Tutte le foto marcate "Dietro l'obiettivo" (featured), per l'admin. */
+export async function getAllFeaturedPhotosAdmin(): Promise<AdminPhotoDTO[]> {
+  try {
+    await connectDB();
+    const docs = await Photo.find({ featured: true })
+      .sort({ createdAt: -1 })
+      .lean();
+    return docs.map((doc) => ({
+      id: String(doc._id),
+      url: doc.url,
+      raceNumber: doc.raceNumber ?? null,
+      pilotName: doc.pilotName ?? null,
+      originalFilename: doc.originalFilename,
+      featured: Boolean(doc.featured),
+      createdAt: doc.createdAt?.toISOString() ?? new Date().toISOString(),
+    }));
+  } catch (error) {
+    console.error("[lifeshot] getAllFeaturedPhotosAdmin fallita:", error);
     return [];
   }
 }

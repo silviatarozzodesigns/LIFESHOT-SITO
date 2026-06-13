@@ -76,7 +76,7 @@ export function Hero3D({
       ref={ref}
       onMouseMove={onMove}
       onMouseLeave={() => setP({ x: 0, y: 0 })}
-      className="relative isolate overflow-hidden rounded-b-[2.5rem] border-b border-border/50"
+      className="relative isolate flex min-h-[100svh] flex-col overflow-hidden"
     >
       {/* LIVELLO 1 — sfondo */}
       <div
@@ -184,9 +184,10 @@ export function Hero3D({
         </>
       )}
 
-      {/* LIVELLO 2 — contenuto. Su mobile sta SOPRA al rider velato (z-20),
-          su desktop torna sotto (z-10) così il rider gli esce davanti. */}
-      <div className="container relative z-20 py-14 sm:z-10 sm:py-20 lg:py-24">
+      {/* LIVELLO 2 — contenuto evento. Centrato verticalmente nella hero
+          full-screen, con spazio in alto per la navbar fluttuante.
+          Mobile sopra al rider velato (z-20), desktop sotto (z-10). */}
+      <div className="container relative z-20 flex flex-1 items-center pt-28 sm:z-10 sm:pt-32">
         <div className="max-w-2xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
             <span className="relative flex h-2 w-2">
@@ -236,18 +237,8 @@ export function Hero3D({
             </span>
           </div>
 
-          <p className="mt-4 max-w-lg text-balance text-base text-muted-foreground sm:text-lg">
-            {subtitle}
-          </p>
-
-          {/* Ricerca istantanea GRANDE — subito sotto i dettagli evento,
-              prominente e above-the-fold (nome pilota O numero di gara) */}
-          <div className="mt-7">
-            <HeroSearch placeholder={searchPlaceholder} large />
-          </div>
-
-          {/* CTA primaria — prenotazione contenuti via DM Instagram */}
-          <div className="mt-4 flex flex-wrap items-center gap-3">
+          {/* Unica CTA accanto all'immagine: prenotazione via DM Instagram */}
+          <div className="mt-7 flex flex-wrap items-center gap-3">
             <a
               href={site.instagramDmUrl}
               target="_blank"
@@ -260,6 +251,20 @@ export function Hero3D({
             <span className="text-xs text-muted-foreground">
               Rispondiamo in DM, di solito in giornata.
             </span>
+          </div>
+        </div>
+      </div>
+
+      {/* SEARCH BAND — in fondo alla hero (sotto il blocco immagine):
+          sottotitolo + barra di ricerca grande, centrati. Il pannello
+          risultati si apre verso l'ALTO per non uscire dallo schermo. */}
+      <div className="container relative z-20 pb-10 pt-6 sm:z-10 sm:pb-14">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-balance text-base text-muted-foreground sm:text-lg">
+            {subtitle}
+          </p>
+          <div className="mx-auto mt-5 flex max-w-xl justify-center">
+            <HeroSearch placeholder={searchPlaceholder} large dropUp />
           </div>
         </div>
       </div>

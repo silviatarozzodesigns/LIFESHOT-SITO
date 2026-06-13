@@ -20,7 +20,7 @@ const NAV_LINKS = [
  * Su mobile i link lasciano il posto a un menu a finestra a tutto schermo
  * con voci grandi, animazione fluida e canali social in fondo.
  */
-export function SiteHeader() {
+export function SiteHeader({ floating = false }: { floating?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -42,9 +42,10 @@ export function SiteHeader() {
   return (
     <>
       {/* Barra FLUTTUANTE: non tocca i bordi, vetro sfocato, capsula stondata.
+          `fixed` così l'hero può scorrere a tutto schermo SOTTO la navbar.
           pointer-events-none sul guscio così il padding trasparente non blocca
           i click sull'hero sottostante; la barra riattiva i puntatori. */}
-      <header className="pointer-events-none sticky top-0 z-50 px-3 pt-3 sm:px-4 sm:pt-5">
+      <header className="pointer-events-none fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 sm:pt-5">
         <div
           className={cn(
             "pointer-events-auto mx-auto flex max-w-6xl items-center justify-between gap-4 rounded-full border transition-all duration-500",
@@ -99,6 +100,10 @@ export function SiteHeader() {
           </div>
         </div>
       </header>
+
+      {/* Spacer: riserva l'altezza della navbar fissa nelle pagine normali.
+          Sulla home (floating) NON si mette, così l'hero parte da bordo schermo. */}
+      {!floating && <div aria-hidden className="h-[4.75rem] sm:h-[5.5rem]" />}
 
       {/* Menu a finestra (mobile) */}
       <AnimatePresence>

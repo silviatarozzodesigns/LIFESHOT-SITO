@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
   CloudUpload,
+  Droplet,
   Hash,
   Loader2,
   TriangleAlert,
@@ -34,11 +35,21 @@ const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/avif"];
  * dal server al termine dell'upload. I file salgono in parallelo (max 3)
  * verso /api/admin/upload.
  */
-export function UploadDropzone({ eventId }: { eventId: string }) {
+export function UploadDropzone({
+  eventId,
+  featured = false,
+}: {
+  eventId: string;
+  /** Se true, le foto caricate entrano in "Dietro l'obiettivo" (featured) */
+  featured?: boolean;
+}) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [watermark, setWatermark] = useState(true);
+  // Ref letto dentro pump() per evitare closure stantie durante gli upload
+  const watermarkRef = useRef(true);
   const activeUploads = useRef(0);
   const pendingItems = useRef<QueueItem[]>([]);
 
@@ -57,7 +68,10 @@ export function UploadDropzone({ eventId }: { eventId: string }) {
       activeUploads.current += 1;
       setItemState(item.id, { status: "uploading" });
 
-      uploadFile(eventId, item.file, "photo")
+      uploadFile(eventId, item.file, "photo", {
+        watermark: watermarkRef.current,
+        featured,
+      })
         .then((photo) => {
           setItemState(item.id, {
             status: "done",
@@ -77,7 +91,7 @@ export function UploadDropzone({ eventId }: { eventId: string }) {
           }
         });
     }
-  }, [eventId, router, setItemState]);
+  }, [eventId, featured, router, setItemState]);
 
   const enqueue = useCallback(
     (files: FileList | File[]) => {
@@ -108,6 +122,51 @@ export function UploadDropzone({ eventId }: { eventId: string }) {
 
   return (
     <div>
+      {/* Toggle filigrana: decide per QUESTI upload se imprimere il watermark */}
+      <label
+        htmlFor="wm-upload-toggle"
+        className="mb-4 flex cursor-pointer items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-3"
+      >
+        <span className="flex items-center gap-2.5">
+          <Droplet
+            className={cn(
+              "h-4 w-4",
+              watermark ? "text-primary" : "text-muted-foreground"
+            )}
+          />
+          <span>
+            <span className="block text-sm font-medium">
+              Applica la filigrana a queste foto
+            </span>
+            <span className="block text-xs text-muted-foreground">
+              Disattiva per caricare scatti senza watermark.
+            </span>
+          </span>
+        </span>
+        <button
+          id="wm-upload-toggle"
+          type="button"
+          role="switch"
+          aria-checked={watermark}
+          onClick={() => {
+            const next = !watermark;
+            setWatermark(next);
+            watermarkRef.current = next;
+          }}
+          className={cn(
+            "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+            watermark ? "bg-primary" : "bg-muted-foreground/30"
+          )}
+        >
+          <span
+            className={cn(
+              "absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform",
+              watermark ? "translate-x-[1.4rem]" : "translate-x-0.5"
+            )}
+          />
+        </button>
+      </label>
+
       {/* Area drag-and-drop */}
       <button
         type="button"

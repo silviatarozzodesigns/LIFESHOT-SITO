@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Hash, Loader2, Search, User } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, photoSrc } from "@/lib/utils";
 
 interface Result {
   id: string;
@@ -23,10 +23,13 @@ interface Result {
 export function HeroSearch({
   placeholder,
   large = false,
+  dropUp = false,
 }: {
   placeholder: string;
   /** Variante ingrandita per la Hero (barra prominente above-the-fold) */
   large?: boolean;
+  /** Apre il pannello risultati verso l'alto (barra vicina al fondo schermo) */
+  dropUp?: boolean;
 }) {
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -119,7 +122,12 @@ export function HeroSearch({
 
       {/* Pannello risultati istantanei */}
       {open && q.trim().length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border bg-card/95 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.8)] backdrop-blur-xl">
+        <div
+          className={cn(
+            "absolute left-0 right-0 z-30 overflow-hidden rounded-2xl border bg-card/95 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.8)] backdrop-blur-xl",
+            dropUp ? "bottom-full mb-2" : "top-full mt-2"
+          )}
+        >
           {results.length > 0 ? (
             <>
               <ul className="max-h-80 overflow-y-auto p-2">
@@ -132,7 +140,7 @@ export function HeroSearch({
                     >
                       <span className="relative h-12 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
                         <Image
-                          src={`/api/images/${r.id}`}
+                          src={photoSrc(r.id)}
                           alt=""
                           fill
                           sizes="64px"
