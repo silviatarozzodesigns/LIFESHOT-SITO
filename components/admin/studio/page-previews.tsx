@@ -202,8 +202,9 @@ export function PagePreview({
                 style={{
                   objectPosition: imgSet("hero.foreground").position,
                   transform: `scale(${imgSet("hero.foreground").scale / 100})`,
+                  transformOrigin: "bottom right",
                 }}
-                className="pointer-events-none absolute inset-y-0 right-0 -z-[5] hidden w-1/2 object-contain sm:block"
+                className="pointer-events-none absolute bottom-0 right-0 top-0 z-20 w-[60%] object-contain"
               />
             )}
 

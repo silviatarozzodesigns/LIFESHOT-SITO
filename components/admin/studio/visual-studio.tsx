@@ -556,7 +556,7 @@ function ContextPanel({
             id="ctx-scale"
             type="range"
             min={100}
-            max={160}
+            max={280}
             step={5}
             value={settings.scale}
             onChange={(e) =>

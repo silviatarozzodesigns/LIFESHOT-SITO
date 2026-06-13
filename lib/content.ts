@@ -106,19 +106,19 @@ const HERO_SCALE: Record<Level, string> = {
 };
 
 const SECTION_SCALE: Record<Level, string> = {
-  1: "py-4",
-  2: "py-8",
-  3: "py-12",
-  4: "py-16",
-  5: "py-24",
+  1: "py-6 sm:py-10",
+  2: "py-10 sm:py-14",
+  3: "py-14 sm:py-20",
+  4: "py-20 sm:py-28",
+  5: "py-24 sm:py-36",
 };
 
 const BOTTOM_SCALE: Record<Level, string> = {
-  1: "pb-8",
-  2: "pb-12",
-  3: "pb-16",
-  4: "pb-24",
-  5: "pb-32",
+  1: "pb-10 sm:pb-14",
+  2: "pb-14 sm:pb-20",
+  3: "pb-20 sm:pb-28",
+  4: "pb-24 sm:pb-32",
+  5: "pb-32 sm:pb-44",
 };
 
 /** Scala tipografica per i titoloni evento/hero (fluida ma vincolata) */
@@ -496,7 +496,7 @@ function cleanImageSettings(raw: unknown): ImageSettings {
       : DEFAULT_IMAGE_SETTINGS.position;
   const scaleNum = Number(r.scale);
   const scale =
-    scaleNum >= 100 && scaleNum <= 160 ? scaleNum : DEFAULT_IMAGE_SETTINGS.scale;
+    scaleNum >= 100 && scaleNum <= 280 ? scaleNum : DEFAULT_IMAGE_SETTINGS.scale;
   return { position, scale };
 }
 

@@ -3,8 +3,9 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useRef, useState } from "react";
-import { CalendarDays, Clock, MapPin } from "lucide-react";
+import { CalendarDays, Clock, Instagram, MapPin } from "lucide-react";
 import { HeroSearch } from "@/components/home/hero-search";
+import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 export interface Hero3DProps {
@@ -152,20 +153,23 @@ export function Hero3D({
         </svg>
       </div>
 
-      {/* LIVELLO 3 — rider scontornato (più reattivo = più vicino) */}
+      {/* LIVELLO 3 — rider scontornato: SOPRA il testo (z-20) così "esce"
+          e si sovrappone alla Hero. Ancorato in basso-destra per restare
+          allineato all'orizzonte dello sfondo anche sotto zoom forte. */}
       {foregroundUrl && (
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-0 -z-[5] hidden w-1/2 transition-transform duration-300 ease-out sm:block"
+          className="pointer-events-none absolute bottom-0 right-0 top-0 z-20 hidden w-[60%] transition-transform duration-300 ease-out sm:block lg:w-[54%]"
           style={{
-            transform: `translate3d(${p.x * 36}px, ${p.y * 24}px, 0) scale(${fgScale / 100})`,
+            transform: `translate3d(${p.x * 42}px, ${p.y * 26}px, 0) scale(${fgScale / 100})`,
+            transformOrigin: "bottom right",
           }}
         >
           <img
             src={foregroundUrl}
             alt=""
             style={{ objectPosition: fgPosition }}
-            className="h-full w-full object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.6)]"
+            className="h-full w-full object-contain drop-shadow-[0_35px_65px_rgba(0,0,0,0.7)]"
           />
         </div>
       )}
@@ -228,6 +232,22 @@ export function Hero3D({
           {/* Ricerca istantanea: nome pilota O numero di gara */}
           <div className="mt-8">
             <HeroSearch placeholder={searchPlaceholder} />
+          </div>
+
+          {/* CTA primaria — prenotazione contenuti via DM Instagram */}
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <a
+              href={site.instagramDmUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:scale-[1.03] hover:shadow-primary/40 active:scale-95"
+            >
+              <Instagram className="h-4 w-4 transition-transform group-hover:rotate-[8deg]" />
+              Prenota ora i tuoi contenuti
+            </a>
+            <span className="text-xs text-muted-foreground">
+              Rispondiamo in DM, di solito in giornata.
+            </span>
           </div>
         </div>
       </div>

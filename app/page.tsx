@@ -6,6 +6,9 @@ import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
 import { Hero3D } from "@/components/home/hero-3d";
 import { PhotoSlider } from "@/components/home/photo-slider";
+import { HowItWorks } from "@/components/home/how-it-works";
+import { Services } from "@/components/home/services";
+import { Testimonials } from "@/components/home/testimonials";
 import { EventScout } from "@/components/home/event-scout";
 import { getRecentEvents } from "@/lib/data/events";
 import { getMarqueePhotos } from "@/lib/data/photos";
@@ -56,18 +59,23 @@ export default async function HomePage() {
 
         {/* SLIDER — scatti recenti, frecce + swipe */}
         {marquee.length > 0 && (
-          <div className="mt-12">
+          <div className="mt-16 sm:mt-24">
             <PhotoSlider
               items={marquee.map((p) => ({ id: p.id, raceNumber: p.raceNumber }))}
             />
           </div>
         )}
 
+        {/* Come funziona — flusso d'acquisto */}
+        <div className="pt-20 sm:pt-28">
+          <HowItWorks />
+        </div>
+
         {/* Eventi recenti */}
         <section
           id="eventi"
           className={cn(
-            "container",
+            "container scroll-mt-24 pt-20 sm:pt-28",
             getSpacingClass(content, "home", "sections")
           )}
         >
@@ -143,6 +151,16 @@ export default async function HomePage() {
             </FadeIn>
           )}
         </section>
+
+        {/* Servizi — cosa offre Lifeshot oltre alle foto evento */}
+        <div className="pt-8 sm:pt-12">
+          <Services />
+        </div>
+
+        {/* Testimonianze — social proof dei rider */}
+        <div className="pt-20 sm:pt-28">
+          <Testimonials />
+        </div>
 
         {/* Invita Lifeshot al tuo evento (lead-gen) */}
         <section
