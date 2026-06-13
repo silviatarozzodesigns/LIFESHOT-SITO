@@ -26,7 +26,7 @@ import {
 } from "@/app/actions/content";
 import {
   DEFAULT_IMAGE_SETTINGS,
-  IMAGE_POSITIONS,
+  posToCss,
   PAGES,
   PAGE_SLUGS,
   SPACING_LABELS,
@@ -98,6 +98,12 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
     }));
   }
 
+  /** Patch delle impostazioni globali (es. filigrana foto) */
+  function patchSettings(patch: Partial<CmsData["settings"]>) {
+    setFeedback(null);
+    setContent((c) => ({ ...c, settings: { ...c.settings, ...patch } }));
+  }
+
   function setText(slug: PageSlug, key: string, value: string) {
     setFeedback(null);
     setContent((c) => ({
@@ -145,6 +151,9 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
     setContent((c) => {
       const current =
         c.pages[activePage].imageSettings[key] ?? DEFAULT_IMAGE_SETTINGS;
+      const merged = { ...current, ...patch };
+      // `position` è derivato: lo ricalcoliamo da X/Y dopo ogni modifica
+      merged.position = posToCss(merged.posX, merged.posY);
       return {
         ...c,
         pages: {
@@ -153,7 +162,7 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
             ...c.pages[activePage],
             imageSettings: {
               ...c.pages[activePage].imageSettings,
-              [key]: { ...current, ...patch },
+              [key]: merged,
             },
           },
         },
@@ -363,6 +372,49 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
             </div>
           </SidebarCard>
 
+          {/* Impostazioni globali foto — filigrana */}
+          <SidebarCard title="Foto & Filigrana">
+            <label
+              htmlFor="wm-toggle"
+              className="flex cursor-pointer items-start justify-between gap-3"
+            >
+              <span>
+                <span className="block text-sm font-medium text-foreground">
+                  Applica filigrana alle foto caricate
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  Vale per i nuovi upload. Le foto già caricate non cambiano.
+                </span>
+              </span>
+              <button
+                id="wm-toggle"
+                type="button"
+                role="switch"
+                aria-checked={content.settings.watermarkEnabled}
+                onClick={() =>
+                  patchSettings({
+                    watermarkEnabled: !content.settings.watermarkEnabled,
+                  })
+                }
+                className={cn(
+                  "relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors",
+                  content.settings.watermarkEnabled
+                    ? "bg-primary"
+                    : "bg-muted-foreground/30"
+                )}
+              >
+                <span
+                  className={cn(
+                    "absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform",
+                    content.settings.watermarkEnabled
+                      ? "translate-x-[1.4rem]"
+                      : "translate-x-0.5"
+                  )}
+                />
+              </button>
+            </label>
+          </SidebarCard>
+
           {/* Spaziature di pagina (layout) */}
           <SidebarCard title="Spaziature">
             {Object.entries(pageDef.spacing).map(([knob, def]) => {
@@ -526,22 +578,48 @@ function ContextPanel({
           Inquadratura
         </Label>
 
-        {/* Posizione focale: griglia 3×3 */}
-        <div className="grid w-fit grid-cols-3 gap-1">
-          {IMAGE_POSITIONS.map((pos) => (
-            <button
-              key={pos}
-              type="button"
-              aria-label={pos}
-              onClick={() => onImageSettings(selected.key, { position: pos })}
-              className={cn(
-                "h-7 w-7 rounded-md border transition-colors",
-                settings.position === pos
-                  ? "border-primary bg-primary/20"
-                  : "hover:border-primary/50"
-              )}
-            />
-          ))}
+        {/* Posizione orizzontale libera */}
+        <div className="space-y-1.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <Label htmlFor="ctx-posx">Orizzontale</Label>
+            <span className="text-[11px] text-muted-foreground">
+              {settings.posX}%
+            </span>
+          </div>
+          <input
+            id="ctx-posx"
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={settings.posX}
+            onChange={(e) =>
+              onImageSettings(selected.key, { posX: Number(e.target.value) })
+            }
+            className="w-full accent-primary"
+          />
+        </div>
+
+        {/* Posizione verticale libera */}
+        <div className="space-y-1.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <Label htmlFor="ctx-posy">Verticale</Label>
+            <span className="text-[11px] text-muted-foreground">
+              {settings.posY}%
+            </span>
+          </div>
+          <input
+            id="ctx-posy"
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={settings.posY}
+            onChange={(e) =>
+              onImageSettings(selected.key, { posY: Number(e.target.value) })
+            }
+            className="w-full accent-primary"
+          />
         </div>
 
         {/* Scala / zoom */}

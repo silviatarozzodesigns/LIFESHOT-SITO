@@ -11,6 +11,8 @@ interface PhotoCardProps {
   eventName?: string;
   /** Per il preload delle prime card above-the-fold */
   priority?: boolean;
+  /** URL di ritorno passato al dettaglio (?ritorno=...) per il back contestuale */
+  backTo?: string;
 }
 
 /**
@@ -22,12 +24,15 @@ export function PhotoCard({
   raceNumber,
   eventName,
   priority = false,
+  backTo,
 }: PhotoCardProps) {
   const [loaded, setLoaded] = useState(false);
 
   return (
     <Link
-      href={`/foto/${id}`}
+      href={
+        backTo ? `/foto/${id}?ritorno=${encodeURIComponent(backTo)}` : `/foto/${id}`
+      }
       className={cn(
         "group relative block aspect-[3/2] overflow-hidden rounded-2xl bg-muted",
         "ring-1 ring-transparent transition-all duration-500 ease-out",

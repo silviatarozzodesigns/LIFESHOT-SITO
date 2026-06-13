@@ -46,6 +46,15 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
 
   const hasFilters = Boolean(evento || numero || pilota);
 
+  // URL di ritorno per il dettaglio: include SOLO i filtri attivi.
+  // Senza filtri → "/galleria" pulito, così il back resta non filtrato (punto 5).
+  const returnParams = new URLSearchParams();
+  if (evento) returnParams.set("evento", evento);
+  if (numero) returnParams.set("numero", numero);
+  if (pilota) returnParams.set("pilota", pilota);
+  if (page > 1) returnParams.set("pagina", String(page));
+  const galleryReturn = `/galleria${returnParams.size ? `?${returnParams}` : ""}`;
+
   return (
     <div className="flex min-h-dvh flex-col">
       <SiteHeader />
@@ -86,6 +95,7 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
                       raceNumber={photo.raceNumber}
                       eventName={photo.event?.name}
                       priority={index < 4}
+                      backTo={galleryReturn}
                     />
                   </FadeIn>
                 ))}

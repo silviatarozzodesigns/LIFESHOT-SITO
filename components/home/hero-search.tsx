@@ -20,7 +20,14 @@ interface Result {
  * mostra le anteprime in un pannello sotto l'input, senza forzare la
  * navigazione in una sotto-pagina. Invio o "Vedi tutti" → /galleria.
  */
-export function HeroSearch({ placeholder }: { placeholder: string }) {
+export function HeroSearch({
+  placeholder,
+  large = false,
+}: {
+  placeholder: string;
+  /** Variante ingrandita per la Hero (barra prominente above-the-fold) */
+  large?: boolean;
+}) {
   const router = useRouter();
   const [q, setQ] = useState("");
   const [results, setResults] = useState<Result[]>([]);
@@ -71,18 +78,21 @@ export function HeroSearch({ placeholder }: { placeholder: string }) {
   }
 
   return (
-    <div ref={boxRef} className="relative max-w-md">
+    <div ref={boxRef} className={cn("relative", large ? "max-w-xl" : "max-w-md")}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           goToGallery();
         }}
-        className="flex items-center gap-3 rounded-full border bg-card/80 px-5 py-2 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.6)] backdrop-blur-md transition-colors focus-within:border-primary/60 hover:border-primary/40"
+        className={cn(
+          "flex items-center gap-3 rounded-full border bg-card/80 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.6)] backdrop-blur-md transition-colors focus-within:border-primary/60 hover:border-primary/40",
+          large ? "px-6 py-2.5" : "px-5 py-2"
+        )}
       >
         {loading ? (
-          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
+          <Loader2 className={cn("shrink-0 animate-spin text-muted-foreground", large ? "h-5 w-5" : "h-4 w-4")} />
         ) : (
-          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <Search className={cn("shrink-0 text-muted-foreground", large ? "h-5 w-5" : "h-4 w-4")} />
         )}
         <input
           value={q}
@@ -90,14 +100,20 @@ export function HeroSearch({ placeholder }: { placeholder: string }) {
           onFocus={() => results.length > 0 && setOpen(true)}
           placeholder={placeholder}
           aria-label="Cerca per nome o numero di gara"
-          className="h-10 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground sm:text-sm"
+          className={cn(
+            "flex-1 bg-transparent outline-none placeholder:text-muted-foreground",
+            large ? "h-12 text-base" : "h-10 text-base sm:text-sm"
+          )}
         />
         <button
           type="submit"
           aria-label="Cerca"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-105 hover:shadow-[0_0_24px_-4px_hsl(var(--primary)/0.6)] active:scale-95"
+          className={cn(
+            "flex shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-105 hover:shadow-[0_0_24px_-4px_hsl(var(--primary)/0.6)] active:scale-95",
+            large ? "h-12 w-12" : "h-9 w-9"
+          )}
         >
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRight className={large ? "h-5 w-5" : "h-4 w-4"} />
         </button>
       </form>
 

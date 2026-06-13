@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { connectDB } from "@/lib/db";
 import { Photo } from "@/models/Photo";
 import { getStorage } from "@/lib/storage";
-import { createWatermarkedPreview } from "@/lib/watermark";
+import { createCoverImage, createWatermarkedPreview } from "@/lib/watermark";
 
 /**
  * Watermark protetto "on-the-fly".
@@ -34,7 +34,7 @@ export async function GET(
   try {
     await connectDB();
     const photo = await Photo.findById(id)
-      .select("originalKey storageKey mimeType")
+      .select("originalKey storageKey mimeType watermark")
       .lean();
     if (!photo) return new Response("Not found", { status: 404 });
 
@@ -43,9 +43,13 @@ export async function GET(
     let contentType = "image/jpeg";
 
     if (photo.originalKey) {
-      // Originale privato → preview filigranata generata al volo
+      // Originale privato → preview ridimensionata per il web.
+      // Con filigrana (default) o pulita se il flag è disattivato sulla foto.
       const original = await storage.download(photo.originalKey);
-      body = (await createWatermarkedPreview(original)).buffer;
+      body =
+        photo.watermark === false
+          ? await createCoverImage(original)
+          : (await createWatermarkedPreview(original)).buffer;
     } else {
       // Foto legacy senza originale separato: si serve il file salvato
       body = await storage.download(photo.storageKey);

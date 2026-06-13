@@ -44,9 +44,9 @@ export function LogoWordmark({ className }: { className?: string }) {
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-2.5", className)}>
-      <LogoMark className="h-6 w-auto shrink-0" />
-      <LogoWordmark className="h-3.5 w-auto" />
+    <span className={cn("inline-flex items-center gap-3", className)}>
+      <LogoMark className="h-7 w-auto shrink-0 sm:h-9" />
+      <LogoWordmark className="h-4 w-auto sm:h-[1.2rem]" />
     </span>
   );
 }

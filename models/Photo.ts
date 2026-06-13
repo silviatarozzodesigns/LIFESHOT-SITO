@@ -54,6 +54,11 @@ const PhotoSchema = new Schema(
     height: { type: Number, default: null },
     sizeBytes: { type: Number, default: null },
     mimeType: { type: String, default: "image/jpeg" },
+    // Se true, la preview pubblica viene servita con la filigrana impressa.
+    // Impostato all'upload dal toggle globale del CMS (settings.watermarkEnabled).
+    watermark: { type: Boolean, default: true },
+    // Marca le foto curate per la sezione homepage "Dietro l'obiettivo"
+    featured: { type: Boolean, default: false, index: true },
     // Prezzo in centesimi per il futuro flusso d'acquisto (placeholder)
     priceCents: {
       type: Number,

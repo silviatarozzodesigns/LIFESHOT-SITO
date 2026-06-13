@@ -3,8 +3,12 @@
 import { useState, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Check, Loader2, Trash2 } from "lucide-react";
-import { deletePhoto, updatePhotoMeta } from "@/app/actions/photos";
+import { Check, Loader2, Star, Trash2 } from "lucide-react";
+import {
+  deletePhoto,
+  togglePhotoFeatured,
+  updatePhotoMeta,
+} from "@/app/actions/photos";
 import type { AdminPhotoDTO } from "@/lib/data/admin";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +41,17 @@ function PhotoAdminCard({ photo }: { photo: AdminPhotoDTO }) {
   const [number, setNumber] = useState(photo.raceNumber ?? "");
   const [pilot, setPilot] = useState(photo.pilotName ?? "");
   const [saved, setSaved] = useState(false);
+  const [featured, setFeatured] = useState(photo.featured);
+
+  function toggleFeatured() {
+    const next = !featured;
+    setFeatured(next); // ottimistico
+    startTransition(async () => {
+      const result = await togglePhotoFeatured(photo.id, next);
+      if (!result.ok) setFeatured(!next);
+      else router.refresh();
+    });
+  }
 
   const dirty =
     number.trim() !== (photo.raceNumber ?? "") ||
@@ -95,6 +110,28 @@ function PhotoAdminCard({ photo }: { photo: AdminPhotoDTO }) {
           ) : (
             <Trash2 className="h-4 w-4" />
           )}
+        </button>
+
+        {/* Stella "Dietro l'obiettivo": sempre visibile se attiva */}
+        <button
+          type="button"
+          onClick={toggleFeatured}
+          disabled={isPending}
+          aria-label={
+            featured
+              ? "Rimuovi da Dietro l'obiettivo"
+              : "Aggiungi a Dietro l'obiettivo"
+          }
+          aria-pressed={featured}
+          title="Dietro l'obiettivo (homepage)"
+          className={cn(
+            "absolute left-2 top-2 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition-all focus-visible:opacity-100",
+            featured
+              ? "bg-primary text-primary-foreground opacity-100"
+              : "bg-black/55 text-white opacity-0 hover:bg-primary group-hover:opacity-100"
+          )}
+        >
+          <Star className={cn("h-4 w-4", featured && "fill-current")} />
         </button>
       </div>
       <figcaption className="space-y-1.5 p-2.5">

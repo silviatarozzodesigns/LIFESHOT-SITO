@@ -5,10 +5,10 @@ import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   Calendar,
+  FileImage,
   Hash,
   Instagram,
   MapPin,
-  ShoppingBag,
   User,
 } from "lucide-react";
 import { site } from "@/lib/site";
@@ -17,7 +17,6 @@ import { buttonVariants } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
-import { Button } from "@/components/ui/button";
 import { getPhotoById } from "@/lib/data/photos";
 import { formatDate } from "@/lib/utils";
 
@@ -25,6 +24,7 @@ export const dynamic = "force-dynamic";
 
 interface PhotoPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ ritorno?: string }>;
 }
 
 export async function generateMetadata({
@@ -40,14 +40,24 @@ export async function generateMetadata({
   };
 }
 
-export default async function PhotoPage({ params }: PhotoPageProps) {
+export default async function PhotoPage({
+  params,
+  searchParams,
+}: PhotoPageProps) {
   const { id } = await params;
+  const { ritorno } = await searchParams;
   const photo = await getPhotoById(id);
   if (!photo) notFound();
 
-  const backHref = photo.event
-    ? `/galleria?evento=${photo.event.slug}${photo.raceNumber ? `&numero=${photo.raceNumber}` : ""}`
-    : "/galleria";
+  // Ritorno contestuale: rispetta da dove arriva l'utente (homepage o
+  // galleria con/senza filtri). Accettiamo solo path interni (anti open-redirect).
+  const safeReturn =
+    ritorno && ritorno.startsWith("/") && !ritorno.startsWith("//")
+      ? ritorno
+      : null;
+  const backHref = safeReturn ?? "/galleria";
+  const backLabel =
+    safeReturn === "/" ? "Torna alla homepage" : "Torna alla galleria";
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -60,7 +70,7 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
             className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
           >
             <ArrowLeft className="h-4 w-4" />
-            Torna alla galleria
+            {backLabel}
           </Link>
         </FadeIn>
 
@@ -119,39 +129,36 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
                   )}
                 </dl>
 
+                {/* Codice di riferimento: nome file mostrato al cliente,
+                    da citare in DM per richiedere lo scatto giusto */}
+                <div className="mt-5 rounded-xl border border-dashed bg-background/50 p-3">
+                  <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    <FileImage className="h-3.5 w-3.5" />
+                    Codice scatto
+                  </p>
+                  <p className="mt-1 break-all font-mono text-sm text-foreground">
+                    {photo.originalFilename}
+                  </p>
+                </div>
+
                 <div className="my-6 border-t" />
 
                 <p className="text-sm text-muted-foreground">
-                  File ad alta risoluzione, senza filigrana, consegnato via
-                  download dopo l&apos;acquisto.
+                  Original ad alta risoluzione, senza filigrana. Scrivici in DM
+                  con il codice qui sopra per riceverlo.
                 </p>
-
-                {/*
-                  PLACEHOLDER ACQUISTO — da collegare al futuro flusso di
-                  checkout (es. Stripe). Il prezzo arriverà da photo.priceCents.
-                */}
-                <Button size="lg" className="mt-5 w-full" disabled>
-                  <ShoppingBag />
-                  Acquista — presto disponibile
-                </Button>
 
                 <a
                   href={site.instagramDmUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(
-                    buttonVariants({ variant: "outline" }),
-                    // Testo su più righe: altezza fluida e contenuto centrato,
-                    // niente overflow fuori dalla pillola
-                    "mt-3 h-auto min-h-12 w-full items-center justify-center gap-2.5 whitespace-normal rounded-2xl px-5 py-3 text-center leading-snug",
-                    "border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
+                    buttonVariants({ size: "lg" }),
+                    "mt-5 h-auto min-h-12 w-full items-center justify-center gap-2.5 whitespace-normal rounded-2xl px-5 py-3 text-center leading-snug"
                   )}
                 >
                   <Instagram className="shrink-0" />
-                  <span>
-                    Richiedi il pacchetto completo o altri scatti di questo
-                    evento in DM
-                  </span>
+                  <span>Scrivici in DM per acquistare le tue foto</span>
                 </a>
               </div>
             </aside>

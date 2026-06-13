@@ -59,23 +59,33 @@ export interface PageDef {
 
 /** Override di layout manuale per un'immagine (resize/posizione dal CMS) */
 export interface ImageSettings {
-  /** object-position CSS (es. "center", "top", "left bottom") */
-  position: string;
-  /** scala percentuale 100–160 (zoom dell'immagine nel contenitore) */
+  /** object-position orizzontale 0–100% (0 = sinistra, 100 = destra) */
+  posX: number;
+  /** object-position verticale 0–100% (0 = alto, 100 = basso) */
+  posY: number;
+  /** scala percentuale 100–280 (zoom dell'immagine nel contenitore) */
   scale: number;
+  /** object-position CSS calcolato ("x% y%") — campo derivato per i consumatori */
+  position: string;
 }
 
-export const IMAGE_POSITIONS = [
-  "left top",
-  "center top",
-  "right top",
-  "left center",
-  "center",
-  "right center",
-  "left bottom",
-  "center bottom",
-  "right bottom",
-] as const;
+/** object-position CSS da coordinate percentuali */
+export function posToCss(posX: number, posY: number): string {
+  return `${posX}% ${posY}%`;
+}
+
+/** Retrocompatibilità: mappa i vecchi nomi posizione → coordinate X/Y */
+const NAMED_TO_XY: Record<string, [number, number]> = {
+  "left top": [0, 0],
+  "center top": [50, 0],
+  "right top": [100, 0],
+  "left center": [0, 50],
+  center: [50, 50],
+  "right center": [100, 50],
+  "left bottom": [0, 100],
+  "center bottom": [50, 100],
+  "right bottom": [100, 100],
+};
 
 export interface PageContent {
   seo: SeoContent;
@@ -87,12 +97,25 @@ export interface PageContent {
 }
 
 export const DEFAULT_IMAGE_SETTINGS: ImageSettings = {
-  position: "center",
+  posX: 50,
+  posY: 50,
   scale: 100,
+  position: "50% 50%",
+};
+
+/** Impostazioni globali del sito (non legate a una singola pagina) */
+export interface SiteSettings {
+  /** Applica la filigrana alle nuove foto caricate */
+  watermarkEnabled: boolean;
+}
+
+export const DEFAULT_SETTINGS: SiteSettings = {
+  watermarkEnabled: true,
 };
 
 export interface CmsData {
   pages: Record<PageSlug, PageContent>;
+  settings: SiteSettings;
 }
 
 /* ── Scale (stringhe letterali: requisito del compilatore JIT di Tailwind) ── */
@@ -465,6 +488,7 @@ export const DEFAULT_CONTENT: CmsData = {
   pages: Object.fromEntries(
     PAGE_SLUGS.map((slug) => [slug, buildDefaultPage(PAGES[slug])])
   ) as Record<PageSlug, PageContent>,
+  settings: { ...DEFAULT_SETTINGS },
 };
 
 function cleanString(value: unknown, fallback: string, max: number): string {
@@ -488,20 +512,35 @@ interface RawPage {
 }
 
 function cleanImageSettings(raw: unknown): ImageSettings {
-  const r = (raw ?? {}) as Partial<ImageSettings>;
-  const position =
-    typeof r.position === "string" &&
-    (IMAGE_POSITIONS as readonly string[]).includes(r.position)
-      ? r.position
-      : DEFAULT_IMAGE_SETTINGS.position;
+  const r = (raw ?? {}) as {
+    posX?: unknown;
+    posY?: unknown;
+    scale?: unknown;
+    position?: unknown;
+  };
   const scaleNum = Number(r.scale);
   const scale =
     scaleNum >= 100 && scaleNum <= 280 ? scaleNum : DEFAULT_IMAGE_SETTINGS.scale;
-  return { position, scale };
+
+  // Coordinate libere 0–100, con fallback ai vecchi nomi posizione salvati
+  const named =
+    typeof r.position === "string" ? NAMED_TO_XY[r.position] : undefined;
+  const inRange = (v: number) => v >= 0 && v <= 100;
+  const xNum = Number(r.posX);
+  const yNum = Number(r.posY);
+  const posX = inRange(xNum)
+    ? Math.round(xNum)
+    : named?.[0] ?? DEFAULT_IMAGE_SETTINGS.posX;
+  const posY = inRange(yNum)
+    ? Math.round(yNum)
+    : named?.[1] ?? DEFAULT_IMAGE_SETTINGS.posY;
+
+  return { posX, posY, scale, position: posToCss(posX, posY) };
 }
 
 export function normalizeContent(raw?: {
   pages?: Partial<Record<PageSlug, RawPage>>;
+  settings?: Partial<SiteSettings>;
 } | null): CmsData {
   const pages = {} as Record<PageSlug, PageContent>;
   for (const slug of PAGE_SLUGS) {
@@ -549,7 +588,13 @@ export function normalizeContent(raw?: {
       ) as Record<string, Level>,
     };
   }
-  return { pages };
+  const settings: SiteSettings = {
+    watermarkEnabled:
+      typeof raw?.settings?.watermarkEnabled === "boolean"
+        ? raw.settings.watermarkEnabled
+        : DEFAULT_SETTINGS.watermarkEnabled,
+  };
+  return { pages, settings };
 }
 
 /* ───────────────────── accessor per le pagine pubbliche ─────────────────── */

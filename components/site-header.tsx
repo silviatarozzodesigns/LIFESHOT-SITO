@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { Instagram, Mail, Menu, X, Youtube } from "lucide-react";
+import { Instagram, Mail, Menu, Phone, X, Youtube } from "lucide-react";
 import { Logo, LogoMark } from "@/components/brand/logo";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -41,15 +41,19 @@ export function SiteHeader() {
 
   return (
     <>
-      <header
-        className={cn(
-          "sticky top-0 z-50 transition-all duration-500",
-          scrolled
-            ? "border-b border-border/60 bg-background/70 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.45)] backdrop-blur-xl"
-            : "border-b border-transparent bg-transparent"
-        )}
-      >
-        <div className="container flex h-16 items-center justify-between">
+      {/* Barra FLUTTUANTE: non tocca i bordi, vetro sfocato, capsula stondata.
+          pointer-events-none sul guscio così il padding trasparente non blocca
+          i click sull'hero sottostante; la barra riattiva i puntatori. */}
+      <header className="pointer-events-none sticky top-0 z-50 px-3 pt-3 sm:px-4 sm:pt-5">
+        <div
+          className={cn(
+            "pointer-events-auto mx-auto flex max-w-6xl items-center justify-between gap-4 rounded-full border transition-all duration-500",
+            "px-4 py-2.5 sm:px-6 sm:py-3",
+            scrolled
+              ? "border-border/60 bg-background/80 shadow-[0_12px_45px_-12px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+              : "border-white/10 bg-background/55 shadow-[0_8px_30px_-16px_rgba(0,0,0,0.5)] backdrop-blur-lg"
+          )}
+        >
           <Link
             href="/"
             aria-label="Lifeshot — Home"
@@ -58,29 +62,41 @@ export function SiteHeader() {
             <Logo />
           </Link>
 
-          {/* Nav desktop */}
-          <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
+          {/* Nav desktop — font uniforme */}
+          <nav className="hidden items-center gap-7 text-sm font-medium text-muted-foreground md:flex">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="transition-colors hover:text-primary"
+                className="transition-colors hover:text-foreground"
               >
                 {link.label}
               </Link>
             ))}
           </nav>
 
-          {/* Hamburger mobile */}
-          <button
-            type="button"
-            onClick={() => setMenuOpen(true)}
-            aria-label="Apri il menu"
-            aria-expanded={menuOpen}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-accent md:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
+          {/* CTA capsula (desktop) + hamburger (mobile) */}
+          <div className="flex items-center gap-2">
+            <a
+              href={site.instagramDmUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.03] hover:shadow-primary/40 md:inline-flex"
+            >
+              <Phone className="h-4 w-4" />
+              Contattaci
+            </a>
+
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              aria-label="Apri il menu"
+              aria-expanded={menuOpen}
+              className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-accent md:hidden"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </header>
 

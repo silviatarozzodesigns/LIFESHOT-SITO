@@ -193,6 +193,27 @@ export async function searchPhotosByQuery(
   }
 }
 
+/**
+ * Foto curate per la sezione homepage "Dietro l'obiettivo".
+ * Mostra SOLO gli scatti marcati come `featured` dall'admin; se non ce n'è
+ * ancora nessuno, ripiega sulle più recenti per non lasciare la sezione vuota.
+ */
+export async function getFeaturedPhotos(limit = 12): Promise<PhotoDTO[]> {
+  try {
+    await connectDB();
+    const docs = await Photo.find({ featured: true })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .populate<{ event: PopulatedEvent }>("event", "name slug date location")
+      .lean();
+    if (docs.length > 0) return docs.map(toDTO);
+    return getMarqueePhotos(limit);
+  } catch (error) {
+    console.error("[lifeshot] foto featured fallito:", error);
+    return [];
+  }
+}
+
 /** Foto più recenti, per il marquee auto-scroll della homepage. */
 export async function getMarqueePhotos(limit = 16): Promise<PhotoDTO[]> {
   try {

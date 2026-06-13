@@ -55,6 +55,29 @@ export async function deletePhoto(id: string): Promise<PhotoActionResult> {
 }
 
 /**
+ * Marca/smarca una foto come "Dietro l'obiettivo" (featured): è la curatela
+ * della galleria in homepage, che mostra solo gli scatti scelti dall'admin.
+ */
+export async function togglePhotoFeatured(
+  id: string,
+  featured: boolean
+): Promise<PhotoActionResult> {
+  if (!(await isAdmin())) return UNAUTHORIZED;
+  if (!Types.ObjectId.isValid(id)) return { ok: false, error: "ID non valido." };
+
+  try {
+    await connectDB();
+    const updated = await Photo.findByIdAndUpdate(id, { featured });
+    if (!updated) return { ok: false, error: "Foto non trovata." };
+    revalidatePath("/");
+    return { ok: true };
+  } catch (error) {
+    console.error("[lifeshot] togglePhotoFeatured fallita:", error);
+    return { ok: false, error: "Errore durante l'aggiornamento." };
+  }
+}
+
+/**
  * Aggiorna i metadati di una foto: numero di gara (per i file senza
  * convenzione nel nome) e nome del pilota (per la ricerca testuale).
  */

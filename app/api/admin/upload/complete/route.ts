@@ -8,6 +8,7 @@ import { getStorage } from "@/lib/storage";
 import { isAdmin } from "@/lib/auth";
 import { extractRaceNumber } from "@/lib/parse-filename";
 import { createCoverImage, getPreviewDimensions } from "@/lib/watermark";
+import { getPublishedContent } from "@/lib/data/content";
 
 /**
  * Step 2 dell'upload presigned: il file originale è già su R2; qui viene
@@ -108,6 +109,7 @@ export async function POST(request: Request) {
     // pubblica filigranata viene generata al volo da /api/images/<id>
     const dimensions = await getPreviewDimensions(original);
     const raceNumber = extractRaceNumber(filename);
+    const { settings } = await getPublishedContent();
     const photoId = new Types.ObjectId();
     const photo = await Photo.create({
       _id: photoId,
@@ -121,6 +123,7 @@ export async function POST(request: Request) {
       height: dimensions.height,
       sizeBytes: size || original.length,
       mimeType: body.contentType ?? "image/jpeg",
+      watermark: settings.watermarkEnabled,
     });
     await Event.updateOne({ _id: event._id }, { $inc: { photoCount: 1 } });
 

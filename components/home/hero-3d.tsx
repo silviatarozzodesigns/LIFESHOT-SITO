@@ -153,29 +153,40 @@ export function Hero3D({
         </svg>
       </div>
 
-      {/* LIVELLO 3 — rider scontornato: SOPRA il testo (z-20) così "esce"
-          e si sovrappone alla Hero. Ancorato in basso-destra per restare
-          allineato all'orizzonte dello sfondo anche sotto zoom forte. */}
+      {/* LIVELLO 3 — rider scontornato.
+          • Mobile: full-bleed dietro al testo, RITAGLIATO come lo sfondo
+            (object-cover) → resta della stessa dimensione, non si rimpicciolisce.
+          • Desktop (sm+): esce sulla destra e si sovrappone al testo (z-20),
+            mostrato per intero (object-contain), ancorato in basso-destra.
+          Posizione e zoom sono pilotati dagli slider del CMS. */}
       {foregroundUrl && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute bottom-0 right-0 top-0 z-20 hidden w-[60%] transition-transform duration-300 ease-out sm:block lg:w-[54%]"
-          style={{
-            transform: `translate3d(${p.x * 42}px, ${p.y * 26}px, 0) scale(${fgScale / 100})`,
-            transformOrigin: "bottom right",
-          }}
-        >
-          <img
-            src={foregroundUrl}
-            alt=""
-            style={{ objectPosition: fgPosition }}
-            className="h-full w-full object-contain drop-shadow-[0_35px_65px_rgba(0,0,0,0.7)]"
+        <>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute bottom-0 right-0 top-0 z-[15] w-full transition-transform duration-300 ease-out sm:z-20 sm:w-[60%] lg:w-[54%]"
+            style={{
+              transform: `translate3d(${p.x * 42}px, ${p.y * 26}px, 0) scale(${fgScale / 100})`,
+              transformOrigin: "bottom right",
+            }}
+          >
+            <img
+              src={foregroundUrl}
+              alt=""
+              style={{ objectPosition: fgPosition }}
+              className="h-full w-full object-cover drop-shadow-[0_35px_65px_rgba(0,0,0,0.7)] sm:object-contain"
+            />
+          </div>
+          {/* Velo solo-mobile: scurisce il rider per tenere il testo leggibile */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-[16] bg-gradient-to-t from-background via-background/75 to-background/35 sm:hidden"
           />
-        </div>
+        </>
       )}
 
-      {/* LIVELLO 2 — contenuto */}
-      <div className="container relative z-10 py-20 sm:py-28 lg:py-36">
+      {/* LIVELLO 2 — contenuto. Su mobile sta SOPRA al rider velato (z-20),
+          su desktop torna sotto (z-10) così il rider gli esce davanti. */}
+      <div className="container relative z-20 py-14 sm:z-10 sm:py-20 lg:py-24">
         <div className="max-w-2xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
             <span className="relative flex h-2 w-2">
@@ -225,17 +236,18 @@ export function Hero3D({
             </span>
           </div>
 
-          <p className="mt-6 max-w-lg text-balance text-base text-muted-foreground sm:text-lg">
+          <p className="mt-4 max-w-lg text-balance text-base text-muted-foreground sm:text-lg">
             {subtitle}
           </p>
 
-          {/* Ricerca istantanea: nome pilota O numero di gara */}
-          <div className="mt-8">
-            <HeroSearch placeholder={searchPlaceholder} />
+          {/* Ricerca istantanea GRANDE — subito sotto i dettagli evento,
+              prominente e above-the-fold (nome pilota O numero di gara) */}
+          <div className="mt-7">
+            <HeroSearch placeholder={searchPlaceholder} large />
           </div>
 
           {/* CTA primaria — prenotazione contenuti via DM Instagram */}
-          <div className="mt-5 flex flex-wrap items-center gap-3">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <a
               href={site.instagramDmUrl}
               target="_blank"

@@ -8,6 +8,7 @@ import { getStorage } from "@/lib/storage";
 import { isAdmin } from "@/lib/auth";
 import { buildStorageKey, extractRaceNumber } from "@/lib/parse-filename";
 import { createCoverImage, getPreviewDimensions } from "@/lib/watermark";
+import { getPublishedContent } from "@/lib/data/content";
 
 /**
  * Upload admin (bulk foto + copertina evento).
@@ -178,6 +179,7 @@ export async function POST(request: Request) {
 
     const dimensions = await getPreviewDimensions(buffer);
     const raceNumber = extractRaceNumber(file.name);
+    const { settings } = await getPublishedContent();
     const photoId = new Types.ObjectId();
     const photo = await Photo.create({
       _id: photoId,
@@ -191,6 +193,7 @@ export async function POST(request: Request) {
       height: dimensions.height,
       sizeBytes: file.size,
       mimeType: file.type,
+      watermark: settings.watermarkEnabled,
     });
     await Event.updateOne({ _id: event._id }, { $inc: { photoCount: 1 } });
 

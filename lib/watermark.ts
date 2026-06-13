@@ -43,7 +43,7 @@ export interface WatermarkOptions {
 function watermarkSvg(
   width: number,
   height: number,
-  { opacity = 0.24, markScale = 0.3, color = "#0a0e1a" }: WatermarkOptions
+  { opacity = 0.42, markScale = 0.34, color = "#0a0e1a" }: WatermarkOptions
 ): string {
   const markWidth = width * markScale;
   const scale = markWidth / WORDMARK_VIEWBOX.width;

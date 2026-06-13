@@ -11,7 +11,7 @@ import { Services } from "@/components/home/services";
 import { Testimonials } from "@/components/home/testimonials";
 import { EventScout } from "@/components/home/event-scout";
 import { getRecentEvents } from "@/lib/data/events";
-import { getMarqueePhotos } from "@/lib/data/photos";
+import { getFeaturedPhotos } from "@/lib/data/photos";
 import { getPublishedContent } from "@/lib/data/content";
 import {
   getImage,
@@ -28,7 +28,7 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const [events, marquee, content] = await Promise.all([
     getRecentEvents(6),
-    getMarqueePhotos(16),
+    getFeaturedPhotos(12),
     getPublishedContent(),
   ]);
   const t = (key: string) => getText(content, "home", key);

@@ -117,7 +117,7 @@ export function PhotoSlider({ items }: { items: SliderItem[] }) {
             ref={(node) => {
               cards.current[i] = node;
             }}
-            href={`/foto/${item.id}`}
+            href={`/foto/${item.id}?ritorno=%2F`}
             style={{ transformStyle: "preserve-3d", willChange: "transform" }}
             className="group relative aspect-[3/4] w-60 shrink-0 snap-center overflow-hidden rounded-3xl bg-muted shadow-[0_30px_60px_-30px_rgba(0,0,0,0.7)] ring-1 ring-border transition-[transform,opacity] duration-300 ease-out hover:ring-primary/50 sm:w-72"
           >

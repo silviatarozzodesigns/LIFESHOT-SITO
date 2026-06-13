@@ -20,6 +20,7 @@ import {
 import { Logo, LogoMark } from "@/components/brand/logo";
 import { EditableText } from "@/components/admin/studio/editable-text";
 import {
+  DEFAULT_IMAGE_SETTINGS,
   getSpacingClass,
   getTypographyClass,
   type CmsData,
@@ -64,7 +65,7 @@ export function PagePreview({
   const t = (key: string) => page.texts[key] ?? "";
   const img = (key: string) => page.images?.[key] ?? "";
   const imgSet = (key: string) =>
-    page.imageSettings?.[key] ?? { position: "center", scale: 100 };
+    page.imageSettings?.[key] ?? DEFAULT_IMAGE_SETTINGS;
   const set = (key: string) => (value: string) => onText(activePage, key, value);
   const sp = (knob: string) => getSpacingClass(content, activePage, knob);
   const ty = (knob: string) => getTypographyClass(content, activePage, knob);
