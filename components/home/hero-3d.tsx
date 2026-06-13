@@ -3,7 +3,8 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useRef, useState } from "react";
-import { ArrowRight, CalendarDays, Clock, MapPin, Search } from "lucide-react";
+import { CalendarDays, Clock, MapPin } from "lucide-react";
+import { HeroSearch } from "@/components/home/hero-search";
 import { cn } from "@/lib/utils";
 
 export interface Hero3DProps {
@@ -19,6 +20,11 @@ export interface Hero3DProps {
   /** Classi tipografiche dal CMS (vincolate alla scala Tailwind) */
   eventNameClass: string;
   dateClass: string;
+  /** Override di inquadratura manuale dal CMS */
+  bgPosition?: string;
+  bgScale?: number;
+  fgPosition?: string;
+  fgScale?: number;
   /** In preview disattiviamo il parallax legato al mouse */
   interactive?: boolean;
 }
@@ -45,6 +51,10 @@ export function Hero3D({
   foregroundUrl,
   eventNameClass,
   dateClass,
+  bgPosition = "center",
+  bgScale = 100,
+  fgPosition = "center bottom",
+  fgScale = 100,
   interactive = true,
 }: Hero3DProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -69,13 +79,16 @@ export function Hero3D({
     >
       {/* LIVELLO 1 — sfondo */}
       <div
-        className="absolute inset-0 -z-10 scale-110 transition-transform duration-300 ease-out"
-        style={{ transform: `translate3d(${p.x * -18}px, ${p.y * -18}px, 0) scale(1.1)` }}
+        className="absolute inset-0 -z-10 transition-transform duration-300 ease-out"
+        style={{
+          transform: `translate3d(${p.x * -18}px, ${p.y * -18}px, 0) scale(${Math.max(1.1, bgScale / 100)})`,
+        }}
       >
         {backgroundUrl ? (
           <img
             src={backgroundUrl}
             alt=""
+            style={{ objectPosition: bgPosition }}
             className="h-full w-full object-cover"
           />
         ) : (
@@ -86,17 +99,73 @@ export function Hero3D({
         <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
       </div>
 
+      {/* OVERLAY 3D GENERATO — griglia prospettica + mesh, anche senza foto:
+          dà profondità "out-of-the-box" prima ancora di caricare gli asset */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-[8] overflow-hidden opacity-[0.5]"
+        style={{ transform: `translate3d(${p.x * -10}px, ${p.y * -10}px, 0)` }}
+      >
+        <svg className="h-full w-full" preserveAspectRatio="xMidYMax slice" viewBox="0 0 1200 600">
+          <defs>
+            <linearGradient id="hero-grid" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.5" />
+            </linearGradient>
+            <radialGradient id="hero-mesh" cx="70%" cy="35%" r="55%">
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <rect width="1200" height="600" fill="url(#hero-mesh)" />
+          {/* Linee orizzontali in prospettiva (pavimento che fugge) */}
+          {Array.from({ length: 9 }).map((_, i) => {
+            const y = 320 + Math.pow(i / 8, 2) * 280;
+            return (
+              <line
+                key={`h${i}`}
+                x1="0"
+                x2="1200"
+                y1={y}
+                y2={y}
+                stroke="url(#hero-grid)"
+                strokeWidth="1"
+              />
+            );
+          })}
+          {/* Linee verticali convergenti verso il punto di fuga */}
+          {Array.from({ length: 17 }).map((_, i) => {
+            const x = (i / 16) * 1200;
+            return (
+              <line
+                key={`v${i}`}
+                x1={x}
+                y1="600"
+                x2={600 + (x - 600) * 0.15}
+                y2="320"
+                stroke="hsl(var(--primary))"
+                strokeOpacity="0.14"
+                strokeWidth="1"
+              />
+            );
+          })}
+        </svg>
+      </div>
+
       {/* LIVELLO 3 — rider scontornato (più reattivo = più vicino) */}
       {foregroundUrl && (
         <div
           aria-hidden
           className="pointer-events-none absolute inset-y-0 right-0 -z-[5] hidden w-1/2 transition-transform duration-300 ease-out sm:block"
-          style={{ transform: `translate3d(${p.x * 36}px, ${p.y * 24}px, 0)` }}
+          style={{
+            transform: `translate3d(${p.x * 36}px, ${p.y * 24}px, 0) scale(${fgScale / 100})`,
+          }}
         >
           <img
             src={foregroundUrl}
             alt=""
-            className="h-full w-full object-contain object-bottom drop-shadow-[0_30px_60px_rgba(0,0,0,0.6)]"
+            style={{ objectPosition: fgPosition }}
+            className="h-full w-full object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.6)]"
           />
         </div>
       )}
@@ -156,27 +225,10 @@ export function Hero3D({
             {subtitle}
           </p>
 
-          {/* Ricerca diretta → galleria col numero di gara */}
-          <form
-            action="/galleria"
-            className="mt-8 flex max-w-md items-center gap-3 rounded-full border bg-card/80 px-5 py-2 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.6)] backdrop-blur-md transition-colors focus-within:border-primary/60 hover:border-primary/40"
-          >
-            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <input
-              name="numero"
-              inputMode="numeric"
-              placeholder={searchPlaceholder}
-              aria-label="Cerca per numero di gara"
-              className="h-10 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-            />
-            <button
-              type="submit"
-              aria-label="Cerca"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-105 hover:shadow-[0_0_24px_-4px_hsl(var(--primary)/0.6)] active:scale-95"
-            >
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </form>
+          {/* Ricerca istantanea: nome pilota O numero di gara */}
+          <div className="mt-8">
+            <HeroSearch placeholder={searchPlaceholder} />
+          </div>
         </div>
       </div>
     </section>

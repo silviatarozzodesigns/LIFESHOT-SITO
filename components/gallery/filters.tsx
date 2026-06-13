@@ -19,7 +19,8 @@ interface GalleryFiltersProps {
 }
 
 const inputClasses = cn(
-  "h-12 w-full rounded-full border bg-card text-sm placeholder:text-muted-foreground",
+  // text-base su mobile per evitare l'auto-zoom iOS
+  "h-12 w-full rounded-full border bg-card text-base placeholder:text-muted-foreground sm:text-sm",
   "transition-colors hover:border-foreground/30",
   "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
 );

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Paesaggio montano enduro">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0c1424"/>
+      <stop offset="55%" stop-color="#10203b"/>
+      <stop offset="100%" stop-color="#0a0f1c"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="72%" cy="30%" r="40%">
+      <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.55"/>
+      <stop offset="40%" stop-color="#f59e0b" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="haze" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#10203b" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#0a0f1c" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <rect width="1600" height="900" fill="url(#sun)"/>
+  <circle cx="1150" cy="270" r="120" fill="#fde68a" opacity="0.35"/>
+  <circle cx="1150" cy="270" r="70" fill="#fef3c7" opacity="0.5"/>
+
+  <!-- Catene montuose stratificate (profondità) -->
+  <path d="M0 560 L240 430 L430 520 L640 380 L860 510 L1080 360 L1320 500 L1600 410 L1600 900 L0 900 Z" fill="#1b2942" opacity="0.6"/>
+  <path d="M0 640 L210 520 L420 610 L650 470 L880 600 L1120 470 L1360 600 L1600 520 L1600 900 L0 900 Z" fill="#16223a" opacity="0.8"/>
+  <path d="M0 720 L260 610 L520 700 L760 580 L1010 690 L1280 590 L1520 690 L1600 650 L1600 900 L0 900 Z" fill="#101a30"/>
+  <!-- Cresta in primo piano col bagliore -->
+  <path d="M0 800 L300 700 L560 780 L820 690 L1090 780 L1360 700 L1600 770 L1600 900 L0 900 Z" fill="#0b1322"/>
+  <path d="M820 690 L1090 780 L1360 700 L1090 720 Z" fill="#fbbf24" opacity="0.10"/>
+
+  <rect width="1600" height="900" fill="url(#haze)"/>
+</svg>

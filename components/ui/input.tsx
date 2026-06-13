@@ -7,7 +7,9 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
       type={type}
       ref={ref}
       className={cn(
-        "flex h-11 w-full rounded-xl border bg-card px-4 text-sm transition-colors",
+        // text-base su mobile (≥16px) per evitare l'auto-zoom di iOS,
+        // text-sm da sm in su
+        "flex h-11 w-full rounded-xl border bg-card px-4 text-base transition-colors sm:text-sm",
         "placeholder:text-muted-foreground hover:border-foreground/30",
         "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background",
         "disabled:cursor-not-allowed disabled:opacity-50",

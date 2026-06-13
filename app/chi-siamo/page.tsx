@@ -23,33 +23,28 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const dynamic = "force-dynamic";
 
-const team = [
-  {
-    name: "Alberto Tarozzo",
-    role: "Fotografo",
-    icon: Camera,
-    initials: "AT",
-    bio: "L'occhio dietro l'obiettivo. Vive il bordo pista come pochi: anticipa la traiettoria, congela il decimo di secondo che racconta tutta la gara. Ogni scatto è un istante che non torna — il suo lavoro è non lasciarselo scappare.",
-  },
-  {
-    name: "Lorenzo Tarozzo",
-    role: "Videomaker",
-    icon: Clapperboard,
-    initials: "LT",
-    bio: "Il movimento è la sua lingua. Dai reel che esplodono sui social ai montaggi cinematografici delle gare, Lorenzo trasforma ore di girato in storie che tengono gli occhi incollati allo schermo fino all'ultimo frame.",
-  },
-  {
-    name: "Silvia Tarozzo",
-    role: "Graphic Designer",
-    icon: PenTool,
-    initials: "ST",
-    bio: "La firma visiva di Lifeshot. Loghi, livree, grafiche social e identità di brand: Silvia dà forma e coerenza a tutto ciò che vedete — incluso questo sito. Se Lifeshot ha uno stile riconoscibile, è merito suo.",
-  },
-];
+const TEAM_ICONS = [Camera, Clapperboard, PenTool];
+
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((w) => w[0] ?? "")
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 export default async function ChiSiamoPage() {
   const content = await getPublishedContent();
   const t = (key: string) => getText(content, "chi-siamo", key);
+
+  // Schede team dai contenuti CMS (nome, ruolo, bio tutti editabili)
+  const team = [1, 2, 3].map((i, index) => ({
+    name: t(`team.m${i}.name`),
+    role: t(`team.m${i}.role`),
+    bio: t(`team.m${i}.bio`),
+    icon: TEAM_ICONS[index],
+  }));
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -95,7 +90,7 @@ export default async function ChiSiamoPage() {
                 <article className="group flex h-full flex-col items-center rounded-3xl border bg-card p-8 text-center transition-all duration-500 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_20px_60px_-24px_rgba(0,0,0,0.8)]">
                   <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-primary/25 to-primary/5 ring-1 ring-primary/30">
                     <span className="text-2xl font-semibold tracking-wide text-primary">
-                      {member.initials}
+                      {initials(member.name)}
                     </span>
                   </div>
                   <h3 className="mt-6 text-xl font-semibold tracking-tight">

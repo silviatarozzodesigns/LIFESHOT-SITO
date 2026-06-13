@@ -33,6 +33,8 @@ export interface StorageAdapter {
    * (in locale si usa l'upload diretto via API route).
    */
   presignUpload(key: string, contentType: string): Promise<string | null>;
+  /** Risale alla chiave storage da un URL pubblico (null se esterno) */
+  keyFromPublicUrl(url: string): string | null;
 }
 
 function isR2Configured(): boolean {
@@ -75,6 +77,11 @@ class LocalStorageAdapter implements StorageAdapter {
   async presignUpload(): Promise<null> {
     // In locale il browser non può scrivere sul filesystem: upload diretto
     return null;
+  }
+
+  keyFromPublicUrl(url: string): string | null {
+    const m = url.match(/^\/uploads\/(.+)$/);
+    return m ? m[1] : null;
   }
 }
 
@@ -157,6 +164,14 @@ class R2StorageAdapter implements StorageAdapter {
       }),
       { expiresIn: 600 }
     );
+  }
+
+  keyFromPublicUrl(url: string): string | null {
+    const base = process.env.R2_PUBLIC_URL?.replace(/\/$/, "");
+    if (base && url.startsWith(base + "/")) {
+      return url.slice(base.length + 1);
+    }
+    return null;
   }
 }
 

@@ -5,13 +5,14 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
 import { Hero3D } from "@/components/home/hero-3d";
-import { PhotoMarquee } from "@/components/home/photo-marquee";
+import { PhotoSlider } from "@/components/home/photo-slider";
 import { EventScout } from "@/components/home/event-scout";
 import { getRecentEvents } from "@/lib/data/events";
 import { getMarqueePhotos } from "@/lib/data/photos";
 import { getPublishedContent } from "@/lib/data/content";
 import {
   getImage,
+  getImageSettings,
   getSpacingClass,
   getText,
   getTypographyClass,
@@ -47,12 +48,16 @@ export default async function HomePage() {
           foregroundUrl={getImage(content, "home", "hero.foreground")}
           eventNameClass={getTypographyClass(content, "home", "hero.eventName")}
           dateClass={getTypographyClass(content, "home", "hero.date")}
+          bgPosition={getImageSettings(content, "home", "hero.background").position}
+          bgScale={getImageSettings(content, "home", "hero.background").scale}
+          fgPosition={getImageSettings(content, "home", "hero.foreground").position}
+          fgScale={getImageSettings(content, "home", "hero.foreground").scale}
         />
 
-        {/* MARQUEE — scatti recenti a scorrimento infinito */}
+        {/* SLIDER — scatti recenti, frecce + swipe */}
         {marquee.length > 0 && (
-          <div className="mt-8">
-            <PhotoMarquee
+          <div className="mt-12">
+            <PhotoSlider
               items={marquee.map((p) => ({ id: p.id, raceNumber: p.raceNumber }))}
             />
           </div>

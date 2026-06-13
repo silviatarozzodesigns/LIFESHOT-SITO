@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { connectDB } from "@/lib/db";
 import { SiteContent } from "@/models/SiteContent";
 import { isAdmin } from "@/lib/auth";
+import { getStorage } from "@/lib/storage";
 import { normalizeContent, type CmsData } from "@/lib/content";
 
 /**
@@ -22,6 +23,31 @@ const UNAUTHORIZED = {
   ok: false as const,
   error: "Non autorizzato: effettua il login admin.",
 };
+
+/**
+ * Elimina un asset dallo storage Cloudflare R2 (o locale) a partire dal suo
+ * URL pubblico — usato dalla sidebar quando si sostituisce o si rimuove
+ * un'immagine, così non restano file orfani sul bucket.
+ *
+ * Sicuro per design: cancella SOLO i file caricati dal CMS (prefisso `cms/`).
+ * Default vettoriali (/hero/…), object-URL (blob:) e URL esterni → no-op.
+ */
+export async function deleteAsset(url: string): Promise<{ ok: boolean }> {
+  if (!(await isAdmin())) return { ok: false };
+  if (!url || url.startsWith("blob:") || url.startsWith("/hero/")) {
+    return { ok: true };
+  }
+  try {
+    const storage = getStorage();
+    const key = storage.keyFromPublicUrl(url);
+    if (!key || !key.startsWith("cms/")) return { ok: true };
+    await storage.delete(key);
+    return { ok: true };
+  } catch (error) {
+    console.warn("[lifeshot] deleteAsset fallita:", error);
+    return { ok: false };
+  }
+}
 
 /** Salva la bozza: visibile solo nell'editor, produzione intatta. */
 export async function saveDraft(

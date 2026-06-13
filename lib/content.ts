@@ -30,6 +30,8 @@ export interface FieldDef {
   default: string;
   max: number;
   multiline?: boolean;
+  /** Knob tipografico collegato (click-to-edit: testo → controlli font) */
+  typographyKnob?: string;
 }
 
 export interface ImageDef {
@@ -55,13 +57,39 @@ export interface PageDef {
   typography: Record<string, ScaleDef>;
 }
 
+/** Override di layout manuale per un'immagine (resize/posizione dal CMS) */
+export interface ImageSettings {
+  /** object-position CSS (es. "center", "top", "left bottom") */
+  position: string;
+  /** scala percentuale 100–160 (zoom dell'immagine nel contenitore) */
+  scale: number;
+}
+
+export const IMAGE_POSITIONS = [
+  "left top",
+  "center top",
+  "right top",
+  "left center",
+  "center",
+  "right center",
+  "left bottom",
+  "center bottom",
+  "right bottom",
+] as const;
+
 export interface PageContent {
   seo: SeoContent;
   texts: Record<string, string>;
   images: Record<string, string>;
+  imageSettings: Record<string, ImageSettings>;
   spacing: Record<string, Level>;
   typography: Record<string, Level>;
 }
+
+export const DEFAULT_IMAGE_SETTINGS: ImageSettings = {
+  position: "center",
+  scale: 100,
+};
 
 export interface CmsData {
   pages: Record<PageSlug, PageContent>;
@@ -150,11 +178,13 @@ export const PAGES: Record<PageSlug, PageDef> = {
         label: "Hero — nome evento",
         default: "Internazionali d'Italia",
         max: 80,
+        typographyKnob: "hero.eventName",
       },
       "hero.eventDate": {
         label: "Hero — data evento",
         default: "16 SET 2026",
         max: 40,
+        typographyKnob: "hero.date",
       },
       "hero.eventTime": {
         label: "Hero — orario",
@@ -175,7 +205,7 @@ export const PAGES: Record<PageSlug, PageDef> = {
       },
       "hero.searchPlaceholder": {
         label: "Hero — placeholder ricerca",
-        default: "Il tuo numero di gara…",
+        default: "Scrivi il tuo nome o un numero di gara",
         max: 60,
       },
       "events.title": {
@@ -210,7 +240,8 @@ export const PAGES: Record<PageSlug, PageDef> = {
     images: {
       "hero.background": {
         label: "Hero — sfondo (pista / paesaggio)",
-        default: "",
+        // Asset vettoriale generato: paesaggio montano enduro, leggero e nitido
+        default: "/hero/enduro-bg.svg",
         hint: "Foto orizzontale del tracciato o del paesaggio. ~2000px.",
       },
       "hero.foreground": {
@@ -252,7 +283,12 @@ export const PAGES: Record<PageSlug, PageDef> = {
     },
     fields: {
       "header.eyebrow": { label: "Occhiello", default: "Portfolio", max: 60 },
-      "header.title": { label: "Titolo", default: "Video", max: 60 },
+      "header.title": {
+        label: "Titolo",
+        default: "Video",
+        max: 60,
+        typographyKnob: "header.title",
+      },
       "header.subtitle": {
         label: "Sottotitolo",
         default: "Montaggi delle gare, reel e clip cinematiche firmate Lifeshot.",
@@ -290,7 +326,12 @@ export const PAGES: Record<PageSlug, PageDef> = {
       ogImage: "",
     },
     fields: {
-      "intro.titleLine1": { label: "Intro — titolo riga 1", default: "Tre sguardi.", max: 80 },
+      "intro.titleLine1": {
+        label: "Intro — titolo riga 1",
+        default: "Tre sguardi.",
+        max: 80,
+        typographyKnob: "intro.title",
+      },
       "intro.titleLine2": {
         label: "Intro — titolo riga 2",
         default: "Una sola visione.",
@@ -308,6 +349,34 @@ export const PAGES: Record<PageSlug, PageDef> = {
         label: "Team — sottotitolo",
         default: "Le persone dietro ogni scatto, clip e pixel.",
         max: 160,
+      },
+      // ── Schede team (nome, ruolo, bio — tutti editabili) ──
+      "team.m1.name": { label: "Membro 1 — nome", default: "Alberto Tarozzo", max: 60 },
+      "team.m1.role": { label: "Membro 1 — ruolo", default: "Fotografo", max: 40 },
+      "team.m1.bio": {
+        label: "Membro 1 — bio",
+        default:
+          "L'occhio dietro l'obiettivo. Vive il bordo pista come pochi: anticipa la traiettoria, congela il decimo di secondo che racconta tutta la gara. Ogni scatto è un istante che non torna — il suo lavoro è non lasciarselo scappare.",
+        max: 400,
+        multiline: true,
+      },
+      "team.m2.name": { label: "Membro 2 — nome", default: "Lorenzo Tarozzo", max: 60 },
+      "team.m2.role": { label: "Membro 2 — ruolo", default: "Videomaker", max: 40 },
+      "team.m2.bio": {
+        label: "Membro 2 — bio",
+        default:
+          "Il movimento è la sua lingua. Dai reel che esplodono sui social ai montaggi cinematografici delle gare, Lorenzo trasforma ore di girato in storie che tengono gli occhi incollati allo schermo fino all'ultimo frame.",
+        max: 400,
+        multiline: true,
+      },
+      "team.m3.name": { label: "Membro 3 — nome", default: "Silvia Tarozzo", max: 60 },
+      "team.m3.role": { label: "Membro 3 — ruolo", default: "Graphic Designer", max: 40 },
+      "team.m3.bio": {
+        label: "Membro 3 — bio",
+        default:
+          "La firma visiva di Lifeshot. Loghi, livree, grafiche social e identità di brand: Silvia dà forma e coerenza a tutto ciò che vedete — incluso questo sito. Se Lifeshot ha uno stile riconoscibile, è merito suo.",
+        max: 400,
+        multiline: true,
       },
     },
     images: {},
@@ -334,7 +403,12 @@ export const PAGES: Record<PageSlug, PageDef> = {
     },
     fields: {
       "intro.eyebrow": { label: "Occhiello", default: "Parliamone", max: 60 },
-      "intro.titleLine1": { label: "Titolo riga 1", default: "Raccontaci cosa", max: 80 },
+      "intro.titleLine1": {
+        label: "Titolo riga 1",
+        default: "Raccontaci cosa",
+        max: 80,
+        typographyKnob: "intro.title",
+      },
       "intro.titleLine2": {
         label: "Titolo riga 2",
         default: "vuoi raccontare.",
@@ -375,6 +449,9 @@ function buildDefaultPage(def: PageDef): PageContent {
     images: Object.fromEntries(
       Object.entries(def.images).map(([k, f]) => [k, f.default])
     ),
+    imageSettings: Object.fromEntries(
+      Object.keys(def.images).map((k) => [k, { ...DEFAULT_IMAGE_SETTINGS }])
+    ),
     spacing: Object.fromEntries(
       Object.entries(def.spacing).map(([k, s]) => [k, s.default])
     ) as Record<string, Level>,
@@ -405,8 +482,22 @@ interface RawPage {
   seo?: Partial<SeoContent>;
   texts?: Record<string, unknown>;
   images?: Record<string, unknown>;
+  imageSettings?: Record<string, unknown>;
   spacing?: Record<string, unknown>;
   typography?: Record<string, unknown>;
+}
+
+function cleanImageSettings(raw: unknown): ImageSettings {
+  const r = (raw ?? {}) as Partial<ImageSettings>;
+  const position =
+    typeof r.position === "string" &&
+    (IMAGE_POSITIONS as readonly string[]).includes(r.position)
+      ? r.position
+      : DEFAULT_IMAGE_SETTINGS.position;
+  const scaleNum = Number(r.scale);
+  const scale =
+    scaleNum >= 100 && scaleNum <= 160 ? scaleNum : DEFAULT_IMAGE_SETTINGS.scale;
+  return { position, scale };
 }
 
 export function normalizeContent(raw?: {
@@ -438,6 +529,12 @@ export function normalizeContent(raw?: {
           cleanString(rawPage?.images?.[k], f.default, 500),
         ])
       ),
+      imageSettings: Object.fromEntries(
+        Object.keys(def.images).map((k) => [
+          k,
+          cleanImageSettings(rawPage?.imageSettings?.[k]),
+        ])
+      ),
       spacing: Object.fromEntries(
         Object.entries(def.spacing).map(([k, s]) => [
           k,
@@ -463,6 +560,14 @@ export function getText(content: CmsData, slug: PageSlug, key: string): string {
 
 export function getImage(content: CmsData, slug: PageSlug, key: string): string {
   return content.pages[slug]?.images[key] ?? PAGES[slug].images[key]?.default ?? "";
+}
+
+export function getImageSettings(
+  content: CmsData,
+  slug: PageSlug,
+  key: string
+): ImageSettings {
+  return content.pages[slug]?.imageSettings?.[key] ?? DEFAULT_IMAGE_SETTINGS;
 }
 
 export function getSpacingClass(

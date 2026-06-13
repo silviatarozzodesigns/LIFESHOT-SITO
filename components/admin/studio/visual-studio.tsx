@@ -9,29 +9,40 @@ import {
   ImageIcon,
   Loader2,
   Monitor,
+  Move,
   Save,
   Smartphone,
   Tablet,
   Trash2,
   Type,
   UploadCloud,
+  X,
 } from "lucide-react";
 import {
   saveDraft,
   publishContent,
   discardDraft,
+  deleteAsset,
 } from "@/app/actions/content";
 import {
+  DEFAULT_IMAGE_SETTINGS,
+  IMAGE_POSITIONS,
   PAGES,
   PAGE_SLUGS,
   SPACING_LABELS,
   TYPOGRAPHY_LABELS,
   type CmsData,
   type ImageDef,
+  type ImageSettings,
   type Level,
+  type PageContent,
+  type PageDef,
   type PageSlug,
 } from "@/lib/content";
-import { PagePreview } from "@/components/admin/studio/page-previews";
+import {
+  PagePreview,
+  type PreviewSelection,
+} from "@/components/admin/studio/page-previews";
 import { PreviewFrame } from "@/components/admin/studio/preview-frame";
 import { uploadAssetFile } from "@/lib/upload-client";
 import { Button } from "@/components/ui/button";
@@ -64,7 +75,14 @@ const DEVICE_WIDTH: Record<Device, string> = {
 export function VisualStudio({ initial }: { initial: CmsData }) {
   const [content, setContent] = useState<CmsData>(initial);
   const [activePage, setActivePage] = useState<PageSlug>("home");
+  const [selected, setSelected] = useState<PreviewSelection | null>(null);
   const [device, setDevice] = useState<Device>("desktop");
+
+  // Cambio pagina → azzera la selezione contestuale
+  function gotoPage(slug: PageSlug) {
+    setActivePage(slug);
+    setSelected(null);
+  }
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -122,6 +140,27 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
     }));
   }
 
+  function setImageSettings(key: string, patch: Partial<ImageSettings>) {
+    setFeedback(null);
+    setContent((c) => {
+      const current =
+        c.pages[activePage].imageSettings[key] ?? DEFAULT_IMAGE_SETTINGS;
+      return {
+        ...c,
+        pages: {
+          ...c.pages,
+          [activePage]: {
+            ...c.pages[activePage],
+            imageSettings: {
+              ...c.pages[activePage].imageSettings,
+              [key]: { ...current, ...patch },
+            },
+          },
+        },
+      };
+    });
+  }
+
   function run(
     action: () => Promise<
       { ok: true; content: CmsData } | { ok: false; error: string }
@@ -149,7 +188,7 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
         <div className="relative">
           <select
             value={activePage}
-            onChange={(e) => setActivePage(e.target.value as PageSlug)}
+            onChange={(e) => gotoPage(e.target.value as PageSlug)}
             aria-label="Pagina in modifica"
             className="h-10 appearance-none rounded-full border bg-background pl-4 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
           >
@@ -245,7 +284,9 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
                 content={content}
                 activePage={activePage}
                 onText={setText}
-                onNavigate={setActivePage}
+                onNavigate={gotoPage}
+                onSelect={setSelected}
+                selected={selected}
               />
             </PreviewFrame>
           </div>
@@ -256,8 +297,32 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
           </p>
         </div>
 
-        {/* ─────────── SIDEBAR: design system + SEO ─────────── */}
+        {/* ─────────── SIDEBAR contestuale (click-to-edit) ─────────── */}
         <aside className="space-y-5 xl:sticky xl:top-24">
+          {/* Pannello contestuale: cambia in base all'elemento selezionato */}
+          {selected ? (
+            <ContextPanel
+              selected={selected}
+              page={page}
+              pageDef={pageDef}
+              onText={(key, v) => setText(activePage, key, v)}
+              onImage={setImage}
+              onTypography={setTypography}
+              onImageSettings={setImageSettings}
+              onClose={() => setSelected(null)}
+              onError={setError}
+            />
+          ) : (
+            <SidebarCard title="Editor contestuale">
+              <p className="text-sm text-muted-foreground">
+                Clicca un <strong className="text-foreground">testo</strong> o
+                un&apos;<strong className="text-foreground">immagine</strong>{" "}
+                nell&apos;anteprima: qui appariranno solo i controlli di
+                quell&apos;elemento.
+              </p>
+            </SidebarCard>
+          )}
+
           {/* SEO contestuale della pagina attiva */}
           <SidebarCard title={`SEO — ${pageDef.label}`}>
             <SeoField
@@ -298,7 +363,7 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
             </div>
           </SidebarCard>
 
-          {/* Spaziature vincolate alla scala Tailwind */}
+          {/* Spaziature di pagina (layout) */}
           <SidebarCard title="Spaziature">
             {Object.entries(pageDef.spacing).map(([knob, def]) => {
               const level = page.spacing[knob] ?? def.default;
@@ -307,10 +372,7 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
                   <div className="flex items-baseline justify-between gap-2">
                     <Label htmlFor={`sp-${knob}`}>{def.label}</Label>
                     <span className="text-[11px] text-muted-foreground">
-                      {SPACING_LABELS[level]} ·{" "}
-                      <code className="rounded bg-secondary px-1 py-0.5">
-                        {def.classes[level]}
-                      </code>
+                      {SPACING_LABELS[level]}
                     </span>
                   </div>
                   <input
@@ -334,82 +396,6 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
               );
             })}
           </SidebarCard>
-
-          {/* Immagini — upload con anteprima istantanea */}
-          {Object.keys(pageDef.images).length > 0 && (
-            <SidebarCard title="Immagini">
-              {Object.entries(pageDef.images).map(([key, def]) => (
-                <ImageField
-                  key={key}
-                  def={def}
-                  value={page.images[key] ?? ""}
-                  onChange={(url) => setImage(key, url)}
-                  onError={setError}
-                />
-              ))}
-            </SidebarCard>
-          )}
-
-          {/* Tipografia — slider vincolati alla scala Tailwind */}
-          {Object.keys(pageDef.typography).length > 0 && (
-            <SidebarCard title="Tipografia">
-              {Object.entries(pageDef.typography).map(([knob, def]) => {
-                const level = page.typography[knob] ?? def.default;
-                return (
-                  <div key={knob} className="space-y-1.5">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <Label htmlFor={`ty-${knob}`} className="flex items-center gap-1.5">
-                        <Type className="h-3.5 w-3.5" />
-                        {def.label}
-                      </Label>
-                      <span className="text-[11px] text-muted-foreground">
-                        {TYPOGRAPHY_LABELS[level]}
-                      </span>
-                    </div>
-                    <input
-                      id={`ty-${knob}`}
-                      type="range"
-                      min={1}
-                      max={5}
-                      step={1}
-                      value={level}
-                      onChange={(e) =>
-                        setTypography(knob, Number(e.target.value) as Level)
-                      }
-                      className="w-full accent-primary"
-                    />
-                  </div>
-                );
-              })}
-            </SidebarCard>
-          )}
-
-          {/* Testi — sincronizzati in tempo reale con l'anteprima */}
-          <SidebarCard title={`Testi — ${pageDef.label}`}>
-            {Object.entries(pageDef.fields).map(([key, def]) => (
-              <div key={key} className="space-y-1.5">
-                <Label htmlFor={`f-${key}`} className="text-xs">
-                  {def.label}
-                </Label>
-                {def.multiline ? (
-                  <Textarea
-                    id={`f-${key}`}
-                    rows={2}
-                    value={page.texts[key] ?? ""}
-                    maxLength={def.max}
-                    onChange={(e) => setText(activePage, key, e.target.value)}
-                  />
-                ) : (
-                  <Input
-                    id={`f-${key}`}
-                    value={page.texts[key] ?? ""}
-                    maxLength={def.max}
-                    onChange={(e) => setText(activePage, key, e.target.value)}
-                  />
-                )}
-              </div>
-            ))}
-          </SidebarCard>
         </aside>
       </div>
     </div>
@@ -417,6 +403,172 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
 }
 
 /* ───────────────────────────── helper UI ───────────────────────────── */
+
+/**
+ * PANNELLO CONTESTUALE (click-to-edit).
+ * Mostra SOLO i controlli dell'elemento selezionato nell'anteprima:
+ *  • testo  → campo testo + (se collegato) slider tipografia
+ *  • immagine → upload + controlli manuali di resize/posizione
+ */
+function ContextPanel({
+  selected,
+  page,
+  pageDef,
+  onText,
+  onImage,
+  onTypography,
+  onImageSettings,
+  onClose,
+  onError,
+}: {
+  selected: PreviewSelection;
+  page: PageContent;
+  pageDef: PageDef;
+  onText: (key: string, value: string) => void;
+  onImage: (key: string, url: string) => void;
+  onTypography: (knob: string, level: Level) => void;
+  onImageSettings: (key: string, patch: Partial<ImageSettings>) => void;
+  onClose: () => void;
+  onError: (msg: string | null) => void;
+}) {
+  const header = (title: string) => (
+    <div className="flex items-center justify-between">
+      <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Chiudi"
+        className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  );
+
+  if (selected.kind === "text") {
+    const def = pageDef.fields[selected.key];
+    if (!def) return null;
+    const tyKnob = def.typographyKnob;
+    const tyDef = tyKnob ? pageDef.typography[tyKnob] : undefined;
+    const tyLevel = tyKnob ? page.typography[tyKnob] ?? tyDef?.default ?? 3 : 3;
+    return (
+      <section className="space-y-4 rounded-2xl border-2 border-primary/40 bg-card p-5">
+        {header(def.label)}
+        <div className="space-y-2">
+          <Label htmlFor="ctx-text" className="text-xs">
+            Contenuto
+          </Label>
+          {def.multiline ? (
+            <Textarea
+              id="ctx-text"
+              rows={4}
+              autoFocus
+              value={page.texts[selected.key] ?? ""}
+              maxLength={def.max}
+              onChange={(e) => onText(selected.key, e.target.value)}
+            />
+          ) : (
+            <Input
+              id="ctx-text"
+              autoFocus
+              value={page.texts[selected.key] ?? ""}
+              maxLength={def.max}
+              onChange={(e) => onText(selected.key, e.target.value)}
+            />
+          )}
+        </div>
+
+        {tyKnob && tyDef && (
+          <div className="space-y-1.5 border-t pt-4">
+            <div className="flex items-baseline justify-between gap-2">
+              <Label htmlFor="ctx-ty" className="flex items-center gap-1.5">
+                <Type className="h-3.5 w-3.5" />
+                Dimensione testo
+              </Label>
+              <span className="text-[11px] text-muted-foreground">
+                {TYPOGRAPHY_LABELS[tyLevel]}
+              </span>
+            </div>
+            <input
+              id="ctx-ty"
+              type="range"
+              min={1}
+              max={5}
+              step={1}
+              value={tyLevel}
+              onChange={(e) => onTypography(tyKnob, Number(e.target.value) as Level)}
+              className="w-full accent-primary"
+            />
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  // selected.kind === "image"
+  const imgDef = pageDef.images[selected.key];
+  if (!imgDef) return null;
+  const settings = page.imageSettings[selected.key] ?? DEFAULT_IMAGE_SETTINGS;
+  return (
+    <section className="space-y-4 rounded-2xl border-2 border-primary/40 bg-card p-5">
+      {header(imgDef.label)}
+      <ImageField
+        def={imgDef}
+        value={page.images[selected.key] ?? ""}
+        onChange={(url) => onImage(selected.key, url)}
+        onError={onError}
+      />
+
+      {/* Resize manuale (override di layout) */}
+      <div className="space-y-3 border-t pt-4">
+        <Label className="flex items-center gap-1.5">
+          <Move className="h-3.5 w-3.5" />
+          Inquadratura
+        </Label>
+
+        {/* Posizione focale: griglia 3×3 */}
+        <div className="grid w-fit grid-cols-3 gap-1">
+          {IMAGE_POSITIONS.map((pos) => (
+            <button
+              key={pos}
+              type="button"
+              aria-label={pos}
+              onClick={() => onImageSettings(selected.key, { position: pos })}
+              className={cn(
+                "h-7 w-7 rounded-md border transition-colors",
+                settings.position === pos
+                  ? "border-primary bg-primary/20"
+                  : "hover:border-primary/50"
+              )}
+            />
+          ))}
+        </div>
+
+        {/* Scala / zoom */}
+        <div className="space-y-1.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <Label htmlFor="ctx-scale">Zoom</Label>
+            <span className="text-[11px] text-muted-foreground">
+              {settings.scale}%
+            </span>
+          </div>
+          <input
+            id="ctx-scale"
+            type="range"
+            min={100}
+            max={160}
+            step={5}
+            value={settings.scale}
+            onChange={(e) =>
+              onImageSettings(selected.key, { scale: Number(e.target.value) })
+            }
+            className="w-full accent-primary"
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
 
 /**
  * Campo immagine: alla selezione del file mostra SUBITO l'anteprima locale
@@ -439,6 +591,7 @@ function ImageField({
 
   async function handleFile(file: File) {
     onError(null);
+    const previous = value; // per la pulizia del vecchio asset su R2
     // Anteprima immediata (prima ancora che l'upload finisca)
     const localUrl = URL.createObjectURL(file);
     onChange(localUrl);
@@ -446,13 +599,21 @@ function ImageField({
     try {
       const finalUrl = await uploadAssetFile(file);
       onChange(finalUrl); // sostituisce l'object URL con quello persistente
+      // Cloudflare sync: elimina il file precedente per non lasciare orfani
+      if (previous) void deleteAsset(previous);
     } catch (e) {
-      onChange(""); // rollback dell'anteprima locale
+      onChange(previous); // rollback all'immagine precedente
       onError(e instanceof Error ? e.message : "Upload immagine fallito.");
     } finally {
       setUploading(false);
       URL.revokeObjectURL(localUrl);
     }
+  }
+
+  function handleRemove() {
+    const previous = value;
+    onChange("");
+    if (previous) void deleteAsset(previous); // purge da Cloudflare
   }
 
   return (
@@ -492,7 +653,7 @@ function ImageField({
               size="sm"
               disabled={uploading}
               className="text-muted-foreground hover:text-destructive"
-              onClick={() => onChange("")}
+              onClick={handleRemove}
             >
               <Trash2 />
               Rimuovi

@@ -9,6 +9,10 @@ interface EditableTextProps {
   /** Tag renderizzato (h1, h2, p, span…) — lo stile resta quello del sito */
   as?: React.ElementType;
   className?: string;
+  /** Click-to-edit: notifica la selezione di questo elemento alla sidebar */
+  onSelect?: () => void;
+  /** Evidenzia l'elemento attualmente selezionato dalla sidebar */
+  selected?: boolean;
 }
 
 /**
@@ -27,6 +31,8 @@ export function EditableText({
   onChange,
   as: Tag = "span",
   className,
+  onSelect,
+  selected,
 }: EditableTextProps) {
   const ref = useRef<HTMLElement | null>(null);
   const [focused, setFocused] = useState(false);
@@ -48,7 +54,11 @@ export function EditableText({
       spellCheck={false}
       role="textbox"
       aria-label="Testo modificabile"
-      onFocus={() => setFocused(true)}
+      onFocus={() => {
+        setFocused(true);
+        onSelect?.();
+      }}
+      onClick={() => onSelect?.()}
       onBlur={(e: React.FocusEvent<HTMLElement>) => {
         setFocused(false);
         onChange(e.currentTarget.textContent ?? "");
@@ -79,6 +89,8 @@ export function EditableText({
         "hover:after:opacity-100 focus:after:opacity-0",
         // Stato attivo: outline pieno giallo
         "focus:outline focus:outline-2 focus:outline-primary focus:outline-offset-4",
+        // Selezionato dalla sidebar (contestuale)
+        selected && "outline outline-2 outline-primary outline-offset-4",
         className
       )}
     />

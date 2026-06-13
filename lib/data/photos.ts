@@ -156,6 +156,43 @@ export async function searchPhotos({
   }
 }
 
+/**
+ * Ricerca istantanea: una sola stringa che matcha numero di gara OPPURE
+ * nome pilota (usata dalla barra hero). Numerico → match anche su "045".
+ */
+export async function searchPhotosByQuery(
+  q: string,
+  limit = 12
+): Promise<PhotoDTO[]> {
+  const trimmed = q.trim();
+  if (trimmed.length < 1) return [];
+  try {
+    await connectDB();
+    const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const or: Record<string, unknown>[] = [
+      { pilotName: { $regex: escaped, $options: "i" } },
+    ];
+    if (/^\d+$/.test(trimmed)) {
+      or.push({
+        raceNumber: {
+          $in: [trimmed, String(Number(trimmed)), trimmed.padStart(3, "0")],
+        },
+      });
+    } else {
+      or.push({ raceNumber: { $regex: escaped, $options: "i" } });
+    }
+    const docs = await Photo.find({ $or: or })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .populate<{ event: PopulatedEvent }>("event", "name slug date location")
+      .lean();
+    return docs.map(toDTO);
+  } catch (error) {
+    console.error("[lifeshot] ricerca istantanea fallita:", error);
+    return [];
+  }
+}
+
 /** Foto più recenti, per il marquee auto-scroll della homepage. */
 export async function getMarqueePhotos(limit = 16): Promise<PhotoDTO[]> {
   try {
