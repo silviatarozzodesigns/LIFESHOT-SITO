@@ -58,6 +58,34 @@ export async function POST(request: Request) {
   const kind = String(form.get("kind") ?? "photo");
   const file = form.get("file");
 
+  // kind === "asset": immagine del CMS (hero, OG) — nessun watermark
+  if (kind === "asset") {
+    if (!(file instanceof File) || file.size === 0) {
+      return NextResponse.json(
+        { ok: false, error: "Nessun file ricevuto." },
+        { status: 400 }
+      );
+    }
+    if (!ALLOWED_TYPES.has(file.type)) {
+      return NextResponse.json(
+        { ok: false, error: `Formato non supportato (${file.type || "sconosciuto"}).` },
+        { status: 415 }
+      );
+    }
+    try {
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const key = buildStorageKey("cms", file.name);
+      const { url } = await getStorage().upload(buffer, key, file.type);
+      return NextResponse.json({ ok: true, url });
+    } catch (error) {
+      console.error("[lifeshot] upload asset fallito:", error);
+      return NextResponse.json(
+        { ok: false, error: "Errore durante il caricamento." },
+        { status: 500 }
+      );
+    }
+  }
+
   // kind === "video": clip del portfolio (nessun evento, nessun watermark)
   if (kind === "video") {
     if (!(file instanceof File) || file.size === 0) {

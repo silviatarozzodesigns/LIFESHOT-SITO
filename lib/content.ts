@@ -2,29 +2,21 @@
  * VISUAL CMS LIFESHOT — architettura dati multi-pagina.
  *
  * ┌─ REGISTRY (questo file) ──────────────────────────────────────────┐
- * │ Schema rigido di ciò che l'admin PUÒ modificare: campi di testo,  │
- * │ manopole di spaziatura (mappate SOLO alla scala Tailwind), SEO.   │
+ * │ Schema rigido di ciò che l'admin PUÒ modificare:                  │
+ * │  • testi      → campi con lunghezza massima                        │
+ * │  • immagini   → URL (upload dalla sidebar, anteprima istantanea)   │
+ * │  • spaziature → slider 1–5 mappati SOLO a classi Tailwind          │
+ * │  • tipografia → slider 1–5 mappati SOLO a scale Tailwind           │
  * │ Font, colori e allineamenti restano blindati nel codice.          │
  * └───────────────────────────────────────────────────────────────────┘
- *
- * Struttura JSON di una pagina (salvata in draft/published su MongoDB):
- *
- *   {
- *     pages: {
- *       home: {
- *         seo:    { metaTitle, metaDescription, ogImage },
- *         texts:  { "hero.titleLine1": "I tuoi momenti,", ... },
- *         spacing:{ hero: 3, sections: 4 }   // livelli 1–5, mai pixel
- *       },
- *       video: { ... }, "chi-siamo": { ... }, contatti: { ... }
- *     }
- *   }
  *
  * `normalizeContent()` è l'unica porta d'ingresso: fonde i dati grezzi
  * col registry (default, lunghezze massime, livelli 1–5).
  */
 
-export type SpacingLevel = 1 | 2 | 3 | 4 | 5;
+export type Level = 1 | 2 | 3 | 4 | 5;
+/** Alias storico per le spaziature */
+export type SpacingLevel = Level;
 export type PageSlug = "home" | "video" | "chi-siamo" | "contatti";
 
 export interface SeoContent {
@@ -40,11 +32,17 @@ export interface FieldDef {
   multiline?: boolean;
 }
 
-export interface SpacingDef {
+export interface ImageDef {
+  label: string;
+  default: string;
+  hint?: string;
+}
+
+export interface ScaleDef {
   label: string;
   /** Livello → classi Tailwind LETTERALI (vincolo del design system) */
-  classes: Record<SpacingLevel, string>;
-  default: SpacingLevel;
+  classes: Record<Level, string>;
+  default: Level;
 }
 
 export interface PageDef {
@@ -52,22 +50,26 @@ export interface PageDef {
   path: string;
   seo: SeoContent;
   fields: Record<string, FieldDef>;
-  spacing: Record<string, SpacingDef>;
+  images: Record<string, ImageDef>;
+  spacing: Record<string, ScaleDef>;
+  typography: Record<string, ScaleDef>;
 }
 
 export interface PageContent {
   seo: SeoContent;
   texts: Record<string, string>;
-  spacing: Record<string, SpacingLevel>;
+  images: Record<string, string>;
+  spacing: Record<string, Level>;
+  typography: Record<string, Level>;
 }
 
 export interface CmsData {
   pages: Record<PageSlug, PageContent>;
 }
 
-/* ── Scale di spaziatura (stringhe letterali: requisito del JIT Tailwind) ── */
+/* ── Scale (stringhe letterali: requisito del compilatore JIT di Tailwind) ── */
 
-const HERO_SCALE: Record<SpacingLevel, string> = {
+const HERO_SCALE: Record<Level, string> = {
   1: "py-10 sm:py-14",
   2: "py-16 sm:py-20",
   3: "py-24 sm:py-32",
@@ -75,7 +77,7 @@ const HERO_SCALE: Record<SpacingLevel, string> = {
   5: "py-40 sm:py-52",
 };
 
-const SECTION_SCALE: Record<SpacingLevel, string> = {
+const SECTION_SCALE: Record<Level, string> = {
   1: "py-4",
   2: "py-8",
   3: "py-12",
@@ -83,7 +85,7 @@ const SECTION_SCALE: Record<SpacingLevel, string> = {
   5: "py-24",
 };
 
-const BOTTOM_SCALE: Record<SpacingLevel, string> = {
+const BOTTOM_SCALE: Record<Level, string> = {
   1: "pb-8",
   2: "pb-12",
   3: "pb-16",
@@ -91,12 +93,38 @@ const BOTTOM_SCALE: Record<SpacingLevel, string> = {
   5: "pb-32",
 };
 
-export const SPACING_LABELS: Record<SpacingLevel, string> = {
+/** Scala tipografica per i titoloni evento/hero (fluida ma vincolata) */
+const DISPLAY_SCALE: Record<Level, string> = {
+  1: "text-3xl sm:text-4xl",
+  2: "text-4xl sm:text-5xl",
+  3: "text-5xl sm:text-6xl",
+  4: "text-5xl sm:text-7xl",
+  5: "text-6xl sm:text-8xl",
+};
+
+/** Scala tipografica per i titoli di sezione */
+const HEADING_SCALE: Record<Level, string> = {
+  1: "text-xl sm:text-2xl",
+  2: "text-2xl sm:text-3xl",
+  3: "text-3xl sm:text-4xl",
+  4: "text-4xl sm:text-5xl",
+  5: "text-5xl sm:text-6xl",
+};
+
+export const SPACING_LABELS: Record<Level, string> = {
   1: "Compatta",
   2: "Ridotta",
   3: "Standard",
   4: "Ampia",
   5: "Monumentale",
+};
+
+export const TYPOGRAPHY_LABELS: Record<Level, string> = {
+  1: "Piccolo",
+  2: "Ridotto",
+  3: "Standard",
+  4: "Grande",
+  5: "Enorme",
 };
 
 /* ─────────────────────────── REGISTRY PAGINE ─────────────────────────── */
@@ -112,26 +140,37 @@ export const PAGES: Record<PageSlug, PageDef> = {
       ogImage: "",
     },
     fields: {
-      "hero.eyebrow": {
-        label: "Hero — occhiello",
-        default: "Fotografia · Video · Grafica",
+      // ── HERO 3D: prossimo evento coperto ──
+      "hero.badge": {
+        label: "Hero — etichetta evento",
+        default: "Prossimo evento",
+        max: 40,
+      },
+      "hero.eventName": {
+        label: "Hero — nome evento",
+        default: "Internazionali d'Italia",
         max: 80,
       },
-      "hero.titleLine1": {
-        label: "Hero — titolo riga 1",
-        default: "I tuoi momenti,",
-        max: 80,
+      "hero.eventDate": {
+        label: "Hero — data evento",
+        default: "16 SET 2026",
+        max: 40,
       },
-      "hero.titleLine2": {
-        label: "Hero — titolo riga 2",
-        default: "scattati per durare.",
-        max: 80,
+      "hero.eventTime": {
+        label: "Hero — orario",
+        default: "09:00",
+        max: 20,
+      },
+      "hero.eventLocation": {
+        label: "Hero — luogo",
+        default: "Crossodromo Il Ciglione, Mantova",
+        max: 100,
       },
       "hero.subtitle": {
         label: "Hero — sottotitolo",
         default:
-          "Cerca le foto del tuo evento con il tuo numero di gara e portale a casa in pochi clic.",
-        max: 300,
+          "Saremo a bordo pista per immortalare ogni salto. Cerca i tuoi scatti per numero di gara.",
+        max: 200,
         multiline: true,
       },
       "hero.searchPlaceholder": {
@@ -149,12 +188,54 @@ export const PAGES: Record<PageSlug, PageDef> = {
         default: "Gli ultimi eventi coperti da Lifeshot.",
         max: 200,
       },
+      // ── Sezione lead "Invita Lifeshot al tuo evento" ──
+      "scout.title": {
+        label: "Invito — titolo",
+        default: "Vuoi che siamo al tuo evento?",
+        max: 100,
+      },
+      "scout.subtitle": {
+        label: "Invito — sottotitolo",
+        default:
+          "Scrivici dove corri la prossima gara e possiamo parlarne insieme.",
+        max: 200,
+        multiline: true,
+      },
+      "scout.button": {
+        label: "Invito — testo bottone",
+        default: "Segnala l'evento",
+        max: 40,
+      },
+    },
+    images: {
+      "hero.background": {
+        label: "Hero — sfondo (pista / paesaggio)",
+        default: "",
+        hint: "Foto orizzontale del tracciato o del paesaggio. ~2000px.",
+      },
+      "hero.foreground": {
+        label: "Hero — primo piano (rider scontornato PNG)",
+        default: "",
+        hint: "PNG con sfondo trasparente del pilota in azione.",
+      },
     },
     spacing: {
-      hero: { label: "Respiro della Hero", classes: HERO_SCALE, default: 3 },
       sections: {
         label: "Spazio sezione eventi",
         classes: BOTTOM_SCALE,
+        default: 4,
+      },
+      scout: { label: "Spazio sezione invito", classes: SECTION_SCALE, default: 5 },
+    },
+    typography: {
+      "hero.eventName": {
+        label: "Dimensione nome evento",
+        classes: HEADING_SCALE,
+        default: 3,
+      },
+      "hero.date": {
+        label: "Dimensione data evento",
+        classes: DISPLAY_SCALE,
         default: 4,
       },
     },
@@ -170,11 +251,7 @@ export const PAGES: Record<PageSlug, PageDef> = {
       ogImage: "",
     },
     fields: {
-      "header.eyebrow": {
-        label: "Occhiello",
-        default: "Portfolio",
-        max: 60,
-      },
+      "header.eyebrow": { label: "Occhiello", default: "Portfolio", max: 60 },
       "header.title": { label: "Titolo", default: "Video", max: 60 },
       "header.subtitle": {
         label: "Sottotitolo",
@@ -190,10 +267,14 @@ export const PAGES: Record<PageSlug, PageDef> = {
         multiline: true,
       },
     },
+    images: {},
     spacing: {
-      header: {
-        label: "Spazio d'apertura pagina",
-        classes: SECTION_SCALE,
+      header: { label: "Spazio d'apertura pagina", classes: SECTION_SCALE, default: 4 },
+    },
+    typography: {
+      "header.title": {
+        label: "Dimensione titolo",
+        classes: HEADING_SCALE,
         default: 4,
       },
     },
@@ -209,11 +290,7 @@ export const PAGES: Record<PageSlug, PageDef> = {
       ogImage: "",
     },
     fields: {
-      "intro.titleLine1": {
-        label: "Intro — titolo riga 1",
-        default: "Tre sguardi.",
-        max: 80,
-      },
+      "intro.titleLine1": { label: "Intro — titolo riga 1", default: "Tre sguardi.", max: 80 },
       "intro.titleLine2": {
         label: "Intro — titolo riga 2",
         default: "Una sola visione.",
@@ -233,11 +310,15 @@ export const PAGES: Record<PageSlug, PageDef> = {
         max: 160,
       },
     },
+    images: {},
     spacing: {
-      intro: {
-        label: "Respiro dell'introduzione",
-        classes: HERO_SCALE,
-        default: 3,
+      intro: { label: "Respiro dell'introduzione", classes: HERO_SCALE, default: 3 },
+    },
+    typography: {
+      "intro.title": {
+        label: "Dimensione titolo intro",
+        classes: DISPLAY_SCALE,
+        default: 4,
       },
     },
   },
@@ -253,11 +334,7 @@ export const PAGES: Record<PageSlug, PageDef> = {
     },
     fields: {
       "intro.eyebrow": { label: "Occhiello", default: "Parliamone", max: 60 },
-      "intro.titleLine1": {
-        label: "Titolo riga 1",
-        default: "Raccontaci cosa",
-        max: 80,
-      },
+      "intro.titleLine1": { label: "Titolo riga 1", default: "Raccontaci cosa", max: 80 },
       "intro.titleLine2": {
         label: "Titolo riga 2",
         default: "vuoi raccontare.",
@@ -271,11 +348,15 @@ export const PAGES: Record<PageSlug, PageDef> = {
         multiline: true,
       },
     },
+    images: {},
     spacing: {
-      intro: {
-        label: "Respiro d'apertura",
-        classes: HERO_SCALE,
-        default: 2,
+      intro: { label: "Respiro d'apertura", classes: HERO_SCALE, default: 2 },
+    },
+    typography: {
+      "intro.title": {
+        label: "Dimensione titolo",
+        classes: DISPLAY_SCALE,
+        default: 4,
       },
     },
   },
@@ -289,11 +370,17 @@ function buildDefaultPage(def: PageDef): PageContent {
   return {
     seo: { ...def.seo },
     texts: Object.fromEntries(
-      Object.entries(def.fields).map(([key, field]) => [key, field.default])
+      Object.entries(def.fields).map(([k, f]) => [k, f.default])
+    ),
+    images: Object.fromEntries(
+      Object.entries(def.images).map(([k, f]) => [k, f.default])
     ),
     spacing: Object.fromEntries(
-      Object.entries(def.spacing).map(([key, knob]) => [key, knob.default])
-    ) as Record<string, SpacingLevel>,
+      Object.entries(def.spacing).map(([k, s]) => [k, s.default])
+    ) as Record<string, Level>,
+    typography: Object.fromEntries(
+      Object.entries(def.typography).map(([k, s]) => [k, s.default])
+    ) as Record<string, Level>,
   };
 }
 
@@ -308,16 +395,18 @@ function cleanString(value: unknown, fallback: string, max: number): string {
   return value.slice(0, max);
 }
 
-function clampLevel(value: unknown, fallback: SpacingLevel): SpacingLevel {
+function clampLevel(value: unknown, fallback: Level): Level {
   const n = Number(value);
-  if (n >= 1 && n <= 5) return Math.round(n) as SpacingLevel;
+  if (n >= 1 && n <= 5) return Math.round(n) as Level;
   return fallback;
 }
 
 interface RawPage {
   seo?: Partial<SeoContent>;
   texts?: Record<string, unknown>;
+  images?: Record<string, unknown>;
   spacing?: Record<string, unknown>;
+  typography?: Record<string, unknown>;
 }
 
 export function normalizeContent(raw?: {
@@ -338,17 +427,29 @@ export function normalizeContent(raw?: {
         ogImage: cleanString(rawPage?.seo?.ogImage, def.seo.ogImage, 500),
       },
       texts: Object.fromEntries(
-        Object.entries(def.fields).map(([key, field]) => [
-          key,
-          cleanString(rawPage?.texts?.[key], field.default, field.max),
+        Object.entries(def.fields).map(([k, f]) => [
+          k,
+          cleanString(rawPage?.texts?.[k], f.default, f.max),
+        ])
+      ),
+      images: Object.fromEntries(
+        Object.entries(def.images).map(([k, f]) => [
+          k,
+          cleanString(rawPage?.images?.[k], f.default, 500),
         ])
       ),
       spacing: Object.fromEntries(
-        Object.entries(def.spacing).map(([key, knob]) => [
-          key,
-          clampLevel(rawPage?.spacing?.[key], knob.default),
+        Object.entries(def.spacing).map(([k, s]) => [
+          k,
+          clampLevel(rawPage?.spacing?.[k], s.default),
         ])
-      ) as Record<string, SpacingLevel>,
+      ) as Record<string, Level>,
+      typography: Object.fromEntries(
+        Object.entries(def.typography).map(([k, s]) => [
+          k,
+          clampLevel(rawPage?.typography?.[k], s.default),
+        ])
+      ) as Record<string, Level>,
     };
   }
   return { pages };
@@ -360,6 +461,10 @@ export function getText(content: CmsData, slug: PageSlug, key: string): string {
   return content.pages[slug]?.texts[key] ?? PAGES[slug].fields[key]?.default ?? "";
 }
 
+export function getImage(content: CmsData, slug: PageSlug, key: string): string {
+  return content.pages[slug]?.images[key] ?? PAGES[slug].images[key]?.default ?? "";
+}
+
 export function getSpacingClass(
   content: CmsData,
   slug: PageSlug,
@@ -367,6 +472,15 @@ export function getSpacingClass(
 ): string {
   const def = PAGES[slug].spacing[knob];
   if (!def) return "";
-  const level = content.pages[slug]?.spacing[knob] ?? def.default;
-  return def.classes[level];
+  return def.classes[content.pages[slug]?.spacing[knob] ?? def.default];
+}
+
+export function getTypographyClass(
+  content: CmsData,
+  slug: PageSlug,
+  knob: string
+): string {
+  const def = PAGES[slug].typography[knob];
+  if (!def) return "";
+  return def.classes[content.pages[slug]?.typography[knob] ?? def.default];
 }

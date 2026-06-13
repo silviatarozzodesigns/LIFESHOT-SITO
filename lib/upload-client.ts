@@ -25,6 +25,55 @@ async function parseJson(response: Response) {
 }
 
 const VIDEO_TYPES = ["video/mp4", "video/webm"];
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+
+/**
+ * Carica un'immagine del CMS (sfondo/rider hero, OG) e restituisce l'URL
+ * pubblico. In produzione: PUT diretto su R2; in locale: POST multipart.
+ */
+export async function uploadAssetFile(file: File): Promise<string> {
+  if (!IMAGE_TYPES.includes(file.type)) {
+    throw new Error("Formato non supportato: usa JPG, PNG, WebP o AVIF.");
+  }
+  if (file.size > MAX_UPLOAD_BYTES) {
+    throw new Error("File troppo grande (max 5 GB).");
+  }
+
+  const presign = await parseJson(
+    await fetch("/api/admin/presign", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        kind: "asset",
+        filename: file.name,
+        contentType: file.type,
+        size: file.size,
+      }),
+    })
+  );
+
+  if (presign.mode === "direct") {
+    const formData = new FormData();
+    formData.set("kind", "asset");
+    formData.set("file", file);
+    const payload = await parseJson(
+      await fetch("/api/admin/upload", { method: "POST", body: formData })
+    );
+    return payload.url;
+  }
+
+  const put = await fetch(presign.uploadUrl, {
+    method: "PUT",
+    headers: { "content-type": file.type },
+    body: file,
+  });
+  if (!put.ok) {
+    throw new Error(
+      `Upload su storage fallito (${put.status}). Verifica la configurazione CORS del bucket R2.`
+    );
+  }
+  return presign.publicUrl;
+}
 
 /**
  * Carica una clip video del portfolio (.mp4/.webm) e restituisce l'URL

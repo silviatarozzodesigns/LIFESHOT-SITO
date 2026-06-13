@@ -83,6 +83,13 @@
     );
   }
 
+  /* Rispetta chi preferisce meno animazioni: ferma il marquee */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-marquee {
+      animation: none !important;
+    }
+  }
+
   /* Bagliori cinematografici di sfondo (hero, sezioni) */
   .glow-primary {
     background: radial-gradient(

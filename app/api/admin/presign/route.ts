@@ -56,13 +56,56 @@ export async function POST(request: Request) {
 
   const { eventId = "", filename = "", contentType = "", size = 0 } = body;
   const kind =
-    body.kind === "cover" ? "cover" : body.kind === "video" ? "video" : "photo";
+    body.kind === "cover"
+      ? "cover"
+      : body.kind === "video"
+        ? "video"
+        : body.kind === "asset"
+          ? "asset"
+          : "photo";
 
   if (size > MAX_FILE_BYTES) {
     return NextResponse.json(
       { ok: false, error: "File troppo grande (max 5 GB)." },
       { status: 413 }
     );
+  }
+
+  // kind === "asset": immagine del CMS (sfondi/rider hero, OG), nessun evento
+  if (kind === "asset") {
+    if (!filename) {
+      return NextResponse.json(
+        { ok: false, error: "Nome file mancante." },
+        { status: 400 }
+      );
+    }
+    if (!ALLOWED_TYPES.has(contentType)) {
+      return NextResponse.json(
+        { ok: false, error: `Formato non supportato (${contentType || "sconosciuto"}).` },
+        { status: 415 }
+      );
+    }
+    try {
+      const storage = getStorage();
+      const key = buildStorageKey("cms", filename);
+      const uploadUrl = await storage.presignUpload(key, contentType);
+      if (!uploadUrl) {
+        return NextResponse.json({ ok: true, mode: "direct" });
+      }
+      return NextResponse.json({
+        ok: true,
+        mode: "presigned",
+        uploadUrl,
+        key,
+        publicUrl: storage.getPublicUrl(key),
+      });
+    } catch (error) {
+      console.error("[lifeshot] presign asset fallita:", error);
+      return NextResponse.json(
+        { ok: false, error: "Errore nella preparazione dell'upload." },
+        { status: 500 }
+      );
+    }
   }
 
   // kind === "video": file del portfolio, nessun evento associato

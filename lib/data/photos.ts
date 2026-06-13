@@ -156,6 +156,22 @@ export async function searchPhotos({
   }
 }
 
+/** Foto più recenti, per il marquee auto-scroll della homepage. */
+export async function getMarqueePhotos(limit = 16): Promise<PhotoDTO[]> {
+  try {
+    await connectDB();
+    const docs = await Photo.find()
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .populate<{ event: PopulatedEvent }>("event", "name slug date location")
+      .lean();
+    return docs.map(toDTO);
+  } catch (error) {
+    console.error("[lifeshot] marquee foto fallito:", error);
+    return [];
+  }
+}
+
 export async function getPhotoById(id: string): Promise<PhotoDTO | null> {
   if (!Types.ObjectId.isValid(id)) return null;
   try {

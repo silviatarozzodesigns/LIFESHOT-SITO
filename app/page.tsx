@@ -1,20 +1,30 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Calendar, Camera, MapPin, Search } from "lucide-react";
+import { ArrowRight, Calendar, Camera, MapPin } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
+import { Hero3D } from "@/components/home/hero-3d";
+import { PhotoMarquee } from "@/components/home/photo-marquee";
+import { EventScout } from "@/components/home/event-scout";
 import { getRecentEvents } from "@/lib/data/events";
+import { getMarqueePhotos } from "@/lib/data/photos";
 import { getPublishedContent } from "@/lib/data/content";
-import { getSpacingClass, getText } from "@/lib/content";
+import {
+  getImage,
+  getSpacingClass,
+  getText,
+  getTypographyClass,
+} from "@/lib/content";
 import { cn, formatDate } from "@/lib/utils";
 
 // Eventi e contenuti CMS arrivano dal database: render a richiesta
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [events, content] = await Promise.all([
+  const [events, marquee, content] = await Promise.all([
     getRecentEvents(6),
+    getMarqueePhotos(16),
     getPublishedContent(),
   ]);
   const t = (key: string) => getText(content, "home", key);
@@ -24,55 +34,29 @@ export default async function HomePage() {
       <SiteHeader />
 
       <main className="flex-1">
-        {/* Hero — i bagliori di sfondo sono full-frame nel layout root */}
-        <section className="relative">
-          <div
-            className={cn(
-              "container flex flex-col items-center text-center",
-              getSpacingClass(content, "home", "hero")
-            )}
-          >
-            <FadeIn>
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-primary">
-                {t("hero.eyebrow")}
-              </p>
-              <h1 className="max-w-3xl text-balance text-5xl font-semibold tracking-tight sm:text-7xl">
-                {t("hero.titleLine1")}
-                <br />
-                <span className="text-muted-foreground">
-                  {t("hero.titleLine2")}
-                </span>
-              </h1>
-              <p className="mx-auto mt-6 max-w-xl text-balance text-lg text-muted-foreground">
-                {t("hero.subtitle")}
-              </p>
-            </FadeIn>
+        {/* HERO 3D — prossimo evento (CMS-editable) */}
+        <Hero3D
+          badge={t("hero.badge")}
+          eventName={t("hero.eventName")}
+          eventDate={t("hero.eventDate")}
+          eventTime={t("hero.eventTime")}
+          eventLocation={t("hero.eventLocation")}
+          subtitle={t("hero.subtitle")}
+          searchPlaceholder={t("hero.searchPlaceholder")}
+          backgroundUrl={getImage(content, "home", "hero.background")}
+          foregroundUrl={getImage(content, "home", "hero.foreground")}
+          eventNameClass={getTypographyClass(content, "home", "hero.eventName")}
+          dateClass={getTypographyClass(content, "home", "hero.date")}
+        />
 
-            {/* Ricerca diretta: porta in galleria con il numero precompilato */}
-            <FadeIn delay={0.15} className="mt-10 w-full max-w-md">
-              <form
-                action="/galleria"
-                className="flex items-center gap-3 rounded-full border bg-card/80 px-5 py-2 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.5)] backdrop-blur-sm transition-colors focus-within:border-primary/60 hover:border-primary/40"
-              >
-                <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <input
-                  name="numero"
-                  inputMode="numeric"
-                  placeholder={t("hero.searchPlaceholder")}
-                  aria-label="Cerca per numero di gara"
-                  className="h-10 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                />
-                <button
-                  type="submit"
-                  aria-label="Cerca"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-105 hover:shadow-[0_0_24px_-4px_hsl(var(--primary)/0.6)] active:scale-95"
-                >
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </form>
-            </FadeIn>
+        {/* MARQUEE — scatti recenti a scorrimento infinito */}
+        {marquee.length > 0 && (
+          <div className="mt-8">
+            <PhotoMarquee
+              items={marquee.map((p) => ({ id: p.id, raceNumber: p.raceNumber }))}
+            />
           </div>
-        </section>
+        )}
 
         {/* Eventi recenti */}
         <section
@@ -153,6 +137,19 @@ export default async function HomePage() {
               </p>
             </FadeIn>
           )}
+        </section>
+
+        {/* Invita Lifeshot al tuo evento (lead-gen) */}
+        <section
+          className={cn("container", getSpacingClass(content, "home", "scout"))}
+        >
+          <FadeIn>
+            <EventScout
+              title={t("scout.title")}
+              subtitle={t("scout.subtitle")}
+              buttonLabel={t("scout.button")}
+            />
+          </FadeIn>
         </section>
       </main>
 

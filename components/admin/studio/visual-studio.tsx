@@ -1,16 +1,20 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import {
   CheckCircle2,
   ChevronDown,
   CloudUpload,
   History,
+  ImageIcon,
   Loader2,
   Monitor,
   Save,
   Smartphone,
   Tablet,
+  Trash2,
+  Type,
+  UploadCloud,
 } from "lucide-react";
 import {
   saveDraft,
@@ -21,11 +25,15 @@ import {
   PAGES,
   PAGE_SLUGS,
   SPACING_LABELS,
+  TYPOGRAPHY_LABELS,
   type CmsData,
+  type ImageDef,
+  type Level,
   type PageSlug,
-  type SpacingLevel,
 } from "@/lib/content";
 import { PagePreview } from "@/components/admin/studio/page-previews";
+import { PreviewFrame } from "@/components/admin/studio/preview-frame";
+import { uploadAssetFile } from "@/lib/upload-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,6 +89,34 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
         [slug]: {
           ...c.pages[slug],
           texts: { ...c.pages[slug].texts, [key]: value },
+        },
+      },
+    }));
+  }
+
+  function setImage(key: string, value: string) {
+    setFeedback(null);
+    setContent((c) => ({
+      ...c,
+      pages: {
+        ...c.pages,
+        [activePage]: {
+          ...c.pages[activePage],
+          images: { ...c.pages[activePage].images, [key]: value },
+        },
+      },
+    }));
+  }
+
+  function setTypography(key: string, value: Level) {
+    setFeedback(null);
+    setContent((c) => ({
+      ...c,
+      pages: {
+        ...c.pages,
+        [activePage]: {
+          ...c.pages[activePage],
+          typography: { ...c.pages[activePage].typography, [key]: value },
         },
       },
     }));
@@ -197,22 +233,26 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
       </div>
 
       <div className="grid items-start gap-5 xl:grid-cols-[1fr_320px]">
-        {/* ─────────── SANDBOX ANTEPRIMA (responsive) ─────────── */}
+        {/* ─────────── SANDBOX ANTEPRIMA (iframe, breakpoint reali) ─────────── */}
         <div className="overflow-x-auto rounded-2xl border border-dashed bg-background/40 p-4 sm:p-6">
           <div
             style={{ width: DEVICE_WIDTH[device], maxWidth: "100%" }}
-            className="mx-auto transition-all duration-500 ease-out"
+            className="mx-auto overflow-hidden rounded-2xl border shadow-[0_16px_50px_-20px_rgba(0,0,0,0.7)] transition-all duration-500 ease-out"
           >
-            <PagePreview
-              content={content}
-              activePage={activePage}
-              onText={setText}
-              onNavigate={setActivePage}
-            />
+            {/* L'iframe isola le media query: in mobile i sm: scattano a 390px */}
+            <PreviewFrame title="Anteprima sito">
+              <PagePreview
+                content={content}
+                activePage={activePage}
+                onText={setText}
+                onNavigate={setActivePage}
+              />
+            </PreviewFrame>
           </div>
           <p className="mt-3 text-center text-xs text-muted-foreground">
             Clicca un testo nell&apos;anteprima per modificarlo · navigazione
-            interna attiva · {device === "desktop" ? "larghezza piena" : DEVICE_WIDTH[device]}
+            interna attiva ·{" "}
+            {device === "desktop" ? "larghezza piena" : DEVICE_WIDTH[device]}
           </p>
         </div>
 
@@ -284,7 +324,7 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
                       patchPage({
                         spacing: {
                           ...page.spacing,
-                          [knob]: Number(e.target.value) as SpacingLevel,
+                          [knob]: Number(e.target.value) as Level,
                         },
                       })
                     }
@@ -294,6 +334,55 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
               );
             })}
           </SidebarCard>
+
+          {/* Immagini — upload con anteprima istantanea */}
+          {Object.keys(pageDef.images).length > 0 && (
+            <SidebarCard title="Immagini">
+              {Object.entries(pageDef.images).map(([key, def]) => (
+                <ImageField
+                  key={key}
+                  def={def}
+                  value={page.images[key] ?? ""}
+                  onChange={(url) => setImage(key, url)}
+                  onError={setError}
+                />
+              ))}
+            </SidebarCard>
+          )}
+
+          {/* Tipografia — slider vincolati alla scala Tailwind */}
+          {Object.keys(pageDef.typography).length > 0 && (
+            <SidebarCard title="Tipografia">
+              {Object.entries(pageDef.typography).map(([knob, def]) => {
+                const level = page.typography[knob] ?? def.default;
+                return (
+                  <div key={knob} className="space-y-1.5">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <Label htmlFor={`ty-${knob}`} className="flex items-center gap-1.5">
+                        <Type className="h-3.5 w-3.5" />
+                        {def.label}
+                      </Label>
+                      <span className="text-[11px] text-muted-foreground">
+                        {TYPOGRAPHY_LABELS[level]}
+                      </span>
+                    </div>
+                    <input
+                      id={`ty-${knob}`}
+                      type="range"
+                      min={1}
+                      max={5}
+                      step={1}
+                      value={level}
+                      onChange={(e) =>
+                        setTypography(knob, Number(e.target.value) as Level)
+                      }
+                      className="w-full accent-primary"
+                    />
+                  </div>
+                );
+              })}
+            </SidebarCard>
+          )}
 
           {/* Testi — sincronizzati in tempo reale con l'anteprima */}
           <SidebarCard title={`Testi — ${pageDef.label}`}>
@@ -328,6 +417,104 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
 }
 
 /* ───────────────────────────── helper UI ───────────────────────────── */
+
+/**
+ * Campo immagine: alla selezione del file mostra SUBITO l'anteprima locale
+ * (object URL) e aggiorna lo stato → la preview reagisce all'istante; in
+ * parallelo carica su R2/storage e poi sostituisce con l'URL definitivo.
+ */
+function ImageField({
+  def,
+  value,
+  onChange,
+  onError,
+}: {
+  def: ImageDef;
+  value: string;
+  onChange: (url: string) => void;
+  onError: (msg: string | null) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(file: File) {
+    onError(null);
+    // Anteprima immediata (prima ancora che l'upload finisca)
+    const localUrl = URL.createObjectURL(file);
+    onChange(localUrl);
+    setUploading(true);
+    try {
+      const finalUrl = await uploadAssetFile(file);
+      onChange(finalUrl); // sostituisce l'object URL con quello persistente
+    } catch (e) {
+      onChange(""); // rollback dell'anteprima locale
+      onError(e instanceof Error ? e.message : "Upload immagine fallito.");
+    } finally {
+      setUploading(false);
+      URL.revokeObjectURL(localUrl);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-xs">{def.label}</Label>
+      <div className="flex items-center gap-3">
+        <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg border bg-muted">
+          {value ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={value} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <span className="flex h-full items-center justify-center text-muted-foreground/40">
+              <ImageIcon className="h-5 w-5" />
+            </span>
+          )}
+          {uploading && (
+            <span className="absolute inset-0 flex items-center justify-center bg-black/50">
+              <Loader2 className="h-4 w-4 animate-spin text-white" />
+            </span>
+          )}
+        </div>
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={uploading}
+            onClick={() => inputRef.current?.click()}
+          >
+            <UploadCloud />
+            {value ? "Sostituisci" : "Carica"}
+          </Button>
+          {value && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={uploading}
+              className="text-muted-foreground hover:text-destructive"
+              onClick={() => onChange("")}
+            >
+              <Trash2 />
+              Rimuovi
+            </Button>
+          )}
+        </div>
+      </div>
+      {def.hint && <p className="text-[11px] text-muted-foreground">{def.hint}</p>}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/avif"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+}
 
 function SidebarCard({
   title,

@@ -71,11 +71,17 @@ const config: Config = {
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
+        // Marquee infinito: scorre di metà larghezza (lista duplicata)
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shimmer: "shimmer 1.5s infinite",
+        marquee: "marquee var(--marquee-duration, 40s) linear infinite",
       },
     },
   },
