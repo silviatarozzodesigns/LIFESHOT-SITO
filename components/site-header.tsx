@@ -64,7 +64,7 @@ export function SiteHeader({ floating = false }: { floating?: boolean }) {
           <Link
             href="/"
             aria-label="Lifeshot — Home"
-            className="transition-opacity hover:opacity-80"
+            className="transition-opacity hover:opacity-80 flex items-center h-full overflow-visible"
           >
             <Logo />
           </Link>
@@ -129,6 +129,7 @@ export function SiteHeader({ floating = false }: { floating?: boolean }) {
                 href="/"
                 aria-label="Lifeshot — Home"
                 onClick={() => setMenuOpen(false)}
+                className="flex items-center h-full overflow-visible"
               >
                 <Logo />
               </Link>
