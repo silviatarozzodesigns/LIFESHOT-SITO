@@ -50,8 +50,8 @@ export function Logo({ className }: { className?: string }) {
         className
       )}
     >
-      <LogoMark className="h-8 w-auto shrink-0 sm:h-10" />
-      <LogoWordmark className="h-[1.05rem] w-auto shrink-0 sm:h-[1.3rem]" />
+      <LogoMark className="h-7 w-auto shrink-0 md:h-8" />
+      <LogoWordmark className="h-5 w-auto shrink-0 md:h-6 overflow-visible" />
     </span>
   );
 }
