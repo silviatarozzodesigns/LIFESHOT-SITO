@@ -77,6 +77,9 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
   const [activePage, setActivePage] = useState<PageSlug>("home");
   const [selected, setSelected] = useState<PreviewSelection | null>(null);
   const [device, setDevice] = useState<Device>("desktop");
+  // Anteprima: "edit" = mock click-to-edit (live); "real" = sito vero in iframe
+  const [previewMode, setPreviewMode] = useState<"edit" | "real">("edit");
+  const [realNonce, setRealNonce] = useState(0);
 
   // Cambio pagina → azzera la selezione contestuale
   function gotoPage(slug: PageSlug) {
@@ -186,6 +189,8 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
       }
       setContent(result.content);
       setFeedback(successMessage);
+      // Ricarica l'anteprima "sito reale" così riflette la bozza appena salvata
+      setRealNonce((n) => n + 1);
     });
   }
 
@@ -233,6 +238,30 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
               )}
             >
               <Icon className="h-4 w-4" />
+            </button>
+          ))}
+        </div>
+
+        {/* Switcher anteprima: editor (click-to-edit) ↔ sito reale (mirror 1:1) */}
+        <div className="flex items-center gap-1 rounded-full border bg-background p-1">
+          {(
+            [
+              ["edit", "Modifica"],
+              ["real", "Sito reale"],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setPreviewMode(key)}
+              className={cn(
+                "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                previewMode === key
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {label}
             </button>
           ))}
         </div>
@@ -287,22 +316,35 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
             style={{ width: DEVICE_WIDTH[device], maxWidth: "100%" }}
             className="mx-auto overflow-hidden rounded-2xl border shadow-[0_16px_50px_-20px_rgba(0,0,0,0.7)] transition-all duration-500 ease-out"
           >
-            {/* L'iframe isola le media query: in mobile i sm: scattano a 390px */}
-            <PreviewFrame title="Anteprima sito">
-              <PagePreview
-                content={content}
-                activePage={activePage}
-                onText={setText}
-                onNavigate={gotoPage}
-                onSelect={setSelected}
-                selected={selected}
+            {previewMode === "real" && activePage === "home" ? (
+              // Specchio 1:1 del sito reale (rotta /anteprima con la BOZZA):
+              // mostra TUTTO (hero responsive, gallerie, sezioni). Si ricarica
+              // a ogni salvataggio bozza (realNonce).
+              <iframe
+                key={`real-${realNonce}`}
+                src={`/anteprima?n=${realNonce}`}
+                title="Anteprima sito reale"
+                className="block h-[80vh] w-full border-0 bg-background"
               />
-            </PreviewFrame>
+            ) : (
+              // L'iframe isola le media query: in mobile i sm: scattano a 390px
+              <PreviewFrame title="Anteprima sito">
+                <PagePreview
+                  content={content}
+                  activePage={activePage}
+                  onText={setText}
+                  onNavigate={gotoPage}
+                  onSelect={setSelected}
+                  selected={selected}
+                />
+              </PreviewFrame>
+            )}
           </div>
           <p className="mt-3 text-center text-xs text-muted-foreground">
-            Clicca un testo nell&apos;anteprima per modificarlo · navigazione
-            interna attiva ·{" "}
-            {device === "desktop" ? "larghezza piena" : DEVICE_WIDTH[device]}
+            {previewMode === "real"
+              ? "Specchio 1:1 del sito reale con la bozza · si aggiorna al salvataggio"
+              : "Clicca un testo nell'anteprima per modificarlo · navigazione interna attiva"}{" "}
+            · {device === "desktop" ? "larghezza piena" : DEVICE_WIDTH[device]}
           </p>
         </div>
 
@@ -371,6 +413,57 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
               />
             </div>
           </SidebarCard>
+
+          {/* Hero — sfondi + rider per dispositivo (sempre visibile, non serve
+              cliccare l'anteprima). Tablet/Mobile vuoti = usa lo sfondo desktop
+              senza rider. */}
+          {activePage === "home" && (
+            <SidebarCard title="Hero — Sfondi & Rider per dispositivo">
+              <div className="space-y-5">
+                {(
+                  [
+                    {
+                      label: "Desktop",
+                      keys: ["hero.background", "hero.foreground"],
+                    },
+                    {
+                      label: "Tablet",
+                      keys: [
+                        "hero.backgroundTablet",
+                        "hero.foregroundTablet",
+                      ],
+                    },
+                    {
+                      label: "Mobile",
+                      keys: [
+                        "hero.backgroundMobile",
+                        "hero.foregroundMobile",
+                      ],
+                    },
+                  ] as const
+                ).map((group) => (
+                  <div key={group.label} className="space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                      {group.label}
+                    </p>
+                    {group.keys.map((key) => {
+                      const def = pageDef.images[key];
+                      if (!def) return null;
+                      return (
+                        <ImageField
+                          key={key}
+                          def={def}
+                          value={page.images[key] ?? ""}
+                          onChange={(url) => setImage(key, url)}
+                          onError={setError}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </SidebarCard>
+          )}
 
           {/* Impostazioni globali foto — filigrana */}
           <SidebarCard title="Foto & Filigrana">
