@@ -64,6 +64,9 @@ const PhotoSchema = new Schema(
     // Se true, la preview pubblica viene servita con la filigrana impressa.
     // Impostato all'upload dal toggle globale del CMS (settings.watermarkEnabled).
     watermark: { type: Boolean, default: true },
+    // Variante filigrana: true = scura (foto chiare), false = chiara/bianca
+    // (foto scure). Scelta all'upload per garantire sempre la visibilità.
+    watermarkDark: { type: Boolean, default: true },
     // Marca le foto curate per la sezione homepage "Dietro l'obiettivo"
     featured: { type: Boolean, default: false, index: true },
     // Prezzo in centesimi per il futuro flusso d'acquisto (placeholder)

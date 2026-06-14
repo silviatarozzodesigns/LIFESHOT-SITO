@@ -34,7 +34,7 @@ export async function GET(
   try {
     await connectDB();
     const photo = await Photo.findById(id)
-      .select("originalKey storageKey watermark")
+      .select("originalKey storageKey watermark watermarkDark")
       .lean();
     if (!photo) return new Response("Not found", { status: 404 });
 
@@ -46,10 +46,15 @@ export async function GET(
     const sourceKey = photo.originalKey ?? photo.storageKey;
     if (!sourceKey) return new Response("Not found", { status: 404 });
     const original = await storage.download(sourceKey);
+    // Variante: scura (default) per foto chiare, chiara/bianca per foto scure
+    const wmOptions =
+      photo.watermarkDark === false
+        ? { color: "#ffffff", opacity: 0.5 }
+        : { color: "#0a0e1a", opacity: 0.42 };
     const body =
       photo.watermark === false
         ? await createCoverImage(original)
-        : (await createWatermarkedPreview(original)).buffer;
+        : (await createWatermarkedPreview(original, wmOptions)).buffer;
 
     return new Response(new Uint8Array(body), {
       headers: {

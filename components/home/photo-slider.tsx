@@ -29,6 +29,22 @@ export function PhotoSlider({ items }: { items: SliderItem[] }) {
   const update = useCallback(() => {
     const el = scroller.current;
     if (!el) return;
+
+    // Solo desktop con puntatore fine: il 3D scroll-driven per-frame su touch
+    // (tablet/mobile) causa microscatti. Lì lasciamo lo swipe nativo piatto.
+    const is3d = window.matchMedia(
+      "(min-width: 1024px) and (pointer: fine)"
+    ).matches;
+    if (!is3d) {
+      for (const card of cards.current) {
+        if (!card) continue;
+        card.style.transform = "";
+        card.style.zIndex = "";
+        card.style.opacity = "";
+      }
+      return;
+    }
+
     const viewportCenter = el.scrollLeft + el.clientWidth / 2;
     const reach = el.clientWidth / 2 || 1;
 

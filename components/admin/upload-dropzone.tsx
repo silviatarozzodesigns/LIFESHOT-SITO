@@ -8,6 +8,8 @@ import {
   Droplet,
   Hash,
   Loader2,
+  Moon,
+  Sun,
   TriangleAlert,
 } from "lucide-react";
 import { extractRaceNumber } from "@/lib/parse-filename";
@@ -48,8 +50,10 @@ export function UploadDropzone({
   const [isDragging, setIsDragging] = useState(false);
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [watermark, setWatermark] = useState(true);
-  // Ref letto dentro pump() per evitare closure stantie durante gli upload
+  const [darkMark, setDarkMark] = useState(true);
+  // Ref letti dentro pump() per evitare closure stantie durante gli upload
   const watermarkRef = useRef(true);
+  const darkMarkRef = useRef(true);
   const activeUploads = useRef(0);
   const pendingItems = useRef<QueueItem[]>([]);
 
@@ -70,6 +74,7 @@ export function UploadDropzone({
 
       uploadFile(eventId, item.file, "photo", {
         watermark: watermarkRef.current,
+        watermarkDark: darkMarkRef.current,
         featured,
       })
         .then((photo) => {
@@ -166,6 +171,41 @@ export function UploadDropzone({
           />
         </button>
       </label>
+
+      {/* Variante filigrana: scura (foto chiare) o chiara/bianca (foto scure).
+          Visibile solo se la filigrana è attiva. */}
+      {watermark && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-3">
+          <span className="text-sm font-medium">Colore filigrana</span>
+          <div className="inline-flex rounded-full border p-0.5">
+            {(
+              [
+                { val: true, label: "Scura", Icon: Moon },
+                { val: false, label: "Chiara", Icon: Sun },
+              ] as const
+            ).map(({ val, label, Icon }) => (
+              <button
+                key={label}
+                type="button"
+                aria-pressed={darkMark === val}
+                onClick={() => {
+                  setDarkMark(val);
+                  darkMarkRef.current = val;
+                }}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                  darkMark === val
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Area drag-and-drop */}
       <button

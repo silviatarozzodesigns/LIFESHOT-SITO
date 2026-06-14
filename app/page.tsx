@@ -50,16 +50,25 @@ export default async function HomePage() {
           subtitle={t("hero.subtitle")}
           searchPlaceholder={t("hero.searchPlaceholder")}
           backgroundUrl={getImage(content, "home", "hero.background")}
+          backgroundTabletUrl={getImage(content, "home", "hero.backgroundTablet")}
           backgroundMobileUrl={getImage(content, "home", "hero.backgroundMobile")}
           foregroundUrl={getImage(content, "home", "hero.foreground")}
+          foregroundTabletUrl={getImage(content, "home", "hero.foregroundTablet")}
+          foregroundMobileUrl={getImage(content, "home", "hero.foregroundMobile")}
           eventNameClass={getTypographyClass(content, "home", "hero.eventName")}
           dateClass={getTypographyClass(content, "home", "hero.date")}
           bgPosition={getImageSettings(content, "home", "hero.background").position}
           bgScale={getImageSettings(content, "home", "hero.background").scale}
+          bgTabletPosition={getImageSettings(content, "home", "hero.backgroundTablet").position}
+          bgTabletScale={getImageSettings(content, "home", "hero.backgroundTablet").scale}
           bgMobilePosition={getImageSettings(content, "home", "hero.backgroundMobile").position}
           bgMobileScale={getImageSettings(content, "home", "hero.backgroundMobile").scale}
           fgPosition={getImageSettings(content, "home", "hero.foreground").position}
           fgScale={getImageSettings(content, "home", "hero.foreground").scale}
+          fgTabletPosition={getImageSettings(content, "home", "hero.foregroundTablet").position}
+          fgTabletScale={getImageSettings(content, "home", "hero.foregroundTablet").scale}
+          fgMobilePosition={getImageSettings(content, "home", "hero.foregroundMobile").position}
+          fgMobileScale={getImageSettings(content, "home", "hero.foregroundMobile").scale}
         />
 
         {/* SLIDER — scatti recenti, frecce + swipe */}

@@ -190,6 +190,7 @@ export async function POST(request: Request) {
         ? wmField === "true"
         : (await getPublishedContent()).settings.watermarkEnabled;
     const featured = form.get("featured") === "true";
+    const watermarkDark = form.get("watermarkDark") !== "false";
 
     const photoId = new Types.ObjectId();
     const photo = await Photo.create({
@@ -205,6 +206,7 @@ export async function POST(request: Request) {
       sizeBytes: file.size,
       mimeType: file.type,
       watermark,
+      watermarkDark,
       featured,
     });
     await Event.updateOne({ _id: event._id }, { $inc: { photoCount: 1 } });

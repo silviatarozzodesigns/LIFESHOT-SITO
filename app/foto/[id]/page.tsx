@@ -12,8 +12,7 @@ import {
   User,
 } from "lucide-react";
 import { site } from "@/lib/site";
-import { cn, photoSrc } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
+import { photoSrc } from "@/lib/utils";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
@@ -152,12 +151,9 @@ export default async function PhotoPage({
                   href={site.instagramDmUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={cn(
-                    buttonVariants({ size: "lg" }),
-                    "mt-5 h-auto min-h-12 w-full items-center justify-center gap-2.5 whitespace-normal rounded-2xl px-5 py-3 text-center leading-snug"
-                  )}
+                  className="group mt-5 inline-flex h-auto min-h-12 w-full items-center justify-center gap-2.5 whitespace-normal rounded-2xl bg-primary px-5 py-3 text-center text-sm font-semibold leading-snug text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] hover:shadow-primary/40 active:scale-95"
                 >
-                  <Instagram className="h-6 w-6 shrink-0" />
+                  <Instagram className="h-6 w-6 shrink-0 transition-transform group-hover:rotate-[8deg]" />
                   <span>Scrivici in DM per acquistare le tue foto</span>
                 </a>
               </div>

@@ -262,21 +262,39 @@ export const PAGES: Record<PageSlug, PageDef> = {
       },
     },
     images: {
+      // ── DESKTOP ──
       "hero.background": {
-        label: "Hero — sfondo (pista / paesaggio)",
+        label: "Hero Desktop — sfondo",
         // Asset vettoriale generato: paesaggio montano enduro, leggero e nitido
         default: "/hero/enduro-bg.svg",
         hint: "Foto orizzontale del tracciato o del paesaggio. ~2000px.",
       },
-      "hero.backgroundMobile": {
-        label: "Hero — sfondo Mobile/Tablet (opzionale)",
-        default: "",
-        hint: "Immagine verticale ottimizzata per smartphone. Se vuota, su mobile si usa lo sfondo desktop.",
-      },
       "hero.foreground": {
-        label: "Hero — primo piano (rider scontornato PNG)",
+        label: "Hero Desktop — PNG rider (overlay)",
         default: "",
         hint: "PNG con sfondo trasparente del pilota in azione.",
+      },
+      // ── TABLET ── (vuoti = usa lo sfondo desktop, senza rider)
+      "hero.backgroundTablet": {
+        label: "Hero Tablet — sfondo (opzionale)",
+        default: "",
+        hint: "Se vuoto usa lo sfondo desktop adattato. ~1500px.",
+      },
+      "hero.foregroundTablet": {
+        label: "Hero Tablet — PNG rider (opzionale)",
+        default: "",
+        hint: "Il rider su tablet compare SOLO se carichi questo PNG.",
+      },
+      // ── MOBILE ── (vuoti = usa lo sfondo desktop, senza rider)
+      "hero.backgroundMobile": {
+        label: "Hero Mobile — sfondo (opzionale)",
+        default: "",
+        hint: "Immagine verticale per smartphone. Se vuota usa lo sfondo desktop.",
+      },
+      "hero.foregroundMobile": {
+        label: "Hero Mobile — PNG rider (opzionale)",
+        default: "",
+        hint: "Il rider su mobile compare SOLO se carichi questo PNG.",
       },
     },
     spacing: {

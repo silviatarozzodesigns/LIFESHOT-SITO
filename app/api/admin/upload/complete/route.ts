@@ -40,6 +40,7 @@ export async function POST(request: Request) {
     size?: number;
     kind?: string;
     watermark?: boolean;
+    watermarkDark?: boolean;
     featured?: boolean;
   };
   try {
@@ -121,6 +122,7 @@ export async function POST(request: Request) {
       typeof body.watermark === "boolean"
         ? body.watermark
         : (await getPublishedContent()).settings.watermarkEnabled;
+    const watermarkDark = body.watermarkDark !== false;
     const featured = body.featured === true;
 
     const photoId = new Types.ObjectId();
@@ -137,6 +139,7 @@ export async function POST(request: Request) {
       sizeBytes: size || original.length,
       mimeType: body.contentType ?? "image/jpeg",
       watermark,
+      watermarkDark,
       featured,
     });
     await Event.updateOne({ _id: event._id }, { $inc: { photoCount: 1 } });

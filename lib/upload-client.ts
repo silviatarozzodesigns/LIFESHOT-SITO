@@ -127,6 +127,8 @@ export async function uploadVideoFile(file: File): Promise<string> {
 export interface PhotoUploadOptions {
   /** Applica la filigrana a questa foto (default true) */
   watermark?: boolean;
+  /** Variante filigrana: true = scura (default), false = chiara/bianca */
+  watermarkDark?: boolean;
   /** Marca la foto come "Dietro l'obiettivo" (default false) */
   featured?: boolean;
 }
@@ -141,6 +143,7 @@ export async function uploadFile(
     throw new Error("File troppo grande (max 5 GB).");
   }
   const watermark = opts.watermark !== false;
+  const watermarkDark = opts.watermarkDark !== false;
   const featured = opts.featured === true;
 
   const presign = await parseJson(
@@ -163,6 +166,7 @@ export async function uploadFile(
     formData.set("eventId", eventId);
     formData.set("kind", kind);
     formData.set("watermark", String(watermark));
+    formData.set("watermarkDark", String(watermarkDark));
     formData.set("featured", String(featured));
     formData.set("file", file);
     const payload = await parseJson(
@@ -195,6 +199,7 @@ export async function uploadFile(
         size: file.size,
         kind,
         watermark,
+        watermarkDark,
         featured,
       }),
     })

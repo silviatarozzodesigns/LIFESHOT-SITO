@@ -1,21 +1,13 @@
-"use client";
-
-import { motion } from "framer-motion";
-
 /**
  * Template di rotta: Next.js lo RI-MONTA ad ogni navigazione (a differenza
  * del layout), quindi è il punto giusto per l'animazione d'ingresso pagina.
- * Effetto fade-in + sfocatura progressiva → nessun caricamento "a scatto"
- * quando si torna in homepage o si cambia sezione.
+ *
+ * IMPORTANTE: usiamo un'animazione CSS (non un transform/filter inline di
+ * framer-motion). Un `filter`/`transform` PERSISTENTE su questo wrapper
+ * creerebbe un containing block che rompe `position: fixed` dei figli
+ * (navbar fissa e menu mobile a tutto schermo). La keyframe CSS senza
+ * fill-mode lascia l'elemento "pulito" a fine animazione → fixed di nuovo ok.
  */
 export default function Template({ children }: { children: React.ReactNode }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, filter: "blur(14px)" }}
-      animate={{ opacity: 1, filter: "blur(0px)" }}
-      transition={{ duration: 0.55, ease: [0.22, 0.61, 0.36, 1] }}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div className="page-enter">{children}</div>;
 }

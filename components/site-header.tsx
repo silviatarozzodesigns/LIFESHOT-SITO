@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Instagram, Mail, Menu, Phone, X, Youtube } from "lucide-react";
@@ -23,6 +24,11 @@ const NAV_LINKS = [
 export function SiteHeader({ floating = false }: { floating?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Il menu mobile viene montato via portal su <body>: così il suo
+  // position:fixed non dipende mai da antenati con transform/filter.
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -105,17 +111,19 @@ export function SiteHeader({ floating = false }: { floating?: boolean }) {
           Sulla home (floating) NON si mette, così l'hero parte da bordo schermo. */}
       {!floating && <div aria-hidden className="h-[4.75rem] sm:h-[5.5rem]" />}
 
-      {/* Menu a finestra (mobile) */}
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.div
-            key="mobile-menu"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            className="fixed inset-0 z-[60] flex flex-col bg-background/95 backdrop-blur-2xl md:hidden"
-          >
+      {/* Menu a finestra (mobile) — montato su <body> via portal */}
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {menuOpen && (
+              <motion.div
+                key="mobile-menu"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="fixed inset-0 z-[100] flex flex-col bg-background/95 backdrop-blur-2xl md:hidden"
+              >
             <div className="container flex h-16 shrink-0 items-center justify-between">
               <Link
                 href="/"
@@ -193,8 +201,10 @@ export function SiteHeader({ floating = false }: { floating?: boolean }) {
               <LogoMark className="h-5 w-auto text-muted-foreground/50" />
             </motion.div>
           </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </>
   );
 }

@@ -17,19 +17,29 @@ export interface Hero3DProps {
   subtitle: string;
   searchPlaceholder: string;
   backgroundUrl: string;
-  /** Sfondo dedicato a mobile/tablet (opzionale): se vuoto usa quello desktop */
+  /** Sfondi dedicati per viewport (opzionali): se vuoti usano il desktop */
+  backgroundTabletUrl?: string;
   backgroundMobileUrl?: string;
+  /** Rider PNG per viewport. Su tablet/mobile compare SOLO se caricato qui. */
   foregroundUrl: string;
+  foregroundTabletUrl?: string;
+  foregroundMobileUrl?: string;
   /** Classi tipografiche dal CMS (vincolate alla scala Tailwind) */
   eventNameClass: string;
   dateClass: string;
   /** Override di inquadratura manuale dal CMS */
   bgPosition?: string;
   bgScale?: number;
+  bgTabletPosition?: string;
+  bgTabletScale?: number;
   bgMobilePosition?: string;
   bgMobileScale?: number;
   fgPosition?: string;
   fgScale?: number;
+  fgTabletPosition?: string;
+  fgTabletScale?: number;
+  fgMobilePosition?: string;
+  fgMobileScale?: number;
   /** In preview disattiviamo il parallax legato al mouse */
   interactive?: boolean;
 }
@@ -53,19 +63,31 @@ export function Hero3D({
   subtitle,
   searchPlaceholder,
   backgroundUrl,
+  backgroundTabletUrl = "",
   backgroundMobileUrl = "",
   foregroundUrl,
+  foregroundTabletUrl = "",
+  foregroundMobileUrl = "",
   eventNameClass,
   dateClass,
   bgPosition = "center",
   bgScale = 100,
+  bgTabletPosition = "center",
+  bgTabletScale = 100,
   bgMobilePosition = "center",
   bgMobileScale = 100,
   fgPosition = "center bottom",
   fgScale = 100,
+  fgTabletPosition = "center bottom",
+  fgTabletScale = 100,
+  fgMobilePosition = "center bottom",
+  fgMobileScale = 100,
   interactive = true,
 }: Hero3DProps) {
-  // Sfondo mobile: usa quello dedicato se caricato, altrimenti il desktop
+  // Sfondi per viewport: usano quello dedicato se caricato, altrimenti il desktop
+  const tabletBgUrl = backgroundTabletUrl || backgroundUrl;
+  const tabletBgPosition = backgroundTabletUrl ? bgTabletPosition : bgPosition;
+  const tabletBgScale = backgroundTabletUrl ? bgTabletScale : bgScale;
   const mobileBgUrl = backgroundMobileUrl || backgroundUrl;
   const mobileBgPosition = backgroundMobileUrl ? bgMobilePosition : bgPosition;
   const mobileBgScale = backgroundMobileUrl ? bgMobileScale : bgScale;
@@ -89,18 +111,20 @@ export function Hero3D({
       onMouseLeave={() => setP({ x: 0, y: 0 })}
       className="relative isolate flex flex-col overflow-hidden rounded-b-[2.5rem] lg:min-h-[100svh]"
     >
-      {/* LIVELLO 1 — sfondo (swap responsive desktop / mobile-tablet) */}
+      {/* LIVELLO 1 — sfondo (swap responsive desktop / mobile-tablet).
+          scale(1.06) di sicurezza: overscan che assorbe la traslazione del
+          parallasse → nessun bordo nero ai limiti del movimento del mouse. */}
       <div
         className="absolute inset-0 -z-10 transition-transform duration-300 ease-out"
         style={{
-          transform: `translate3d(${p.x * -18}px, ${p.y * -18}px, 0)`,
+          transform: `translate3d(${p.x * -18}px, ${p.y * -18}px, 0) scale(1.06)`,
         }}
       >
-        {backgroundUrl || backgroundMobileUrl ? (
+        {backgroundUrl || backgroundTabletUrl || backgroundMobileUrl ? (
           <>
             {/* Desktop (≥1024px) */}
             <img
-              src={backgroundUrl || mobileBgUrl}
+              src={backgroundUrl || tabletBgUrl}
               alt=""
               style={{
                 objectPosition: bgPosition,
@@ -108,7 +132,17 @@ export function Hero3D({
               }}
               className="hidden h-full w-full object-cover lg:block"
             />
-            {/* Mobile / Tablet (<1024px) */}
+            {/* Tablet (768–1023px) */}
+            <img
+              src={tabletBgUrl}
+              alt=""
+              style={{
+                objectPosition: tabletBgPosition,
+                transform: `scale(${Math.max(1.1, tabletBgScale / 100)})`,
+              }}
+              className="hidden h-full w-full object-cover md:block lg:hidden"
+            />
+            {/* Mobile (<768px) */}
             <img
               src={mobileBgUrl}
               alt=""
@@ -116,7 +150,7 @@ export function Hero3D({
                 objectPosition: mobileBgPosition,
                 transform: `scale(${Math.max(1.1, mobileBgScale / 100)})`,
               }}
-              className="h-full w-full object-cover lg:hidden"
+              className="h-full w-full object-cover md:hidden"
             />
           </>
         ) : (
@@ -132,7 +166,7 @@ export function Hero3D({
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-[8] overflow-hidden opacity-[0.5]"
-        style={{ transform: `translate3d(${p.x * -10}px, ${p.y * -10}px, 0)` }}
+        style={{ transform: `translate3d(${p.x * -10}px, ${p.y * -10}px, 0) scale(1.05)` }}
       >
         <svg className="h-full w-full" preserveAspectRatio="xMidYMax slice" viewBox="0 0 1200 600">
           <defs>
@@ -180,25 +214,50 @@ export function Hero3D({
         </svg>
       </div>
 
-      {/* LIVELLO 3 — rider scontornato: SOLO desktop (≥1024px).
-          Su mobile/tablet è nascosto (hidden) per evitare overflow e clipping.
-          Posizione e zoom restano pilotati dagli slider del CMS. */}
-      {foregroundUrl && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-0 z-[5] hidden w-[58%] transition-transform duration-300 ease-out lg:block"
-          style={{
-            transform: `translate3d(${p.x * 38}px, ${p.y * 24}px, 0) scale(${fgScale / 100})`,
-            transformOrigin: "bottom right",
-          }}
-        >
-          <img
-            src={foregroundUrl}
-            alt=""
-            style={{ objectPosition: fgPosition }}
-            className="h-full w-full object-contain drop-shadow-[0_35px_65px_rgba(0,0,0,0.7)]"
-          />
-        </div>
+      {/* LIVELLO 3 — rider scontornato, per viewport. Su tablet/mobile compare
+          SOLO se è stato caricato un PNG dedicato per quel dispositivo
+          (altrimenti niente rider → sfondo pulito). Posizione/zoom dal CMS. */}
+      {[
+        {
+          url: foregroundUrl,
+          position: fgPosition,
+          scale: fgScale,
+          vis: "hidden lg:block",
+        },
+        {
+          url: foregroundTabletUrl,
+          position: fgTabletPosition,
+          scale: fgTabletScale,
+          vis: "hidden md:block lg:hidden",
+        },
+        {
+          url: foregroundMobileUrl,
+          position: fgMobilePosition,
+          scale: fgMobileScale,
+          vis: "block md:hidden",
+        },
+      ].map((rider, i) =>
+        rider.url ? (
+          <div
+            key={i}
+            aria-hidden
+            className={cn(
+              "pointer-events-none absolute inset-y-0 right-0 z-[5] w-[58%] transition-transform duration-300 ease-out",
+              rider.vis
+            )}
+            style={{
+              transform: `translate3d(${p.x * 38}px, ${p.y * 24}px, 0) scale(${rider.scale / 100})`,
+              transformOrigin: "bottom right",
+            }}
+          >
+            <img
+              src={rider.url}
+              alt=""
+              style={{ objectPosition: rider.position }}
+              className="h-full w-full object-contain drop-shadow-[0_35px_65px_rgba(0,0,0,0.7)]"
+            />
+          </div>
+        ) : null
       )}
 
       {/* LIVELLO 2 — contenuto in colonna SINISTRA. Centro/destra liberi per
@@ -215,7 +274,7 @@ export function Hero3D({
 
           <h1
             className={cn(
-              "mt-6 font-semibold uppercase leading-[0.95] tracking-tight",
+              "mt-6 font-semibold uppercase leading-[0.95] tracking-tight lg:whitespace-nowrap",
               eventNameClass
             )}
           >
