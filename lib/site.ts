@@ -8,7 +8,7 @@ export const site = {
   instagramDmUrl: "https://ig.me/m/lifeshot.media",
   /** Handle mostrato nelle pagine */
   instagramHandle: "@lifeshot.media",
-  youtubeUrl: "https://www.youtube.com/@lifeshot",
+  youtubeUrl: "https://www.youtube.com/@lifeshot-media",
   /** Email ufficiale unica */
   email: "lifeshotmedia@gmail.com",
 } as const;
