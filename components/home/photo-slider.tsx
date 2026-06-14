@@ -32,9 +32,8 @@ export function PhotoSlider({ items }: { items: SliderItem[] }) {
 
     // Solo desktop con puntatore fine: il 3D scroll-driven per-frame su touch
     // (tablet/mobile) causa microscatti. Lì lasciamo lo swipe nativo piatto.
-    const is3d = window.matchMedia(
-      "(min-width: 1024px) and (pointer: fine)"
-    ).matches;
+    // Forziamo l'abilitazione del 3D su tutti i dispositivi
+    const is3d = true;
     if (!is3d) {
       for (const card of cards.current) {
         if (!card) continue;
