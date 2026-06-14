@@ -254,7 +254,7 @@ export function Hero3D({
               src={rider.url}
               alt=""
               style={{ objectPosition: rider.position }}
-              className="h-full w-full object-contain drop-shadow-[0_35px_65px_rgba(0,0,0,0.7)]"
+              className="relative z-20 h-full w-full object-contain drop-shadow-[0_35px_65px_rgba(0,0,0,0.7)]"
             />
           </div>
         ) : null
@@ -282,7 +282,7 @@ export function Hero3D({
           </h1>
 
           {/* Data + ora in grande, stile locandina evento */}
-          <div className="mt-6 flex flex-col md:flex-row md:items-baseline gap-y-2 md:gap-x-5 relative z-0">
+          <div className="mt-6 flex flex-col md:flex-row md:items-baseline gap-y-2 md:gap-x-5">
           {/* Data grande con "whitespace-nowrap" per obbligarla a stare su una riga sola */}
             <span
               className={cn(
