@@ -151,7 +151,7 @@ export default async function PhotoPage({
                   href={site.instagramDmUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group mt-5 inline-flex h-auto min-h-12 w-full items-center justify-center gap-4 whitespace-nowrap rounded-2xl bg-primary px-5 py-3 text-center text-sm font-semibold leading-snug text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] hover:shadow-primary/40 active:scale-95"
+                  className="group mt-5 inline-flex h-auto min-h-12 w-full items-center justify-center gap-10 whitespace-nowrap rounded-2xl bg-primary px-5 py-3 text-center text-sm font-semibold leading-snug text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] hover:shadow-primary/40 active:scale-95"
                 >
                   <Instagram className="h-6 w-6 shrink-0 transition-transform group-hover:rotate-[8deg]" />
                   <span className="leading-tight text-center"> 
