@@ -302,23 +302,10 @@ export function Hero3D({
 
           {/* Luogo (rimossa la riga "Copertura Lifeshot") */}
           {eventLocation && (
-            <div className="mt-4 flex flex-col items-center justify-center text-center sm:flex-row sm:justify-start">
-              <div className="lex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground sm:text-base">
-                
-              {/* Orario */}
-                <div className="flex items-center gap-1.5">
-                  <Clock className="h-4 w-4 text-white/80" />
-                  <span>{eventTime}</span>
-                </div> 
-
-              {/* Luogo */}
-                <div className="flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  <span>{eventLocation}</span>
-                </div>
-                
-               </div>
-             </div>
+            <p className="mt-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground sm:text-base">
+              <MapPin className="h-4 w-4 text-primary" />
+              {eventLocation}
+            </p>
           )}
 
           {/* CTA principale — grande e prioritaria (unico bottone d'azione).
