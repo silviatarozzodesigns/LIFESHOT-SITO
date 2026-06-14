@@ -33,7 +33,7 @@ const socials = [
   },
   {
     label: "YouTube",
-    value: "Lifeshot",
+    value: "LIFESHOT",
     href: site.youtubeUrl,
     icon: Youtube,
   },
