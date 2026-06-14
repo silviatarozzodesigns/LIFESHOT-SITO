@@ -327,7 +327,7 @@ export function Hero3D({
 
           {/* Blocco RICERCA — separato e arioso. Centrato su mobile/tablet,
               allineato a sinistra su desktop. */}
-          <div className="mx-auto mt-12 max-w-md border-t border-border/40 pt-20 text-center lg:mx-0 lg:text-left">
+          <div className="mx-auto mt-4 pt-8 sm:mt-12 sm:pt-20 max-w-md border-t border-border/40 text-center lg:mx-0 lg:text-left">
             <p className="text-balance text-sm text-muted-foreground sm:text-base">
               {subtitle}
             </p>
