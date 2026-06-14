@@ -282,7 +282,7 @@ export function Hero3D({
           </h1>
 
           {/* Data + ora in grande, stile locandina evento */}
-          <div className="mt-6 flex flex-col md:flex-row md:items-center gap-y-2 md:gap-x-6">
+          <div className="mt-6 flex flex-col md:flex-row md:items-baseline gap-y-2 md:gap-x-5 relative z-0">
           {/* Data grande con "whitespace-nowrap" per obbligarla a stare su una riga sola */}
             <span
               className={cn(
@@ -293,8 +293,8 @@ export function Hero3D({
               {eventDate}
             </span>
             {eventTime && (
-              <span className="inline-flex items-center gap-1.5 text-lg md:text-xl font-medium text-foreground md:mt-1 bg-white/5 px-3 py-1 rounded-md border border-white/10 w-fit">
-                <Clock className="h-4 w-4 text-brand-yellow" />
+              <span className="inline-flex items-center gap-1.5 text-lg font-medium text-foreground pb-0 md:pb-1">
+                <Clock className="h-4 w-4 text-white/80" />
                 {eventTime}
               </span>
             )}
