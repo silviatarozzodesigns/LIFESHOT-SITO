@@ -39,26 +39,25 @@ export async function GET(
     if (!photo) return new Response("Not found", { status: 404 });
 
     const storage = getStorage();
-    let body: Buffer;
-    let contentType = "image/jpeg";
 
-    if (photo.originalKey) {
-      // Originale privato → preview ridimensionata per il web.
-      // Con filigrana (default) o pulita se il flag è disattivato sulla foto.
-      const original = await storage.download(photo.originalKey);
-      body =
-        photo.watermark === false
-          ? await createCoverImage(original)
-          : (await createWatermarkedPreview(original)).buffer;
-    } else {
-      // Foto legacy senza originale separato: si serve il file salvato
-      body = await storage.download(photo.storageKey);
-      contentType = photo.mimeType ?? "image/jpeg";
-    }
+    // Sorgente: l'originale privato se presente, altrimenti il file salvato
+    // (copre anche le foto legacy senza originalKey separato).
+    const sourceKey = photo.originalKey ?? photo.storageKey;
+    if (!sourceKey) return new Response("Not found", { status: 404 });
+    const original = await storage.download(sourceKey);
+
+    // La filigrana è SEMPRE applicata, tranne quando disattivata di proposito
+    // sulla singola foto (toggle CMS). Nessun serve "pulito" silenzioso:
+    // in caso di errore di sharp la richiesta fallisce (catch → 500), non
+    // restituisce mai l'immagine senza watermark.
+    const body =
+      photo.watermark === false
+        ? await createCoverImage(original)
+        : (await createWatermarkedPreview(original)).buffer;
 
     return new Response(new Uint8Array(body), {
       headers: {
-        "Content-Type": contentType,
+        "Content-Type": "image/jpeg",
         // Cache lunga su CDN e browser: la foto non cambia mai (id immutabile)
         "Cache-Control": "public, max-age=86400, s-maxage=31536000, immutable",
       },

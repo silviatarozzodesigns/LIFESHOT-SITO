@@ -228,7 +228,8 @@ export const PAGES: Record<PageSlug, PageDef> = {
       },
       "hero.searchPlaceholder": {
         label: "Hero — placeholder ricerca",
-        default: "Scrivi il tuo nome o un numero di gara",
+        // Corto di proposito: deve leggersi PER INTERO anche su telefoni stretti
+        default: "Nome o numero di gara",
         max: 60,
       },
       "events.title": {

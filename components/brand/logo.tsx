@@ -45,8 +45,10 @@ export function LogoWordmark({ className }: { className?: string }) {
 export function Logo({ className }: { className?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-3", className)}>
-      <LogoMark className="h-7 w-auto shrink-0 sm:h-9" />
-      <LogoWordmark className="h-4 w-auto sm:h-[1.2rem]" />
+      <LogoMark className="h-8 w-auto shrink-0 sm:h-10" />
+      {/* Nudge ottico: la massa dell'icona è più in basso, così il wordmark
+          appare centrato rispetto all'icona e all'altezza della barra */}
+      <LogoWordmark className="relative top-px h-[1.05rem] w-auto sm:top-0.5 sm:h-[1.35rem]" />
     </span>
   );
 }

@@ -88,8 +88,8 @@ export function HeroSearch({
           goToGallery();
         }}
         className={cn(
-          "flex items-center gap-3 rounded-full border bg-card/80 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.6)] backdrop-blur-md transition-colors focus-within:border-primary/60 hover:border-primary/40",
-          large ? "px-6 py-2.5" : "px-5 py-2"
+          "flex items-center gap-2.5 rounded-full border bg-card/80 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.6)] backdrop-blur-md transition-colors focus-within:border-primary/60 hover:border-primary/40",
+          large ? "px-5 py-2.5" : "px-5 py-2"
         )}
       >
         {loading ? (
@@ -104,7 +104,7 @@ export function HeroSearch({
           placeholder={placeholder}
           aria-label="Cerca per nome o numero di gara"
           className={cn(
-            "flex-1 bg-transparent outline-none placeholder:text-muted-foreground",
+            "min-w-0 flex-1 bg-transparent outline-none placeholder:text-foreground/60",
             large ? "h-12 text-base" : "h-10 text-base sm:text-sm"
           )}
         />

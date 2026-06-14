@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useRef, useState } from "react";
-import { CalendarDays, Clock, Instagram, MapPin } from "lucide-react";
+import { Clock, Instagram, MapPin } from "lucide-react";
 import { HeroSearch } from "@/components/home/hero-search";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -76,7 +76,7 @@ export function Hero3D({
       ref={ref}
       onMouseMove={onMove}
       onMouseLeave={() => setP({ x: 0, y: 0 })}
-      className="relative isolate flex min-h-[100svh] flex-col overflow-hidden"
+      className="relative isolate flex flex-col overflow-hidden rounded-b-[2.5rem] lg:min-h-[100svh]"
     >
       {/* LIVELLO 1 — sfondo */}
       <div
@@ -153,43 +153,32 @@ export function Hero3D({
         </svg>
       </div>
 
-      {/* LIVELLO 3 — rider scontornato.
-          • Mobile: full-bleed dietro al testo, RITAGLIATO come lo sfondo
-            (object-cover) → resta della stessa dimensione, non si rimpicciolisce.
-          • Desktop (sm+): esce sulla destra e si sovrappone al testo (z-20),
-            mostrato per intero (object-contain), ancorato in basso-destra.
-          Posizione e zoom sono pilotati dagli slider del CMS. */}
+      {/* LIVELLO 3 — rider scontornato: SOLO desktop (≥1024px).
+          Su mobile/tablet è nascosto (hidden) per evitare overflow e clipping.
+          Posizione e zoom restano pilotati dagli slider del CMS. */}
       {foregroundUrl && (
-        <>
-          <div
-            aria-hidden
-            className="pointer-events-none absolute bottom-0 right-0 top-0 z-[15] w-full transition-transform duration-300 ease-out sm:z-20 sm:w-[60%] lg:w-[54%]"
-            style={{
-              transform: `translate3d(${p.x * 42}px, ${p.y * 26}px, 0) scale(${fgScale / 100})`,
-              transformOrigin: "bottom right",
-            }}
-          >
-            <img
-              src={foregroundUrl}
-              alt=""
-              style={{ objectPosition: fgPosition }}
-              className="h-full w-full object-cover drop-shadow-[0_35px_65px_rgba(0,0,0,0.7)] sm:object-contain"
-            />
-          </div>
-          {/* Velo solo-mobile: scurisce il rider per tenere il testo leggibile */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 z-[16] bg-gradient-to-t from-background via-background/75 to-background/35 sm:hidden"
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-0 z-[5] hidden w-[58%] transition-transform duration-300 ease-out lg:block"
+          style={{
+            transform: `translate3d(${p.x * 38}px, ${p.y * 24}px, 0) scale(${fgScale / 100})`,
+            transformOrigin: "bottom right",
+          }}
+        >
+          <img
+            src={foregroundUrl}
+            alt=""
+            style={{ objectPosition: fgPosition }}
+            className="h-full w-full object-contain drop-shadow-[0_35px_65px_rgba(0,0,0,0.7)]"
           />
-        </>
+        </div>
       )}
 
-      {/* LIVELLO 2 — contenuto evento. Centrato verticalmente nella hero
-          full-screen, con spazio in alto per la navbar fluttuante.
-          Mobile sopra al rider velato (z-20), desktop sotto (z-10). */}
-      <div className="container relative z-20 flex flex-1 items-center pt-28 sm:z-10 sm:pt-32">
-        <div className="max-w-2xl">
-          <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+      {/* LIVELLO 2 — contenuto in colonna SINISTRA. Centro/destra liberi per
+          valorizzare lo scatto del pilota. Spazio ampio per più "respiro". */}
+      <div className="container relative z-10 flex flex-1 flex-col justify-center py-28 sm:py-32 lg:py-28">
+        <div className="max-w-xl">
+          <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
@@ -199,7 +188,7 @@ export function Hero3D({
 
           <h1
             className={cn(
-              "mt-5 font-semibold uppercase leading-[0.95] tracking-tight",
+              "mt-6 font-semibold uppercase leading-[0.95] tracking-tight",
               eventNameClass
             )}
           >
@@ -224,50 +213,48 @@ export function Hero3D({
             )}
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
-            {eventLocation && (
-              <span className="inline-flex items-center gap-1.5">
-                <MapPin className="h-4 w-4 text-primary" />
-                {eventLocation}
-              </span>
-            )}
-            <span className="inline-flex items-center gap-1.5">
-              <CalendarDays className="h-4 w-4 text-primary" />
-              Copertura Lifeshot
-            </span>
-          </div>
+          {/* Luogo (rimossa la riga "Copertura Lifeshot") */}
+          {eventLocation && (
+            <p className="mt-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground sm:text-base">
+              <MapPin className="h-4 w-4 text-primary" />
+              {eventLocation}
+            </p>
+          )}
 
-          {/* Unica CTA accanto all'immagine: prenotazione via DM Instagram */}
-          <div className="mt-7 flex flex-wrap items-center gap-3">
+          {/* CTA principale — grande e prioritaria (unico bottone d'azione) */}
+          <div className="mt-8 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-4">
             <a
               href={site.instagramDmUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:scale-[1.03] hover:shadow-primary/40 active:scale-95"
+              className="group inline-flex items-center justify-center gap-2.5 rounded-full bg-primary px-8 py-4 text-base font-semibold text-primary-foreground shadow-xl shadow-primary/30 transition-all hover:scale-[1.03] hover:shadow-primary/50 active:scale-95"
             >
-              <Instagram className="h-4 w-4 transition-transform group-hover:rotate-[8deg]" />
+              <Instagram className="h-5 w-5 transition-transform group-hover:rotate-[8deg]" />
               Prenota ora i tuoi contenuti
             </a>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground sm:text-sm">
               Rispondiamo in DM, di solito in giornata.
             </span>
+          </div>
+
+          {/* Blocco RICERCA — separato e arioso, sotto al testo, a sinistra */}
+          <div className="mt-12 max-w-md border-t border-border/40 pt-8">
+            <p className="text-balance text-sm text-muted-foreground sm:text-base">
+              {subtitle}
+            </p>
+            <div className="mt-4">
+              <HeroSearch placeholder={searchPlaceholder} large />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* SEARCH BAND — in fondo alla hero (sotto il blocco immagine):
-          sottotitolo + barra di ricerca grande, centrati. Il pannello
-          risultati si apre verso l'ALTO per non uscire dallo schermo. */}
-      <div className="container relative z-20 pb-10 pt-6 sm:z-10 sm:pb-14">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-balance text-base text-muted-foreground sm:text-lg">
-            {subtitle}
-          </p>
-          <div className="mx-auto mt-5 flex max-w-xl justify-center">
-            <HeroSearch placeholder={searchPlaceholder} large dropUp />
-          </div>
-        </div>
-      </div>
+      {/* Sfumatura inferiore: dissolve la hero nel background sottostante,
+          evitando lo stacco netto verso la sezione "Dietro l'obiettivo". */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-40 bg-gradient-to-b from-transparent to-background"
+      />
     </section>
   );
 }
