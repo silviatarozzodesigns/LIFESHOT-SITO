@@ -17,6 +17,8 @@ export interface Hero3DProps {
   subtitle: string;
   searchPlaceholder: string;
   backgroundUrl: string;
+  /** Sfondo dedicato a mobile/tablet (opzionale): se vuoto usa quello desktop */
+  backgroundMobileUrl?: string;
   foregroundUrl: string;
   /** Classi tipografiche dal CMS (vincolate alla scala Tailwind) */
   eventNameClass: string;
@@ -24,6 +26,8 @@ export interface Hero3DProps {
   /** Override di inquadratura manuale dal CMS */
   bgPosition?: string;
   bgScale?: number;
+  bgMobilePosition?: string;
+  bgMobileScale?: number;
   fgPosition?: string;
   fgScale?: number;
   /** In preview disattiviamo il parallax legato al mouse */
@@ -49,15 +53,22 @@ export function Hero3D({
   subtitle,
   searchPlaceholder,
   backgroundUrl,
+  backgroundMobileUrl = "",
   foregroundUrl,
   eventNameClass,
   dateClass,
   bgPosition = "center",
   bgScale = 100,
+  bgMobilePosition = "center",
+  bgMobileScale = 100,
   fgPosition = "center bottom",
   fgScale = 100,
   interactive = true,
 }: Hero3DProps) {
+  // Sfondo mobile: usa quello dedicato se caricato, altrimenti il desktop
+  const mobileBgUrl = backgroundMobileUrl || backgroundUrl;
+  const mobileBgPosition = backgroundMobileUrl ? bgMobilePosition : bgPosition;
+  const mobileBgScale = backgroundMobileUrl ? bgMobileScale : bgScale;
   const ref = useRef<HTMLDivElement>(null);
   const [p, setP] = useState({ x: 0, y: 0 });
 
@@ -78,20 +89,36 @@ export function Hero3D({
       onMouseLeave={() => setP({ x: 0, y: 0 })}
       className="relative isolate flex flex-col overflow-hidden rounded-b-[2.5rem] lg:min-h-[100svh]"
     >
-      {/* LIVELLO 1 — sfondo */}
+      {/* LIVELLO 1 — sfondo (swap responsive desktop / mobile-tablet) */}
       <div
         className="absolute inset-0 -z-10 transition-transform duration-300 ease-out"
         style={{
-          transform: `translate3d(${p.x * -18}px, ${p.y * -18}px, 0) scale(${Math.max(1.1, bgScale / 100)})`,
+          transform: `translate3d(${p.x * -18}px, ${p.y * -18}px, 0)`,
         }}
       >
-        {backgroundUrl ? (
-          <img
-            src={backgroundUrl}
-            alt=""
-            style={{ objectPosition: bgPosition }}
-            className="h-full w-full object-cover"
-          />
+        {backgroundUrl || backgroundMobileUrl ? (
+          <>
+            {/* Desktop (≥1024px) */}
+            <img
+              src={backgroundUrl || mobileBgUrl}
+              alt=""
+              style={{
+                objectPosition: bgPosition,
+                transform: `scale(${Math.max(1.1, bgScale / 100)})`,
+              }}
+              className="hidden h-full w-full object-cover lg:block"
+            />
+            {/* Mobile / Tablet (<1024px) */}
+            <img
+              src={mobileBgUrl}
+              alt=""
+              style={{
+                objectPosition: mobileBgPosition,
+                transform: `scale(${Math.max(1.1, mobileBgScale / 100)})`,
+              }}
+              className="h-full w-full object-cover lg:hidden"
+            />
+          </>
         ) : (
           <div className="h-full w-full bg-gradient-to-b from-secondary to-background" />
         )}

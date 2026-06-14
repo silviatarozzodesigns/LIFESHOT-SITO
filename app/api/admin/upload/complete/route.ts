@@ -4,14 +4,10 @@ import { Types } from "mongoose";
 import { connectDB } from "@/lib/db";
 import { Event } from "@/models/Event";
 import { Photo } from "@/models/Photo";
-import { getStorage } from "@/lib/storage";
+import { getStorage, deleteByPublicUrl } from "@/lib/storage";
 import { isAdmin } from "@/lib/auth";
 import { extractRaceNumber } from "@/lib/parse-filename";
-import {
-  createCoverImage,
-  createWatermarkedPreview,
-  getPreviewDimensions,
-} from "@/lib/watermark";
+import { createCoverImage, getPreviewDimensions } from "@/lib/watermark";
 import { getPublishedContent } from "@/lib/data/content";
 
 /**
@@ -100,6 +96,7 @@ export async function POST(request: Request) {
     const original = await storage.download(key);
 
     if (kind === "cover") {
+      const previousCover = event.coverImage;
       const coverBuffer = await createCoverImage(original);
       const coverKey = key.replace(/\.[^.]+$/, "") + "-web.jpg";
       const { url } = await storage.upload(coverBuffer, coverKey, "image/jpeg");
@@ -107,12 +104,16 @@ export async function POST(request: Request) {
       await storage.delete(key).catch(() => {});
       event.coverImage = url;
       await event.save();
+      // Niente orfani: elimina la copertina precedente dal cloud
+      if (previousCover && previousCover !== url) {
+        await deleteByPublicUrl(previousCover);
+      }
       revalidatePath("/");
       return NextResponse.json({ ok: true, url });
     }
 
-    // kind === "photo": l'originale resta privato su R2; la versione
-    // pubblica filigranata viene generata al volo da /api/images/<id>
+    // kind === "photo": su R2 resta SOLO l'originale pulito. La preview con
+    // filigrana è generata al volo da /api/images/<id> (nessun duplicato su cloud).
     const dimensions = await getPreviewDimensions(original);
     const raceNumber = extractRaceNumber(filename);
     // Filigrana: valore esplicito dal client, altrimenti default globale dal CMS
@@ -122,15 +123,6 @@ export async function POST(request: Request) {
         : (await getPublishedContent()).settings.watermarkEnabled;
     const featured = body.featured === true;
 
-    // Preview baked su R2 (filigrana impressa ora). Un errore qui risale al
-    // catch → l'upload fallisce, niente foto salvata pulita di nascosto.
-    const previewBuffer = watermark
-      ? (await createWatermarkedPreview(original)).buffer
-      : await createCoverImage(original);
-    const previewKey =
-      key.replace("/original/", "/preview/").replace(/\.[^.]+$/, "") + ".jpg";
-    await storage.upload(previewBuffer, previewKey, "image/jpeg");
-
     const photoId = new Types.ObjectId();
     const photo = await Photo.create({
       _id: photoId,
@@ -139,7 +131,6 @@ export async function POST(request: Request) {
       storageKey: key,
       url: `/api/images/${photoId}`,
       originalKey: key,
-      previewKey,
       raceNumber,
       width: dimensions.width,
       height: dimensions.height,

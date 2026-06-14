@@ -34,27 +34,22 @@ export async function GET(
   try {
     await connectDB();
     const photo = await Photo.findById(id)
-      .select("previewKey originalKey storageKey watermark")
+      .select("originalKey storageKey watermark")
       .lean();
     if (!photo) return new Response("Not found", { status: 404 });
 
     const storage = getStorage();
 
-    let body: Buffer;
-    if (photo.previewKey) {
-      // Preview già processata (filigrana baked all'upload): la serviamo così.
-      body = await storage.download(photo.previewKey);
-    } else {
-      // Foto legacy senza preview salvata: filigrana al volo dall'originale.
-      // Mai un serve "pulito" silenzioso: in errore la richiesta fa 500.
-      const sourceKey = photo.originalKey ?? photo.storageKey;
-      if (!sourceKey) return new Response("Not found", { status: 404 });
-      const original = await storage.download(sourceKey);
-      body =
-        photo.watermark === false
-          ? await createCoverImage(original)
-          : (await createWatermarkedPreview(original)).buffer;
-    }
+    // Sul cloud c'è SOLO l'originale pulito: la filigrana è SEMPRE applicata
+    // al volo qui, uniforme per tutto il catalogo. Mai un serve "pulito"
+    // silenzioso: in caso di errore la richiesta risale al catch → 500.
+    const sourceKey = photo.originalKey ?? photo.storageKey;
+    if (!sourceKey) return new Response("Not found", { status: 404 });
+    const original = await storage.download(sourceKey);
+    const body =
+      photo.watermark === false
+        ? await createCoverImage(original)
+        : (await createWatermarkedPreview(original)).buffer;
 
     return new Response(new Uint8Array(body), {
       headers: {

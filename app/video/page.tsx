@@ -68,15 +68,18 @@ export default async function VideoPage() {
                       {video.description}
                     </p>
                   )}
-                  {/* C.T.A. per ogni video */}
+                  {/* C.T.A. per ogni video: testo + bottone DM (stile sito) */}
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    {t("cta.label")}
+                  </p>
                   <a
                     href={site.instagramDmUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary transition-opacity hover:opacity-80"
+                    className="group mt-4 inline-flex items-center gap-2.5 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:scale-[1.03] hover:shadow-primary/40 active:scale-95"
                   >
-                    <Instagram className="h-4 w-4" />
-                    {t("cta.label")}
+                    <Instagram className="h-6 w-6 transition-transform group-hover:rotate-[8deg]" />
+                    Contattaci in DM
                   </a>
                 </article>
               </FadeIn>

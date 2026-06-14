@@ -5,7 +5,7 @@ import { Types } from "mongoose";
 import { connectDB } from "@/lib/db";
 import { Event } from "@/models/Event";
 import { Photo } from "@/models/Photo";
-import { getStorage } from "@/lib/storage";
+import { getStorage, deleteByPublicUrl } from "@/lib/storage";
 import { slugify } from "@/lib/parse-filename";
 import { isAdmin } from "@/lib/auth";
 
@@ -109,9 +109,19 @@ export async function updateEvent(
     event.date = new Date(input.date);
     event.location = input.location?.trim() ?? "";
     event.description = input.description?.trim() ?? "";
+    // Cover sostituita/rimossa: elimina subito la vecchia da Cloudflare
+    const previousCover = event.coverImage;
     if (input.coverImage !== undefined) event.coverImage = input.coverImage;
     if (input.published !== undefined) event.published = input.published;
     await event.save();
+
+    if (
+      input.coverImage !== undefined &&
+      previousCover &&
+      previousCover !== input.coverImage
+    ) {
+      await deleteByPublicUrl(previousCover);
+    }
 
     revalidatePublicPages();
     return { ok: true, id, slug: event.slug };
@@ -135,12 +145,12 @@ export async function deleteEvent(id: string): Promise<ActionResult> {
     if (!event) return { ok: false, error: "Evento non trovato." };
 
     const photos = await Photo.find({ event: id })
-      .select("storageKey originalKey")
+      .select("storageKey originalKey previewKey")
       .lean();
     const storage = getStorage();
     const keys = photos.flatMap((photo) =>
-      [photo.storageKey, photo.originalKey].filter((k): k is string =>
-        Boolean(k)
+      [photo.storageKey, photo.originalKey, photo.previewKey].filter(
+        (k): k is string => Boolean(k)
       )
     );
     const results = await Promise.allSettled(
@@ -152,6 +162,8 @@ export async function deleteEvent(id: string): Promise<ActionResult> {
         `[lifeshot] deleteEvent: ${failed}/${keys.length} file non eliminati dallo storage`
       );
     }
+    // Elimina anche la copertina dell'evento dal cloud
+    await deleteByPublicUrl(event.coverImage);
 
     await Photo.deleteMany({ event: id });
     await event.deleteOne();

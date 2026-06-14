@@ -190,3 +190,21 @@ export function getStorage(): StorageAdapter {
 export function getStorageBackend(): "r2" | "local" {
   return isR2Configured() ? "r2" : "local";
 }
+
+/**
+ * Cancella dal cloud il file corrispondente a un URL pubblico (cover, asset
+ * editor, gallerie…). No-op sicuro per URL vuoti, default vettoriali (/hero/…),
+ * object-URL (blob:) o URL che non mappano a una chiave dello storage.
+ * Garantisce che il CMS resti specchiato 1:1 con Cloudflare, senza orfani.
+ */
+export async function deleteByPublicUrl(url?: string | null): Promise<void> {
+  if (!url || url.startsWith("blob:") || url.startsWith("/hero/")) return;
+  try {
+    const storage = getStorage();
+    const key = storage.keyFromPublicUrl(url);
+    if (!key) return;
+    await storage.delete(key);
+  } catch (error) {
+    console.warn("[lifeshot] deleteByPublicUrl fallita:", error);
+  }
+}

@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
  * le preview (la cache è `immutable`, quindi senza un cambio di URL le foto
  * già servite resterebbero con la filigrana vecchia).
  */
-export const WATERMARK_VERSION = "2";
+export const WATERMARK_VERSION = "3";
 
 /** URL della preview filigranata di una foto (con cache-bust del watermark). */
 export function photoSrc(id: string): string {

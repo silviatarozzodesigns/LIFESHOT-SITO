@@ -4,14 +4,10 @@ import { Types } from "mongoose";
 import { connectDB } from "@/lib/db";
 import { Event } from "@/models/Event";
 import { Photo } from "@/models/Photo";
-import { getStorage } from "@/lib/storage";
+import { getStorage, deleteByPublicUrl } from "@/lib/storage";
 import { isAdmin } from "@/lib/auth";
 import { buildStorageKey, extractRaceNumber } from "@/lib/parse-filename";
-import {
-  createCoverImage,
-  createWatermarkedPreview,
-  getPreviewDimensions,
-} from "@/lib/watermark";
+import { createCoverImage, getPreviewDimensions } from "@/lib/watermark";
 import { getPublishedContent } from "@/lib/data/content";
 
 /**
@@ -164,6 +160,7 @@ export async function POST(request: Request) {
     const storage = getStorage();
 
     if (kind === "cover") {
+      const previousCover = event.coverImage;
       const coverBuffer = await createCoverImage(buffer);
       const key = buildStorageKey(`cover-${event.slug}`, file.name).replace(
         /\.[^.]+$/,
@@ -172,12 +169,15 @@ export async function POST(request: Request) {
       const { url } = await storage.upload(coverBuffer, key, "image/jpeg");
       event.coverImage = url;
       await event.save();
+      if (previousCover && previousCover !== url) {
+        await deleteByPublicUrl(previousCover);
+      }
       revalidatePath("/");
       return NextResponse.json({ ok: true, url });
     }
 
-    // L'originale pulito resta privato; la PREVIEW (con/ senza filigrana)
-    // viene generata ORA e salvata su R2: la filigrana è quindi baked.
+    // Su R2 resta SOLO l'originale pulito: la preview con filigrana è generata
+    // al volo da /api/images/<id> (nessun duplicato salvato sul cloud).
     const originalKey = buildStorageKey(`${event.slug}/original`, file.name);
     await storage.upload(buffer, originalKey, file.type);
 
@@ -191,16 +191,6 @@ export async function POST(request: Request) {
         : (await getPublishedContent()).settings.watermarkEnabled;
     const featured = form.get("featured") === "true";
 
-    // Se la generazione fallisce, l'errore risale al catch → l'upload FALLISCE
-    // (nessuna foto salvata pulita di nascosto).
-    const previewBuffer = watermark
-      ? (await createWatermarkedPreview(buffer)).buffer
-      : await createCoverImage(buffer);
-    const previewKey =
-      originalKey.replace("/original/", "/preview/").replace(/\.[^.]+$/, "") +
-      ".jpg";
-    await storage.upload(previewBuffer, previewKey, "image/jpeg");
-
     const photoId = new Types.ObjectId();
     const photo = await Photo.create({
       _id: photoId,
@@ -209,7 +199,6 @@ export async function POST(request: Request) {
       storageKey: originalKey,
       url: `/api/images/${photoId}`,
       originalKey,
-      previewKey,
       raceNumber,
       width: dimensions.width,
       height: dimensions.height,

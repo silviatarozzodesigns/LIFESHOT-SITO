@@ -268,6 +268,11 @@ export const PAGES: Record<PageSlug, PageDef> = {
         default: "/hero/enduro-bg.svg",
         hint: "Foto orizzontale del tracciato o del paesaggio. ~2000px.",
       },
+      "hero.backgroundMobile": {
+        label: "Hero — sfondo Mobile/Tablet (opzionale)",
+        default: "",
+        hint: "Immagine verticale ottimizzata per smartphone. Se vuota, su mobile si usa lo sfondo desktop.",
+      },
       "hero.foreground": {
         label: "Hero — primo piano (rider scontornato PNG)",
         default: "",

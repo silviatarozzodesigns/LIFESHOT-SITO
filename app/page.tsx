@@ -22,8 +22,10 @@ import {
 } from "@/lib/content";
 import { cn, formatDate } from "@/lib/utils";
 
-// Eventi e contenuti CMS arrivano dal database: render a richiesta
-export const dynamic = "force-dynamic";
+// ISR: la home è servita da cache (navigazione istantanea) e rigenerata
+// on-demand — ogni upload/pubblicazione/eliminazione chiama revalidatePath("/").
+// Il revalidate orario è solo una rete di sicurezza.
+export const revalidate = 3600;
 
 export default async function HomePage() {
   const [events, marquee, content] = await Promise.all([
@@ -48,11 +50,14 @@ export default async function HomePage() {
           subtitle={t("hero.subtitle")}
           searchPlaceholder={t("hero.searchPlaceholder")}
           backgroundUrl={getImage(content, "home", "hero.background")}
+          backgroundMobileUrl={getImage(content, "home", "hero.backgroundMobile")}
           foregroundUrl={getImage(content, "home", "hero.foreground")}
           eventNameClass={getTypographyClass(content, "home", "hero.eventName")}
           dateClass={getTypographyClass(content, "home", "hero.date")}
           bgPosition={getImageSettings(content, "home", "hero.background").position}
           bgScale={getImageSettings(content, "home", "hero.background").scale}
+          bgMobilePosition={getImageSettings(content, "home", "hero.backgroundMobile").position}
+          bgMobileScale={getImageSettings(content, "home", "hero.backgroundMobile").scale}
           fgPosition={getImageSettings(content, "home", "hero.foreground").position}
           fgScale={getImageSettings(content, "home", "hero.foreground").scale}
         />
