@@ -242,7 +242,7 @@ export function Hero3D({
             key={i}
             aria-hidden
             className={cn(
-              "pointer-events-none absolute inset-y-0 right-0 z-0 w-[58%] transition-transform duration-300 ease-out",
+              "pointer-events-none absolute inset-y-0 right-0 z-20 w-[58%] transition-transform duration-300 ease-out",
               rider.vis
             )}
             style={{
@@ -262,7 +262,7 @@ export function Hero3D({
 
       {/* LIVELLO 2 — contenuto in colonna SINISTRA. Centro/destra liberi per
           valorizzare lo scatto del pilota. Spazio ampio per più "respiro". */}
-      <div className="container relative z-10 flex flex-1 flex-col justify-center py-16 sm:py-24 lg:py-32">
+      <div className="container flex flex-1 flex-col justify-center py-24 sm:py-32 lg:py-40">
         <div className="max-w-xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
             <span className="relative flex h-2 w-2">
