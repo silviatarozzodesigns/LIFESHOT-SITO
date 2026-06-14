@@ -262,7 +262,7 @@ export function Hero3D({
 
       {/* LIVELLO 2 — contenuto in colonna SINISTRA. Centro/destra liberi per
           valorizzare lo scatto del pilota. Spazio ampio per più "respiro". */}
-      <div className="container relative z-10 flex flex-1 flex-col justify-center py-28 sm:py-32 lg:pb-24 lg:pt-44">
+      <div className="container relative isolate z-[-1] flex flex-1 flex-col justify-center py-28 sm:py-32 lg:pb-24 lg:pt-20">
         <div className="max-w-xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
             <span className="relative flex h-2 w-2">
