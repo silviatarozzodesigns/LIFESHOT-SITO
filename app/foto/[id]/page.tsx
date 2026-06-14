@@ -157,7 +157,7 @@ export default async function PhotoPage({
                     "mt-5 h-auto min-h-12 w-full items-center justify-center gap-2.5 whitespace-normal rounded-2xl px-5 py-3 text-center leading-snug"
                   )}
                 >
-                  <Instagram className="shrink-0" />
+                  <Instagram className="h-6 w-6 shrink-0" />
                   <span>Scrivici in DM per acquistare le tue foto</span>
                 </a>
               </div>

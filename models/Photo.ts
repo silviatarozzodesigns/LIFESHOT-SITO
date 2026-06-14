@@ -36,6 +36,13 @@ const PhotoSchema = new Schema(
       type: String,
       default: null,
     },
+    // Chiave della PREVIEW già processata su R2 (filigrana impressa al volo
+    // dell'upload). Se presente, /api/images la serve così com'è: la filigrana
+    // è quindi baked e non può fallire al serve.
+    previewKey: {
+      type: String,
+      default: null,
+    },
     // Numero di gara estratto dal nome file; stringa per supportare "045", "A12"
     raceNumber: {
       type: String,

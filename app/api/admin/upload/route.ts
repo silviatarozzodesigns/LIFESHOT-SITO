@@ -7,7 +7,11 @@ import { Photo } from "@/models/Photo";
 import { getStorage } from "@/lib/storage";
 import { isAdmin } from "@/lib/auth";
 import { buildStorageKey, extractRaceNumber } from "@/lib/parse-filename";
-import { createCoverImage, getPreviewDimensions } from "@/lib/watermark";
+import {
+  createCoverImage,
+  createWatermarkedPreview,
+  getPreviewDimensions,
+} from "@/lib/watermark";
 import { getPublishedContent } from "@/lib/data/content";
 
 /**
@@ -172,8 +176,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, url });
     }
 
-    // kind === "photo": si salva SOLO l'originale (privato); la versione
-    // pubblica filigranata viene generata al volo da /api/images/<id>
+    // L'originale pulito resta privato; la PREVIEW (con/ senza filigrana)
+    // viene generata ORA e salvata su R2: la filigrana è quindi baked.
     const originalKey = buildStorageKey(`${event.slug}/original`, file.name);
     await storage.upload(buffer, originalKey, file.type);
 
@@ -186,6 +190,17 @@ export async function POST(request: Request) {
         ? wmField === "true"
         : (await getPublishedContent()).settings.watermarkEnabled;
     const featured = form.get("featured") === "true";
+
+    // Se la generazione fallisce, l'errore risale al catch → l'upload FALLISCE
+    // (nessuna foto salvata pulita di nascosto).
+    const previewBuffer = watermark
+      ? (await createWatermarkedPreview(buffer)).buffer
+      : await createCoverImage(buffer);
+    const previewKey =
+      originalKey.replace("/original/", "/preview/").replace(/\.[^.]+$/, "") +
+      ".jpg";
+    await storage.upload(previewBuffer, previewKey, "image/jpeg");
+
     const photoId = new Types.ObjectId();
     const photo = await Photo.create({
       _id: photoId,
@@ -194,6 +209,7 @@ export async function POST(request: Request) {
       storageKey: originalKey,
       url: `/api/images/${photoId}`,
       originalKey,
+      previewKey,
       raceNumber,
       width: dimensions.width,
       height: dimensions.height,

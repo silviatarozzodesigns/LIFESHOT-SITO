@@ -89,7 +89,7 @@ export function HeroSearch({
         }}
         className={cn(
           "flex items-center gap-2.5 rounded-full border bg-card/80 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.6)] backdrop-blur-md transition-colors focus-within:border-primary/60 hover:border-primary/40",
-          large ? "px-5 py-2.5" : "px-5 py-2"
+          large ? "py-2 pl-5 pr-2" : "px-5 py-2"
         )}
       >
         {loading ? (

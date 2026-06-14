@@ -34,26 +34,27 @@ export async function GET(
   try {
     await connectDB();
     const photo = await Photo.findById(id)
-      .select("originalKey storageKey mimeType watermark")
+      .select("previewKey originalKey storageKey watermark")
       .lean();
     if (!photo) return new Response("Not found", { status: 404 });
 
     const storage = getStorage();
 
-    // Sorgente: l'originale privato se presente, altrimenti il file salvato
-    // (copre anche le foto legacy senza originalKey separato).
-    const sourceKey = photo.originalKey ?? photo.storageKey;
-    if (!sourceKey) return new Response("Not found", { status: 404 });
-    const original = await storage.download(sourceKey);
-
-    // La filigrana è SEMPRE applicata, tranne quando disattivata di proposito
-    // sulla singola foto (toggle CMS). Nessun serve "pulito" silenzioso:
-    // in caso di errore di sharp la richiesta fallisce (catch → 500), non
-    // restituisce mai l'immagine senza watermark.
-    const body =
-      photo.watermark === false
-        ? await createCoverImage(original)
-        : (await createWatermarkedPreview(original)).buffer;
+    let body: Buffer;
+    if (photo.previewKey) {
+      // Preview già processata (filigrana baked all'upload): la serviamo così.
+      body = await storage.download(photo.previewKey);
+    } else {
+      // Foto legacy senza preview salvata: filigrana al volo dall'originale.
+      // Mai un serve "pulito" silenzioso: in errore la richiesta fa 500.
+      const sourceKey = photo.originalKey ?? photo.storageKey;
+      if (!sourceKey) return new Response("Not found", { status: 404 });
+      const original = await storage.download(sourceKey);
+      body =
+        photo.watermark === false
+          ? await createCoverImage(original)
+          : (await createWatermarkedPreview(original)).buffer;
+    }
 
     return new Response(new Uint8Array(body), {
       headers: {

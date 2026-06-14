@@ -176,7 +176,7 @@ export function Hero3D({
 
       {/* LIVELLO 2 — contenuto in colonna SINISTRA. Centro/destra liberi per
           valorizzare lo scatto del pilota. Spazio ampio per più "respiro". */}
-      <div className="container relative z-10 flex flex-1 flex-col justify-center py-28 sm:py-32 lg:py-28">
+      <div className="container relative z-10 flex flex-1 flex-col justify-center py-28 sm:py-32 lg:pb-24 lg:pt-44">
         <div className="max-w-xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
             <span className="relative flex h-2 w-2">
@@ -221,15 +221,16 @@ export function Hero3D({
             </p>
           )}
 
-          {/* CTA principale — grande e prioritaria (unico bottone d'azione) */}
-          <div className="mt-8 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-4">
+          {/* CTA principale — grande e prioritaria (unico bottone d'azione).
+              Centrata su mobile/tablet (<1024px), in riga a sinistra su desktop. */}
+          <div className="mt-8 flex flex-col items-center gap-2.5 text-center lg:flex-row lg:items-center lg:gap-4 lg:text-left">
             <a
               href={site.instagramDmUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center justify-center gap-2.5 rounded-full bg-primary px-8 py-4 text-base font-semibold text-primary-foreground shadow-xl shadow-primary/30 transition-all hover:scale-[1.03] hover:shadow-primary/50 active:scale-95"
+              className="group inline-flex items-center justify-center gap-2.5 whitespace-nowrap rounded-full bg-primary px-8 py-4 text-base font-semibold text-primary-foreground shadow-xl shadow-primary/30 transition-all hover:scale-[1.03] hover:shadow-primary/50 active:scale-95"
             >
-              <Instagram className="h-5 w-5 transition-transform group-hover:rotate-[8deg]" />
+              <Instagram className="h-6 w-6 transition-transform group-hover:rotate-[8deg]" />
               Prenota ora i tuoi contenuti
             </a>
             <span className="text-xs text-muted-foreground sm:text-sm">
@@ -237,8 +238,9 @@ export function Hero3D({
             </span>
           </div>
 
-          {/* Blocco RICERCA — separato e arioso, sotto al testo, a sinistra */}
-          <div className="mt-12 max-w-md border-t border-border/40 pt-8">
+          {/* Blocco RICERCA — separato e arioso. Centrato su mobile/tablet,
+              allineato a sinistra su desktop. */}
+          <div className="mx-auto mt-12 max-w-md border-t border-border/40 pt-8 text-center lg:mx-0 lg:text-left">
             <p className="text-balance text-sm text-muted-foreground sm:text-base">
               {subtitle}
             </p>

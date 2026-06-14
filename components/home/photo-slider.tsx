@@ -119,7 +119,11 @@ export function PhotoSlider({ items }: { items: SliderItem[] }) {
               cards.current[i] = node;
             }}
             href={`/foto/${item.id}?ritorno=%2F`}
-            style={{ transformStyle: "preserve-3d", willChange: "transform" }}
+            style={{
+              transformStyle: "preserve-3d",
+              willChange: "transform",
+              backfaceVisibility: "hidden",
+            }}
             className="group relative aspect-[3/4] w-60 shrink-0 snap-center overflow-hidden rounded-3xl bg-muted shadow-[0_30px_60px_-30px_rgba(0,0,0,0.7)] ring-1 ring-border transition-[transform,opacity] duration-300 ease-out hover:ring-primary/50 sm:w-72"
           >
             <Image
@@ -128,7 +132,7 @@ export function PhotoSlider({ items }: { items: SliderItem[] }) {
               fill
               sizes="(max-width: 640px) 15rem, 18rem"
               priority={i < 3}
-              className="object-cover transition-transform duration-700 [transition-timing-function:cubic-bezier(0.22,0.61,0.36,1)] group-hover:scale-[1.05]"
+              className="object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
             {item.raceNumber && (

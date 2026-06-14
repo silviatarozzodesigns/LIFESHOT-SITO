@@ -30,8 +30,8 @@ export async function deletePhoto(id: string): Promise<PhotoActionResult> {
     const photo = await Photo.findById(id);
     if (!photo) return { ok: false, error: "Foto non trovata." };
 
-    // Elimina sia la preview filigranata sia l'originale pulito
-    const keys = [photo.storageKey, photo.originalKey].filter(
+    // Elimina la preview filigranata, l'originale pulito e la preview baked
+    const keys = [photo.storageKey, photo.originalKey, photo.previewKey].filter(
       (k): k is string => Boolean(k)
     );
     for (const key of keys) {

@@ -397,7 +397,7 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
                   })
                 }
                 className={cn(
-                  "relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors",
+                  "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors",
                   content.settings.watermarkEnabled
                     ? "bg-primary"
                     : "bg-muted-foreground/30"
@@ -405,10 +405,10 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
               >
                 <span
                   className={cn(
-                    "absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform",
+                    "h-5 w-5 rounded-full bg-white shadow-sm transition-transform",
                     content.settings.watermarkEnabled
-                      ? "translate-x-[1.4rem]"
-                      : "translate-x-0.5"
+                      ? "translate-x-5"
+                      : "translate-x-0"
                   )}
                 />
               </button>

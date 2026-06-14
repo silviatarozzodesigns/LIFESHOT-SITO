@@ -7,7 +7,11 @@ import { Photo } from "@/models/Photo";
 import { getStorage } from "@/lib/storage";
 import { isAdmin } from "@/lib/auth";
 import { extractRaceNumber } from "@/lib/parse-filename";
-import { createCoverImage, getPreviewDimensions } from "@/lib/watermark";
+import {
+  createCoverImage,
+  createWatermarkedPreview,
+  getPreviewDimensions,
+} from "@/lib/watermark";
 import { getPublishedContent } from "@/lib/data/content";
 
 /**
@@ -117,6 +121,16 @@ export async function POST(request: Request) {
         ? body.watermark
         : (await getPublishedContent()).settings.watermarkEnabled;
     const featured = body.featured === true;
+
+    // Preview baked su R2 (filigrana impressa ora). Un errore qui risale al
+    // catch → l'upload fallisce, niente foto salvata pulita di nascosto.
+    const previewBuffer = watermark
+      ? (await createWatermarkedPreview(original)).buffer
+      : await createCoverImage(original);
+    const previewKey =
+      key.replace("/original/", "/preview/").replace(/\.[^.]+$/, "") + ".jpg";
+    await storage.upload(previewBuffer, previewKey, "image/jpeg");
+
     const photoId = new Types.ObjectId();
     const photo = await Photo.create({
       _id: photoId,
@@ -125,6 +139,7 @@ export async function POST(request: Request) {
       storageKey: key,
       url: `/api/images/${photoId}`,
       originalKey: key,
+      previewKey,
       raceNumber,
       width: dimensions.width,
       height: dimensions.height,
