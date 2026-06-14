@@ -302,18 +302,18 @@ export function Hero3D({
 
           {/* Luogo (rimossa la riga "Copertura Lifeshot") */}
           {eventLocation && (
-            <div className="flex flex-col items-center justify-center mt-4 text-center sm:flex-row sm:justify-start">
-              <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground sm:text-base">
+            <div className="mt-4 flex flex-col items-center justify-center text-center sm:flex-row sm:justify-start">
+              <div className="lex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground sm:text-base">
                 
               {/* Orario */}
                 <div className="flex items-center gap-1.5">
-                  <Clock className="h-4 w-4" />
+                  <Clock className="h-4 w-4 text-white/80" />
                   <span>{eventTime}</span>
                 </div> 
 
               {/* Luogo */}
                 <div className="flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4" />
+                  <MapPin className="h-4 w-4 text-primary" />
                   <span>{eventLocation}</span>
                 </div>
                 
