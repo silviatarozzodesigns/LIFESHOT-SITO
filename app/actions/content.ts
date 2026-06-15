@@ -55,9 +55,9 @@ export async function deleteAsset(url: string): Promise<{ ok: boolean }> {
 }
 
 /**
- * Editing IN-PLACE sul sito live (CMS WYSIWYG).
- * Aggiorna un singolo campo e lo rende SUBITO live: scrive sia su `draft`
- * sia su `published`, poi rigenera le pagine. Coerenza editor ↔ live.
+ * Editing IN-PLACE (CMS WYSIWYG) → salva in BOZZA.
+ * Le modifiche restano nella bozza (visibili nell'anteprima "Sito reale")
+ * finché non si preme "Pubblica". Il sito pubblico NON cambia da solo.
  */
 export async function setField(
   page: PageSlug,
@@ -70,7 +70,7 @@ export async function setField(
     const doc = await SiteContent.findOne({ key: "site" })
       .select("draft published")
       .lean();
-    const base = normalizeContent(doc?.published ?? doc?.draft);
+    const base = normalizeContent(doc?.draft ?? doc?.published);
     if (!(key in base.pages[page].texts)) {
       return { ok: false, error: "Campo sconosciuto." };
     }
@@ -78,10 +78,9 @@ export async function setField(
     const content = normalizeContent(base); // riapplica le lunghezze massime
     await SiteContent.updateOne(
       { key: "site" },
-      { $set: { draft: content, published: content } },
+      { $set: { draft: content } },
       { upsert: true }
     );
-    revalidatePath("/", "layout");
     return { ok: true };
   } catch (error) {
     console.error("[lifeshot] setField fallita:", error);
@@ -89,12 +88,11 @@ export async function setField(
   }
 }
 
-/** Editing in-place: dimensione (typography) o spaziatura di un knob. */
-export async function setKnob(
+/** Editing in-place dimensione/allineamento di un testo → BOZZA. */
+export async function setTextStyle(
   page: PageSlug,
-  kind: "typography" | "spacing",
-  knob: string,
-  level: Level
+  key: string,
+  style: { align?: "left" | "center" | "right"; size?: Level }
 ): Promise<{ ok: boolean; error?: string }> {
   if (!(await isAdmin())) return { ok: false, error: "Non autorizzato." };
   try {
@@ -102,21 +100,18 @@ export async function setKnob(
     const doc = await SiteContent.findOne({ key: "site" })
       .select("draft published")
       .lean();
-    const base = normalizeContent(doc?.published ?? doc?.draft);
-    if (!(knob in base.pages[page][kind])) {
-      return { ok: false, error: "Knob sconosciuto." };
-    }
-    base.pages[page][kind][knob] = level;
+    const base = normalizeContent(doc?.draft ?? doc?.published);
+    const current = base.pages[page].textStyles[key] ?? {};
+    base.pages[page].textStyles[key] = { ...current, ...style };
     const content = normalizeContent(base);
     await SiteContent.updateOne(
       { key: "site" },
-      { $set: { draft: content, published: content } },
+      { $set: { draft: content } },
       { upsert: true }
     );
-    revalidatePath("/", "layout");
     return { ok: true };
   } catch (error) {
-    console.error("[lifeshot] setKnob fallita:", error);
+    console.error("[lifeshot] setTextStyle fallita:", error);
     return { ok: false, error: "Salvataggio non riuscito." };
   }
 }

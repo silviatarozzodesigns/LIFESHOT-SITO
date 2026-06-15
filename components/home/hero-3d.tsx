@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { Clock, Instagram, MapPin } from "lucide-react";
 import { HeroSearch } from "@/components/home/hero-search";
 import { EditableText } from "@/components/cms/editable-text";
+import type { TextStyle } from "@/lib/content";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +44,8 @@ export interface Hero3DProps {
   fgMobileScale?: number;
   /** In preview disattiviamo il parallax legato al mouse */
   interactive?: boolean;
+  /** Stili per-testo (allineamento/dimensione) modificabili in-place */
+  textStyles?: Record<string, TextStyle>;
 }
 
 /**
@@ -84,6 +87,7 @@ export function Hero3D({
   fgMobilePosition = "center bottom",
   fgMobileScale = 100,
   interactive = true,
+  textStyles = {},
 }: Hero3DProps) {
   // Sfondi per viewport: usano quello dedicato se caricato, altrimenti il desktop
   const tabletBgUrl = backgroundTabletUrl || backgroundUrl;
@@ -270,7 +274,7 @@ export function Hero3D({
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
             </span>
-            <EditableText page="home" k="hero.badge" value={badge} maxLength={40} />
+            <EditableText page="home" k="hero.badge" value={badge} maxLength={40} style={textStyles["hero.badge"]} />
           </span>
 
           <h1
@@ -284,7 +288,8 @@ export function Hero3D({
               k="hero.eventName"
               value={eventName}
               maxLength={80}
-            />
+            style={textStyles["hero.eventName"]}
+              />
           </h1>
 
           {/* Data + ora in grande, stile locandina evento */}
@@ -301,6 +306,7 @@ export function Hero3D({
                 k="hero.eventDate"
                 value={eventDate}
                 maxLength={40}
+              style={textStyles["hero.eventDate"]}
               />
             </span>
             {eventTime && (
@@ -311,7 +317,8 @@ export function Hero3D({
                   k="hero.eventTime"
                   value={eventTime}
                   maxLength={20}
-                />
+                style={textStyles["hero.eventTime"]}
+              />
               </span>
             )}
           </div>
@@ -325,6 +332,7 @@ export function Hero3D({
                 k="hero.eventLocation"
                 value={eventLocation}
                 maxLength={100}
+              style={textStyles["hero.eventLocation"]}
               />
             </p>
           )}
@@ -356,6 +364,7 @@ export function Hero3D({
                 value={subtitle}
                 as="span"
                 maxLength={200}
+              style={textStyles["hero.subtitle"]}
               />
             </p>
             <div className="mt-4">

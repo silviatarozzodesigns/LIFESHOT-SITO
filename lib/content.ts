@@ -87,14 +87,31 @@ const NAMED_TO_XY: Record<string, [number, number]> = {
   "right bottom": [100, 100],
 };
 
+/** Stile per-testo modificabile in-place: allineamento + scala dimensione */
+export interface TextStyle {
+  align?: "left" | "center" | "right";
+  size?: Level;
+}
+
 export interface PageContent {
   seo: SeoContent;
   texts: Record<string, string>;
+  /** Override stile (allineamento/dimensione) per chiave di testo */
+  textStyles: Record<string, TextStyle>;
   images: Record<string, string>;
   imageSettings: Record<string, ImageSettings>;
   spacing: Record<string, Level>;
   typography: Record<string, Level>;
 }
+
+/** Scala dimensione testo 1–5 → moltiplicatore em (1=originale, design-safe) */
+export const TEXT_SIZE_EM: Record<Level, string> = {
+  1: "0.85em",
+  2: "0.93em",
+  3: "1em",
+  4: "1.12em",
+  5: "1.28em",
+};
 
 export const DEFAULT_IMAGE_SETTINGS: ImageSettings = {
   posX: 50,
@@ -493,6 +510,7 @@ function buildDefaultPage(def: PageDef): PageContent {
     texts: Object.fromEntries(
       Object.entries(def.fields).map(([k, f]) => [k, f.default])
     ),
+    textStyles: {},
     images: Object.fromEntries(
       Object.entries(def.images).map(([k, f]) => [k, f.default])
     ),
@@ -529,10 +547,22 @@ function clampLevel(value: unknown, fallback: Level): Level {
 interface RawPage {
   seo?: Partial<SeoContent>;
   texts?: Record<string, unknown>;
+  textStyles?: Record<string, unknown>;
   images?: Record<string, unknown>;
   imageSettings?: Record<string, unknown>;
   spacing?: Record<string, unknown>;
   typography?: Record<string, unknown>;
+}
+
+function cleanTextStyle(raw: unknown): TextStyle {
+  const r = (raw ?? {}) as { align?: unknown; size?: unknown };
+  const out: TextStyle = {};
+  if (r.align === "left" || r.align === "center" || r.align === "right") {
+    out.align = r.align;
+  }
+  const n = Number(r.size);
+  if (n >= 1 && n <= 5) out.size = Math.round(n) as Level;
+  return out;
 }
 
 function cleanImageSettings(raw: unknown): ImageSettings {
@@ -586,6 +616,11 @@ export function normalizeContent(raw?: {
           cleanString(rawPage?.texts?.[k], f.default, f.max),
         ])
       ),
+      textStyles: Object.fromEntries(
+        Object.keys(def.fields)
+          .map((k) => [k, cleanTextStyle(rawPage?.textStyles?.[k])] as const)
+          .filter(([, v]) => v.align || v.size)
+      ),
       images: Object.fromEntries(
         Object.entries(def.images).map(([k, f]) => [
           k,
@@ -625,6 +660,15 @@ export function normalizeContent(raw?: {
 
 export function getText(content: CmsData, slug: PageSlug, key: string): string {
   return content.pages[slug]?.texts[key] ?? PAGES[slug].fields[key]?.default ?? "";
+}
+
+/** Stile (allineamento/dimensione) di un testo modificabile in-place */
+export function getTextStyle(
+  content: CmsData,
+  slug: PageSlug,
+  key: string
+): TextStyle {
+  return content.pages[slug]?.textStyles?.[key] ?? {};
 }
 
 export function getImage(content: CmsData, slug: PageSlug, key: string): string {

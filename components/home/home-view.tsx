@@ -18,6 +18,7 @@ import {
   getImageSettings,
   getSpacingClass,
   getText,
+  getTextStyle,
   getTypographyClass,
   type CmsData,
 } from "@/lib/content";
@@ -73,6 +74,7 @@ export function HomeView({
           fgTabletScale={getImageSettings(content, "home", "hero.foregroundTablet").scale}
           fgMobilePosition={getImageSettings(content, "home", "hero.foregroundMobile").position}
           fgMobileScale={getImageSettings(content, "home", "hero.foregroundMobile").scale}
+          textStyles={content.pages.home.textStyles}
         />
 
         {/* SLIDER — scatti recenti, frecce + swipe */}
@@ -105,6 +107,7 @@ export function HomeView({
                   k="events.title"
                   value={t("events.title")}
                   maxLength={80}
+                  style={getTextStyle(content, "home", "events.title")}
                 />
               </h2>
               <p className="mt-2 text-muted-foreground">
@@ -114,6 +117,7 @@ export function HomeView({
                   value={t("events.subtitle")}
                   as="span"
                   maxLength={200}
+                  style={getTextStyle(content, "home", "events.subtitle")}
                 />
               </p>
             </div>
