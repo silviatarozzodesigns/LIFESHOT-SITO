@@ -10,6 +10,7 @@ import { HowItWorks } from "@/components/home/how-it-works";
 import { Services } from "@/components/home/services";
 import { Testimonials } from "@/components/home/testimonials";
 import { EventScout } from "@/components/home/event-scout";
+import { EditableText } from "@/components/cms/editable-text";
 import type { EventDTO } from "@/lib/data/events";
 import type { PhotoDTO } from "@/lib/data/photos";
 import {
@@ -99,9 +100,22 @@ export function HomeView({
           <FadeIn className="mb-8 flex items-end justify-between">
             <div>
               <h2 className="text-3xl font-semibold tracking-tight">
-                {t("events.title")}
+                <EditableText
+                  page="home"
+                  k="events.title"
+                  value={t("events.title")}
+                  maxLength={80}
+                />
               </h2>
-              <p className="mt-2 text-muted-foreground">{t("events.subtitle")}</p>
+              <p className="mt-2 text-muted-foreground">
+                <EditableText
+                  page="home"
+                  k="events.subtitle"
+                  value={t("events.subtitle")}
+                  as="span"
+                  maxLength={200}
+                />
+              </p>
             </div>
             <Link
               href="/galleria"

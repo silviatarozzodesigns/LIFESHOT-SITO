@@ -5,6 +5,7 @@
 import { useRef, useState } from "react";
 import { Clock, Instagram, MapPin } from "lucide-react";
 import { HeroSearch } from "@/components/home/hero-search";
+import { EditableText } from "@/components/cms/editable-text";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -269,7 +270,7 @@ export function Hero3D({
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
             </span>
-            {badge}
+            <EditableText page="home" k="hero.badge" value={badge} maxLength={40} />
           </span>
 
           <h1
@@ -278,7 +279,12 @@ export function Hero3D({
               eventNameClass
             )}
           >
-            {eventName}
+            <EditableText
+              page="home"
+              k="hero.eventName"
+              value={eventName}
+              maxLength={80}
+            />
           </h1>
 
           {/* Data + ora in grande, stile locandina evento */}
@@ -290,12 +296,22 @@ export function Hero3D({
                 dateClass
               )}
             >
-              {eventDate}
+              <EditableText
+                page="home"
+                k="hero.eventDate"
+                value={eventDate}
+                maxLength={40}
+              />
             </span>
             {eventTime && (
               <span className="inline-flex items-center gap-1.5 text-lg font-medium text-foreground pb-0 md:pb-1">
                 <Clock className="h-4 w-4 text-white/80" />
-                {eventTime}
+                <EditableText
+                  page="home"
+                  k="hero.eventTime"
+                  value={eventTime}
+                  maxLength={20}
+                />
               </span>
             )}
           </div>
@@ -304,7 +320,12 @@ export function Hero3D({
           {eventLocation && (
             <p className="mt-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground sm:text-base">
               <MapPin className="h-4 w-4 text-primary" />
-              {eventLocation}
+              <EditableText
+                page="home"
+                k="hero.eventLocation"
+                value={eventLocation}
+                maxLength={100}
+              />
             </p>
           )}
 
@@ -329,7 +350,13 @@ export function Hero3D({
               allineato a sinistra su desktop. */}
           <div className="mx-auto mt-7 pt-12 sm:mt-12 sm:pt-20 max-w-md border-t border-border/40 text-center lg:mx-0 lg:text-left">
             <p className="text-balance text-sm text-muted-foreground sm:text-base">
-              {subtitle}
+              <EditableText
+                page="home"
+                k="hero.subtitle"
+                value={subtitle}
+                as="span"
+                maxLength={200}
+              />
             </p>
             <div className="mt-4">
               <HeroSearch placeholder={searchPlaceholder} large />

@@ -5,7 +5,12 @@ import { connectDB } from "@/lib/db";
 import { SiteContent } from "@/models/SiteContent";
 import { isAdmin } from "@/lib/auth";
 import { getStorage } from "@/lib/storage";
-import { normalizeContent, type CmsData } from "@/lib/content";
+import {
+  normalizeContent,
+  type CmsData,
+  type Level,
+  type PageSlug,
+} from "@/lib/content";
 
 /**
  * Server Actions del micro-CMS.
@@ -46,6 +51,73 @@ export async function deleteAsset(url: string): Promise<{ ok: boolean }> {
   } catch (error) {
     console.warn("[lifeshot] deleteAsset fallita:", error);
     return { ok: false };
+  }
+}
+
+/**
+ * Editing IN-PLACE sul sito live (CMS WYSIWYG).
+ * Aggiorna un singolo campo e lo rende SUBITO live: scrive sia su `draft`
+ * sia su `published`, poi rigenera le pagine. Coerenza editor ↔ live.
+ */
+export async function setField(
+  page: PageSlug,
+  key: string,
+  value: string
+): Promise<{ ok: boolean; error?: string }> {
+  if (!(await isAdmin())) return { ok: false, error: "Non autorizzato." };
+  try {
+    await connectDB();
+    const doc = await SiteContent.findOne({ key: "site" })
+      .select("draft published")
+      .lean();
+    const base = normalizeContent(doc?.published ?? doc?.draft);
+    if (!(key in base.pages[page].texts)) {
+      return { ok: false, error: "Campo sconosciuto." };
+    }
+    base.pages[page].texts[key] = value;
+    const content = normalizeContent(base); // riapplica le lunghezze massime
+    await SiteContent.updateOne(
+      { key: "site" },
+      { $set: { draft: content, published: content } },
+      { upsert: true }
+    );
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (error) {
+    console.error("[lifeshot] setField fallita:", error);
+    return { ok: false, error: "Salvataggio non riuscito." };
+  }
+}
+
+/** Editing in-place: dimensione (typography) o spaziatura di un knob. */
+export async function setKnob(
+  page: PageSlug,
+  kind: "typography" | "spacing",
+  knob: string,
+  level: Level
+): Promise<{ ok: boolean; error?: string }> {
+  if (!(await isAdmin())) return { ok: false, error: "Non autorizzato." };
+  try {
+    await connectDB();
+    const doc = await SiteContent.findOne({ key: "site" })
+      .select("draft published")
+      .lean();
+    const base = normalizeContent(doc?.published ?? doc?.draft);
+    if (!(knob in base.pages[page][kind])) {
+      return { ok: false, error: "Knob sconosciuto." };
+    }
+    base.pages[page][kind][knob] = level;
+    const content = normalizeContent(base);
+    await SiteContent.updateOne(
+      { key: "site" },
+      { $set: { draft: content, published: content } },
+      { upsert: true }
+    );
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (error) {
+    console.error("[lifeshot] setKnob fallita:", error);
+    return { ok: false, error: "Salvataggio non riuscito." };
   }
 }
 

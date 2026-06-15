@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { CinematicBackdrop } from "@/components/cinematic-backdrop";
+import { EditModeProvider } from "@/components/cms/edit-mode";
 import { getPublishedContent } from "@/lib/data/content";
 import "./globals.css";
 
@@ -37,7 +38,7 @@ export default function RootLayout({
     <html lang="it" className={`dark ${inter.variable}`} suppressHydrationWarning>
       <body className="min-h-dvh font-sans">
         <CinematicBackdrop />
-        {children}
+        <EditModeProvider>{children}</EditModeProvider>
       </body>
     </html>
   );
