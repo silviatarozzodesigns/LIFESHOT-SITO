@@ -40,11 +40,7 @@ import {
   type PageDef,
   type PageSlug,
 } from "@/lib/content";
-import {
-  PagePreview,
-  type PreviewSelection,
-} from "@/components/admin/studio/page-previews";
-import { PreviewFrame } from "@/components/admin/studio/preview-frame";
+import type { PreviewSelection } from "@/components/admin/studio/page-previews";
 import { uploadAssetFile } from "@/lib/upload-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,8 +74,6 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
   const [activePage, setActivePage] = useState<PageSlug>("home");
   const [selected, setSelected] = useState<PreviewSelection | null>(null);
   const [device, setDevice] = useState<Device>("desktop");
-  // Anteprima: "edit" = mock click-to-edit (live); "real" = sito vero in iframe
-  const [previewMode, setPreviewMode] = useState<"edit" | "real">("edit");
   const [realNonce, setRealNonce] = useState(0);
 
   // Cambio pagina → azzera la selezione contestuale
@@ -256,30 +250,6 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
           ))}
         </div>
 
-        {/* Switcher anteprima: editor (click-to-edit) ↔ sito reale (mirror 1:1) */}
-        <div className="flex items-center gap-1 rounded-full border bg-background p-1">
-          {(
-            [
-              ["edit", "Modifica"],
-              ["real", "Sito reale"],
-            ] as const
-          ).map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setPreviewMode(key)}
-              className={cn(
-                "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                previewMode === key
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
         <div className="min-w-0 flex-1">
           {feedback && (
             <span className="inline-flex items-center gap-1.5 text-sm text-primary">
@@ -330,35 +300,23 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
             style={{ width: DEVICE_WIDTH[device], maxWidth: "100%" }}
             className="mx-auto overflow-hidden rounded-2xl border shadow-[0_16px_50px_-20px_rgba(0,0,0,0.7)] transition-all duration-500 ease-out"
           >
-            {previewMode === "real" && activePage === "home" ? (
-              // Specchio 1:1 del sito reale (rotta /anteprima con la BOZZA):
-              // mostra TUTTO (hero responsive, gallerie, sezioni). Si ricarica
-              // a ogni salvataggio bozza (realNonce).
-              <iframe
-                key={`real-${realNonce}`}
-                src={`/anteprima?n=${realNonce}`}
-                title="Anteprima sito reale"
-                className="block h-[80vh] w-full border-0 bg-background"
-              />
-            ) : (
-              // L'iframe isola le media query: in mobile i sm: scattano a 390px
-              <PreviewFrame title="Anteprima sito">
-                <PagePreview
-                  content={content}
-                  activePage={activePage}
-                  onText={setText}
-                  onNavigate={gotoPage}
-                  onSelect={setSelected}
-                  selected={selected}
-                />
-              </PreviewFrame>
-            )}
+            {/* VISTA UNICA: il sito REALE in iframe. Sulla home carica la
+                bozza editabile (/anteprima); sulle altre pagine l'anteprima
+                reale. Dentro l'iframe l'edit-mode è automatico per l'admin. */}
+            <iframe
+              key={`site-${activePage}-${realNonce}`}
+              src={
+                activePage === "home"
+                  ? `/anteprima?n=${realNonce}`
+                  : `${pageDef.path}?n=${realNonce}`
+              }
+              title="Sito reale (modificabile)"
+              className="block h-[80vh] w-full border-0 bg-background"
+            />
           </div>
           <p className="mt-3 text-center text-xs text-muted-foreground">
-            {previewMode === "real"
-              ? "Sito reale 1:1 · clicca i testi per modificarli, si salva da solo"
-              : "Clicca un testo nell'anteprima per modificarlo · navigazione interna attiva"}{" "}
-            · {device === "desktop" ? "larghezza piena" : DEVICE_WIDTH[device]}
+            Sito reale 1:1 · passa sui testi e clicca per modificarli, si salva
+            in bozza · {device === "desktop" ? "larghezza piena" : DEVICE_WIDTH[device]}
           </p>
         </div>
 
@@ -378,12 +336,15 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
               onError={setError}
             />
           ) : (
-            <SidebarCard title="Editor contestuale">
+            <SidebarCard title="Come si modifica">
               <p className="text-sm text-muted-foreground">
-                Clicca un <strong className="text-foreground">testo</strong> o
-                un&apos;<strong className="text-foreground">immagine</strong>{" "}
-                nell&apos;anteprima: qui appariranno solo i controlli di
-                quell&apos;elemento.
+                <strong className="text-foreground">Testi:</strong> passa il
+                mouse e clicca direttamente sul testo nell&apos;anteprima per
+                modificarlo (con allineamento e dimensione).{" "}
+                <strong className="text-foreground">Immagini, SEO e
+                spaziature:</strong> usa i pannelli qui sotto. Tutto resta in{" "}
+                <strong className="text-foreground">bozza</strong> finché non
+                premi <strong className="text-foreground">Pubblica</strong>.
               </p>
             </SidebarCard>
           )}
