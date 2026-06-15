@@ -69,6 +69,11 @@ export function EditableText({
           const res = await setField(page, k, next);
           setStatus(res.ok ? "saved" : "error");
           setTimeout(() => setStatus("idle"), 1500);
+          // Se siamo nell'iframe dell'editor, avvisa il parent così
+          // risincronizza il suo stato (evita che "Pubblica" sovrascriva).
+          if (res.ok && window.parent !== window) {
+            window.parent.postMessage({ type: "ls-content-edited" }, "*");
+          }
         });
       },
       onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => {

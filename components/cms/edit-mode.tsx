@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { usePathname } from "next/navigation";
 import { EditToolbar } from "@/components/cms/edit-toolbar";
 
 interface EditModeState {
@@ -36,11 +37,20 @@ export const useEditMode = () => useContext(Ctx);
  * inerte (isAdmin=false → nessuna UI, nessun listener).
  */
 export function EditModeProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [status, setStatus] = useState<EditModeState["status"]>("idle");
+  // L'editor carica il sito in un <iframe>: lì l'editing è SEMPRE attivo e la
+  // toolbar fluttuante non serve (i controlli sono nella chrome dell'editor).
+  const [framed, setFramed] = useState(false);
 
   useEffect(() => {
+    try {
+      setFramed(window.self !== window.top);
+    } catch {
+      setFramed(true); // cross-origin → quasi certamente in iframe
+    }
     let alive = true;
     fetch("/api/admin/me", { cache: "no-store" })
       .then((r) => r.json())
@@ -51,15 +61,20 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Dentro l'iframe dell'editor: edit mode automatico per l'admin.
+  const effectiveEdit = framed ? isAdmin : editMode;
+  // Mai mostrare la toolbar nella dashboard admin o dentro l'iframe.
+  const showToolbar = isAdmin && !framed && !pathname.startsWith("/admin");
+
   const value = useMemo(
-    () => ({ isAdmin, editMode, setEditMode, status, setStatus }),
-    [isAdmin, editMode, status]
+    () => ({ isAdmin, editMode: effectiveEdit, setEditMode, status, setStatus }),
+    [isAdmin, effectiveEdit, status]
   );
 
   return (
     <Ctx.Provider value={value}>
       {children}
-      {isAdmin && <EditToolbar />}
+      {showToolbar && <EditToolbar />}
     </Ctx.Provider>
   );
 }

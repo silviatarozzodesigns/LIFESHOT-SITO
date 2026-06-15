@@ -121,6 +121,21 @@ export async function setKnob(
   }
 }
 
+/** Rilegge il contenuto corrente (published) — usato dall'editor per
+ *  risincronizzarsi dopo le modifiche in-place fatte dentro l'iframe. */
+export async function loadContent(): Promise<CmsData> {
+  try {
+    await connectDB();
+    const doc = await SiteContent.findOne({ key: "site" })
+      .select("published draft")
+      .lean();
+    return normalizeContent(doc?.published ?? doc?.draft);
+  } catch (error) {
+    console.error("[lifeshot] loadContent fallita:", error);
+    return normalizeContent(null);
+  }
+}
+
 /** Salva la bozza: visibile solo nell'editor, produzione intatta. */
 export async function saveDraft(
   input: CmsData

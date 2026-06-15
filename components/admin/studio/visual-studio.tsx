@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   CheckCircle2,
   ChevronDown,
@@ -23,6 +23,7 @@ import {
   publishContent,
   discardDraft,
   deleteAsset,
+  loadContent,
 } from "@/app/actions/content";
 import {
   DEFAULT_IMAGE_SETTINGS,
@@ -87,6 +88,19 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
     setSelected(null);
   }
   const [isPending, startTransition] = useTransition();
+
+  // Modifiche in-place fatte dentro l'iframe "Sito reale" → risincronizza lo
+  // stato dell'editor col contenuto salvato live (così "Pubblica" non
+  // sovrascrive con dati vecchi e la sidebar resta coerente).
+  useEffect(() => {
+    function onMessage(e: MessageEvent) {
+      if (e.origin !== window.location.origin) return;
+      if ((e.data as { type?: string })?.type !== "ls-content-edited") return;
+      loadContent().then(setContent);
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -342,7 +356,7 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
           </div>
           <p className="mt-3 text-center text-xs text-muted-foreground">
             {previewMode === "real"
-              ? "Specchio 1:1 del sito reale con la bozza · si aggiorna al salvataggio"
+              ? "Sito reale 1:1 · clicca i testi per modificarli, si salva da solo"
               : "Clicca un testo nell'anteprima per modificarlo · navigazione interna attiva"}{" "}
             · {device === "desktop" ? "larghezza piena" : DEVICE_WIDTH[device]}
           </p>
