@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Clock, Instagram, MapPin } from "lucide-react";
 import { HeroSearch } from "@/components/home/hero-search";
 import { EditableText } from "@/components/cms/editable-text";
@@ -99,9 +99,18 @@ export function Hero3D({
   const mobileBgScale = backgroundMobileUrl ? bgMobileScale : bgScale;
   const ref = useRef<HTMLDivElement>(null);
   const [p, setP] = useState({ x: 0, y: 0 });
+  // Niente parallax 3D su touch o schermi piccoli: solo puntatore fine + desktop
+  const [coarse, setCoarse] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(pointer: coarse), (max-width: 1023px)");
+    const update = () => setCoarse(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   function onMove(e: React.MouseEvent<HTMLDivElement>) {
-    if (!interactive) return;
+    if (!interactive || coarse) return;
     const rect = ref.current?.getBoundingClientRect();
     if (!rect) return;
     setP({
