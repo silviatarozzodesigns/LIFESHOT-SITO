@@ -88,6 +88,59 @@ export async function setField(
   }
 }
 
+/** Override di un testo "fisso" (id arbitrario) → BOZZA. */
+export async function setCustom(
+  id: string,
+  value: string
+): Promise<{ ok: boolean; error?: string }> {
+  if (!(await isAdmin())) return { ok: false, error: "Non autorizzato." };
+  if (!id) return { ok: false, error: "Id mancante." };
+  try {
+    await connectDB();
+    const doc = await SiteContent.findOne({ key: "site" })
+      .select("draft published")
+      .lean();
+    const base = normalizeContent(doc?.draft ?? doc?.published);
+    base.custom[id] = value.slice(0, 600);
+    const content = normalizeContent(base);
+    await SiteContent.updateOne(
+      { key: "site" },
+      { $set: { draft: content } },
+      { upsert: true }
+    );
+    return { ok: true };
+  } catch (error) {
+    console.error("[lifeshot] setCustom fallita:", error);
+    return { ok: false, error: "Salvataggio non riuscito." };
+  }
+}
+
+/** Allineamento/dimensione di un testo "fisso" (id arbitrario) → BOZZA. */
+export async function setCustomStyle(
+  id: string,
+  style: { align?: "left" | "center" | "right"; size?: Level }
+): Promise<{ ok: boolean; error?: string }> {
+  if (!(await isAdmin())) return { ok: false, error: "Non autorizzato." };
+  try {
+    await connectDB();
+    const doc = await SiteContent.findOne({ key: "site" })
+      .select("draft published")
+      .lean();
+    const base = normalizeContent(doc?.draft ?? doc?.published);
+    base.customStyles[id] = { ...base.customStyles[id], ...style };
+    const content = normalizeContent(base);
+    await SiteContent.updateOne(
+      { key: "site" },
+      { $set: { draft: content } },
+      { upsert: true }
+    );
+    return { ok: true };
+  } catch (error) {
+    console.error("[lifeshot] setCustomStyle fallita:", error);
+    return { ok: false, error: "Salvataggio non riuscito." };
+  }
+}
+
 /** Editing in-place di un'immagine (sfondo/rider/OG…) → BOZZA. */
 export async function setImageField(
   page: PageSlug,

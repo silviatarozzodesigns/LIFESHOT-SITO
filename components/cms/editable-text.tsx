@@ -3,7 +3,12 @@
 import { createElement, useState, useTransition } from "react";
 import { AlignCenter, AlignLeft, AlignRight, Minus, Plus } from "lucide-react";
 import { useEditMode } from "@/components/cms/edit-mode";
-import { setField, setTextStyle } from "@/app/actions/content";
+import {
+  setField,
+  setTextStyle,
+  setCustom,
+  setCustomStyle,
+} from "@/app/actions/content";
 import { TEXT_SIZE_EM, type Level, type PageSlug, type TextStyle } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
@@ -33,14 +38,18 @@ function notifyParent() {
 export function EditableText({
   page,
   k,
+  customId,
   value,
   as = "span",
   className,
   maxLength = 2000,
   style,
 }: {
-  page: PageSlug;
-  k: string;
+  /** Per i testi del registro CMS: pagina + chiave */
+  page?: PageSlug;
+  k?: string;
+  /** Per QUALSIASI testo "fisso" dei componenti: id stabile arbitrario */
+  customId?: string;
   value: string;
   as?: keyof React.JSX.IntrinsicElements;
   className?: string;
@@ -68,7 +77,9 @@ export function EditableText({
   function saveText(next: string) {
     setStatus("saving");
     startTransition(async () => {
-      const res = await setField(page, k, next);
+      const res = customId
+        ? await setCustom(customId, next)
+        : await setField(page!, k!, next);
       setStatus(res.ok ? "saved" : "error");
       setTimeout(() => setStatus("idle"), 1500);
       if (res.ok) notifyParent();
@@ -80,7 +91,9 @@ export function EditableText({
     setTs(merged);
     setStatus("saving");
     startTransition(async () => {
-      const res = await setTextStyle(page, k, patch);
+      const res = customId
+        ? await setCustomStyle(customId, patch)
+        : await setTextStyle(page!, k!, patch);
       setStatus(res.ok ? "saved" : "error");
       setTimeout(() => setStatus("idle"), 1500);
       if (res.ok) notifyParent();
@@ -100,7 +113,7 @@ export function EditableText({
       suppressContentEditableWarning: true,
       spellCheck: false,
       role: "textbox",
-      "aria-label": `Modifica: ${k}`,
+      "aria-label": `Modifica: ${customId ?? k}`,
       onFocus: () => setActive(true),
       onBlur: (e: React.FocusEvent<HTMLElement>) => {
         // chiudi il popover solo se il focus esce davvero dal gruppo

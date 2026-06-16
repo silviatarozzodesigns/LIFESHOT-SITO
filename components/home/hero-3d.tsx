@@ -117,10 +117,11 @@ export function Hero3D({
       onMouseLeave={() => setP({ x: 0, y: 0 })}
       className="relative isolate flex flex-col overflow-hidden rounded-b-[2.5rem] lg:min-h-[100svh]"
     >
-      {/* Chip cambio immagini in-place (solo admin in edit mode) */}
-      <div className="pointer-events-none absolute right-4 top-4 z-30 flex flex-wrap justify-end gap-2">
-        <EditableImage page="home" k="hero.background" label="Cambia sfondo" />
-        <EditableImage page="home" k="hero.foreground" label="Cambia rider" />
+      {/* Chip cambio immagini in-place (solo admin in edit mode).
+          Sotto la navbar fluttuante e z alto così restano sempre visibili. */}
+      <div className="pointer-events-none absolute right-4 top-24 z-[60] flex flex-wrap justify-end gap-2 sm:top-28">
+        <EditableImage page="home" k="hero.background" label="Sfondo" />
+        <EditableImage page="home" k="hero.foreground" label="Rider" />
       </div>
 
       {/* LIVELLO 1 — sfondo (swap responsive desktop / mobile-tablet).

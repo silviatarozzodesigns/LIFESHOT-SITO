@@ -424,14 +424,45 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
                     {group.keys.map((key) => {
                       const def = pageDef.images[key];
                       if (!def) return null;
+                      const s = page.imageSettings[key] ?? DEFAULT_IMAGE_SETTINGS;
                       return (
-                        <ImageField
-                          key={key}
-                          def={def}
-                          value={page.images[key] ?? ""}
-                          onChange={(url) => setImage(key, url)}
-                          onError={setError}
-                        />
+                        <div key={key} className="space-y-2 rounded-xl border bg-background/40 p-2.5">
+                          <ImageField
+                            def={def}
+                            value={page.images[key] ?? ""}
+                            onChange={(url) => setImage(key, url)}
+                            onError={setError}
+                          />
+                          {page.images[key] && (
+                            <div className="space-y-1.5 pt-1">
+                              <RangeRow
+                                label="Orizzontale"
+                                value={s.posX}
+                                min={0}
+                                max={100}
+                                suffix="%"
+                                onChange={(v) => setImageSettings(key, { posX: v })}
+                              />
+                              <RangeRow
+                                label="Verticale"
+                                value={s.posY}
+                                min={0}
+                                max={100}
+                                suffix="%"
+                                onChange={(v) => setImageSettings(key, { posY: v })}
+                              />
+                              <RangeRow
+                                label="Zoom"
+                                value={s.scale}
+                                min={100}
+                                max={280}
+                                step={5}
+                                suffix="%"
+                                onChange={(v) => setImageSettings(key, { scale: v })}
+                              />
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
@@ -818,6 +849,46 @@ function ImageField({
           if (file) handleFile(file);
           e.target.value = "";
         }}
+      />
+    </div>
+  );
+}
+
+/** Slider etichettato compatto per inquadratura/zoom immagini */
+function RangeRow({
+  label,
+  value,
+  min,
+  max,
+  step = 1,
+  suffix = "",
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  suffix?: string;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-[11px] text-muted-foreground">{label}</span>
+        <span className="text-[11px] tabular-nums text-muted-foreground">
+          {value}
+          {suffix}
+        </span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-full accent-primary"
       />
     </div>
   );

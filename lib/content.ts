@@ -133,6 +133,14 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 export interface CmsData {
   pages: Record<PageSlug, PageContent>;
   settings: SiteSettings;
+  /**
+   * Override liberi per QUALSIASI testo "fisso" dei componenti (etichette,
+   * titoli sezione, ecc.), keyati con un id stabile. Il default è il testo
+   * scritto nel codice; se qui c'è un override, vince. Stile per-id in
+   * `customStyles`. Rende editabile ogni testo senza gonfiare il registro.
+   */
+  custom: Record<string, string>;
+  customStyles: Record<string, TextStyle>;
 }
 
 /* ── Scale (stringhe letterali: requisito del compilatore JIT di Tailwind) ── */
@@ -531,6 +539,8 @@ export const DEFAULT_CONTENT: CmsData = {
     PAGE_SLUGS.map((slug) => [slug, buildDefaultPage(PAGES[slug])])
   ) as Record<PageSlug, PageContent>,
   settings: { ...DEFAULT_SETTINGS },
+  custom: {},
+  customStyles: {},
 };
 
 function cleanString(value: unknown, fallback: string, max: number): string {
@@ -595,6 +605,8 @@ function cleanImageSettings(raw: unknown): ImageSettings {
 export function normalizeContent(raw?: {
   pages?: Partial<Record<PageSlug, RawPage>>;
   settings?: Partial<SiteSettings>;
+  custom?: Record<string, unknown>;
+  customStyles?: Record<string, unknown>;
 } | null): CmsData {
   const pages = {} as Record<PageSlug, PageContent>;
   for (const slug of PAGE_SLUGS) {
@@ -653,13 +665,41 @@ export function normalizeContent(raw?: {
         ? raw.settings.watermarkEnabled
         : DEFAULT_SETTINGS.watermarkEnabled,
   };
-  return { pages, settings };
+  // Override liberi: max ~800 voci, valori ≤ 600 char (anti-abuso)
+  const custom: Record<string, string> = {};
+  const rawCustom = raw?.custom ?? {};
+  for (const key of Object.keys(rawCustom).slice(0, 800)) {
+    const v = rawCustom[key];
+    if (typeof v === "string") custom[key] = v.slice(0, 600);
+  }
+  const customStyles: Record<string, TextStyle> = {};
+  const rawCS = raw?.customStyles ?? {};
+  for (const key of Object.keys(rawCS).slice(0, 800)) {
+    const s = cleanTextStyle(rawCS[key]);
+    if (s.align || s.size) customStyles[key] = s;
+  }
+  return { pages, settings, custom, customStyles };
 }
 
 /* ───────────────────── accessor per le pagine pubbliche ─────────────────── */
 
 export function getText(content: CmsData, slug: PageSlug, key: string): string {
   return content.pages[slug]?.texts[key] ?? PAGES[slug].fields[key]?.default ?? "";
+}
+
+/** Override di un testo "fisso" (id arbitrario): se assente usa il fallback */
+export function getCustom(
+  content: CmsData,
+  id: string,
+  fallback: string
+): string {
+  const v = content.custom?.[id];
+  return typeof v === "string" && v.length > 0 ? v : fallback;
+}
+
+/** Stile di un testo custom (id arbitrario) */
+export function getCustomStyle(content: CmsData, id: string): TextStyle {
+  return content.customStyles?.[id] ?? {};
 }
 
 /** Stile (allineamento/dimensione) di un testo modificabile in-place */
