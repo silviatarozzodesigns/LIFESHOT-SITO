@@ -18,9 +18,9 @@ export const site = {
  * Placeholder ben visibili: aggiornarli quando disponibili.
  */
 export const company = {
-  legalName: "[INSERIRE RAGIONE SOCIALE]",
-  vat: "[INSERIRE PARTITA IVA]",
-  address: "[INSERIRE SEDE LEGALE]",
+  legalName: "Silvia Tarozzo Digital Creator",
+  vat: "02828270039",
+  address: "Via F.Peretti 55, 28075 Grignasco (NO)",
   email: "lifeshotmedia@gmail.com",
 } as const;
 
