@@ -51,14 +51,13 @@ export default function PrivacyPolicyPage() {
         precontrattuali e legittimo interesse a riscontrare i contatti.
       </p>
 
-      <h2>3. Dati trattati per i pagamenti</h2>
+      <h2>3. Acquisti e pagamenti</h2>
       <p>
-        L&apos;eventuale acquisto di foto o servizi avviene tramite il fornitore
-        di pagamento <strong>Stripe</strong>. I dati di pagamento (numero di
-        carta, ecc.) sono inseriti e gestiti <strong>direttamente da Stripe</strong>{" "}
-        su canali cifrati e non transitano né vengono conservati sui nostri
-        sistemi. Stripe agisce come autonomo titolare/responsabile secondo la
-        propria informativa privacy.
+        <strong>Sul sito non vengono effettuati pagamenti.</strong> L&apos;eventuale
+        acquisto delle foto o dei servizi si concorda direttamente con noi
+        tramite messaggio privato (DM su Instagram) o via email. Di conseguenza
+        il sito <strong>non raccoglie né tratta dati di pagamento</strong> (carte,
+        IBAN o simili).
       </p>
 
       <h2>4. Dati e immagini archiviati</h2>
@@ -74,6 +73,14 @@ export default function PrivacyPolicyPage() {
           <strong>MongoDB</strong>.
         </li>
       </ul>
+      <p>
+        Questi fornitori, insieme alla piattaforma di hosting e al servizio di
+        invio email dei moduli di contatto, agiscono come{" "}
+        <strong>responsabili del trattamento</strong>. Alcuni dati possono
+        essere trattati su server situati al di fuori dello Spazio Economico
+        Europeo, in tal caso con adeguate garanzie (es. clausole contrattuali
+        standard della Commissione UE).
+      </p>
       <p>
         Le foto che ritraggono persone vengono pubblicate e vendute nel contesto
         di eventi sportivi; per richieste di rimozione di una tua immagine puoi
