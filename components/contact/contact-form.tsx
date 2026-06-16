@@ -121,6 +121,32 @@ export function ContactForm() {
         className="absolute left-[-9999px] h-0 w-0 opacity-0"
       />
 
+      {/* Consenso privacy obbligatorio (il form non parte senza spunta) */}
+      <div className="flex items-start gap-2.5">
+        <input
+          id="contact-privacy"
+          name="privacy"
+          type="checkbox"
+          required
+          className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-primary"
+        />
+        <Label
+          htmlFor="contact-privacy"
+          className="cursor-pointer text-sm font-normal leading-snug text-muted-foreground"
+        >
+          Accetto il trattamento dei dati personali secondo la{" "}
+          <a
+            href="/privacy-policy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-primary underline-offset-2 hover:underline"
+          >
+            Privacy Policy
+          </a>
+          .
+        </Label>
+      </div>
+
       {error && (
         <p role="alert" className="text-sm text-destructive">
           {error}

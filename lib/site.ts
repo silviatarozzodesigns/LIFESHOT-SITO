@@ -14,6 +14,17 @@ export const site = {
 } as const;
 
 /**
+ * Dati fiscali/legali dell'agenzia (obblighi siti professionali IT).
+ * Placeholder ben visibili: aggiornarli quando disponibili.
+ */
+export const company = {
+  legalName: "[INSERIRE RAGIONE SOCIALE]",
+  vat: "[INSERIRE PARTITA IVA]",
+  address: "[INSERIRE SEDE LEGALE]",
+  email: "lifeshotmedia@gmail.com",
+} as const;
+
+/**
  * Slug dell'evento di sistema "Dietro l'obiettivo": contenitore degli
  * scatti caricati direttamente nella sezione curata della homepage.
  * Non pubblicato → invisibile in liste/filtri pubblici. Prefisso "__"
