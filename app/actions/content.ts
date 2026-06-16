@@ -88,6 +88,39 @@ export async function setField(
   }
 }
 
+/** Editing in-place di un'immagine (sfondo/rider/OG…) → BOZZA. */
+export async function setImageField(
+  page: PageSlug,
+  key: string,
+  url: string
+): Promise<{ ok: boolean; error?: string }> {
+  if (!(await isAdmin())) return { ok: false, error: "Non autorizzato." };
+  try {
+    await connectDB();
+    const doc = await SiteContent.findOne({ key: "site" })
+      .select("draft published")
+      .lean();
+    const base = normalizeContent(doc?.draft ?? doc?.published);
+    if (!(key in base.pages[page].images)) {
+      return { ok: false, error: "Immagine sconosciuta." };
+    }
+    const previous = base.pages[page].images[key];
+    base.pages[page].images[key] = url;
+    const content = normalizeContent(base);
+    await SiteContent.updateOne(
+      { key: "site" },
+      { $set: { draft: content } },
+      { upsert: true }
+    );
+    // Pulisci il vecchio asset dal cloud (solo file caricati dal CMS)
+    if (previous && previous !== url) await deleteAsset(previous);
+    return { ok: true };
+  } catch (error) {
+    console.error("[lifeshot] setImageField fallita:", error);
+    return { ok: false, error: "Salvataggio non riuscito." };
+  }
+}
+
 /** Editing in-place dimensione/allineamento di un testo → BOZZA. */
 export async function setTextStyle(
   page: PageSlug,

@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { Clock, Instagram, MapPin } from "lucide-react";
 import { HeroSearch } from "@/components/home/hero-search";
 import { EditableText } from "@/components/cms/editable-text";
+import { EditableImage } from "@/components/cms/editable-image";
 import type { TextStyle } from "@/lib/content";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -116,6 +117,12 @@ export function Hero3D({
       onMouseLeave={() => setP({ x: 0, y: 0 })}
       className="relative isolate flex flex-col overflow-hidden rounded-b-[2.5rem] lg:min-h-[100svh]"
     >
+      {/* Chip cambio immagini in-place (solo admin in edit mode) */}
+      <div className="pointer-events-none absolute right-4 top-4 z-30 flex flex-wrap justify-end gap-2">
+        <EditableImage page="home" k="hero.background" label="Cambia sfondo" />
+        <EditableImage page="home" k="hero.foreground" label="Cambia rider" />
+      </div>
+
       {/* LIVELLO 1 — sfondo (swap responsive desktop / mobile-tablet).
           scale(1.06) di sicurezza: overscan che assorbe la traslazione del
           parallasse → nessun bordo nero ai limiti del movimento del mouse. */}

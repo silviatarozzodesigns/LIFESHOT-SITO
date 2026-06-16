@@ -4,9 +4,10 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
 import { VideoPlayer } from "@/components/video/video-player";
+import { EditableText } from "@/components/cms/editable-text";
 import { getPublishedVideos } from "@/lib/data/videos";
-import { getPublishedContent } from "@/lib/data/content";
-import { getSpacingClass, getText } from "@/lib/content";
+import { getPublishedContent, getViewContent } from "@/lib/data/content";
+import { getSpacingClass, getText, getTextStyle } from "@/lib/content";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -25,12 +26,18 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const dynamic = "force-dynamic";
 
-export default async function VideoPage() {
+export default async function VideoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ preview?: string }>;
+}) {
+  const { preview } = await searchParams;
   const [videos, content] = await Promise.all([
     getPublishedVideos(),
-    getPublishedContent(),
+    getViewContent(preview === "1"),
   ]);
   const t = (key: string) => getText(content, "video", key);
+  const ts = (key: string) => getTextStyle(content, "video", key);
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -44,13 +51,13 @@ export default async function VideoPage() {
       >
         <FadeIn>
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">
-            {t("header.eyebrow")}
+            <EditableText page="video" k="header.eyebrow" value={t("header.eyebrow")} as="span" maxLength={60} style={ts("header.eyebrow")} />
           </p>
           <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
-            {t("header.title")}
+            <EditableText page="video" k="header.title" value={t("header.title")} maxLength={60} style={ts("header.title")} />
           </h1>
           <p className="mt-3 max-w-xl text-muted-foreground">
-            {t("header.subtitle")}
+            <EditableText page="video" k="header.subtitle" value={t("header.subtitle")} as="span" maxLength={200} style={ts("header.subtitle")} />
           </p>
         </FadeIn>
 
@@ -70,7 +77,11 @@ export default async function VideoPage() {
                   )}
                   {/* C.T.A. per ogni video: testo + bottone DM (stile sito) */}
                   <p className="mt-3 text-sm text-muted-foreground">
-                    {t("cta.label")}
+                    {index === 0 ? (
+                      <EditableText page="video" k="cta.label" value={t("cta.label")} as="span" maxLength={160} style={ts("cta.label")} />
+                    ) : (
+                      t("cta.label")
+                    )}
                   </p>
                   <a
                     href={site.instagramDmUrl}

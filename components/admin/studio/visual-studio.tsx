@@ -308,7 +308,7 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
               src={
                 activePage === "home"
                   ? `/anteprima?n=${realNonce}`
-                  : `${pageDef.path}?n=${realNonce}`
+                  : `${pageDef.path}?preview=1&n=${realNonce}`
               }
               title="Sito reale (modificabile)"
               className="block h-[80vh] w-full border-0 bg-background"

@@ -4,8 +4,9 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
 import { LogoMark } from "@/components/brand/logo";
-import { getPublishedContent } from "@/lib/data/content";
-import { getSpacingClass, getText } from "@/lib/content";
+import { EditableText } from "@/components/cms/editable-text";
+import { getPublishedContent, getViewContent } from "@/lib/data/content";
+import { getSpacingClass, getText, getTextStyle } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -34,12 +35,19 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
-export default async function ChiSiamoPage() {
-  const content = await getPublishedContent();
+export default async function ChiSiamoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ preview?: string }>;
+}) {
+  const { preview } = await searchParams;
+  const content = await getViewContent(preview === "1");
   const t = (key: string) => getText(content, "chi-siamo", key);
+  const ts = (key: string) => getTextStyle(content, "chi-siamo", key);
 
   // Schede team dai contenuti CMS (nome, ruolo, bio tutti editabili)
   const team = [1, 2, 3].map((i, index) => ({
+    n: i,
     name: t(`team.m${i}.name`),
     role: t(`team.m${i}.role`),
     bio: t(`team.m${i}.bio`),
@@ -61,14 +69,14 @@ export default async function ChiSiamoPage() {
           <FadeIn>
             <LogoMark className="mx-auto h-16 w-auto text-primary" />
             <h1 className="mx-auto mt-8 max-w-3xl text-balance text-4xl font-semibold tracking-tight sm:text-6xl">
-              {t("intro.titleLine1")}
+              <EditableText page="chi-siamo" k="intro.titleLine1" value={t("intro.titleLine1")} maxLength={80} style={ts("intro.titleLine1")} />
               <br />
               <span className="text-muted-foreground">
-                {t("intro.titleLine2")}
+                <EditableText page="chi-siamo" k="intro.titleLine2" value={t("intro.titleLine2")} maxLength={80} style={ts("intro.titleLine2")} />
               </span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-balance text-lg text-muted-foreground">
-              {t("intro.subtitle")}
+              <EditableText page="chi-siamo" k="intro.subtitle" value={t("intro.subtitle")} as="span" maxLength={500} style={ts("intro.subtitle")} />
             </p>
           </FadeIn>
         </section>
@@ -77,10 +85,10 @@ export default async function ChiSiamoPage() {
         <section className="container pb-24">
           <FadeIn className="mb-10 text-center">
             <h2 className="text-3xl font-semibold tracking-tight">
-              {t("team.title")}
+              <EditableText page="chi-siamo" k="team.title" value={t("team.title")} maxLength={60} style={ts("team.title")} />
             </h2>
             <p className="mt-2 text-muted-foreground">
-              {t("team.subtitle")}
+              <EditableText page="chi-siamo" k="team.subtitle" value={t("team.subtitle")} as="span" maxLength={160} style={ts("team.subtitle")} />
             </p>
           </FadeIn>
 
@@ -94,14 +102,14 @@ export default async function ChiSiamoPage() {
                     </span>
                   </div>
                   <h3 className="mt-6 text-xl font-semibold tracking-tight">
-                    {member.name}
+                    <EditableText page="chi-siamo" k={`team.m${member.n}.name`} value={member.name} maxLength={60} style={ts(`team.m${member.n}.name`)} />
                   </h3>
                   <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-primary">
                     <member.icon className="h-4 w-4" />
-                    {member.role}
+                    <EditableText page="chi-siamo" k={`team.m${member.n}.role`} value={member.role} as="span" maxLength={40} style={ts(`team.m${member.n}.role`)} />
                   </p>
                   <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                    {member.bio}
+                    <EditableText page="chi-siamo" k={`team.m${member.n}.bio`} value={member.bio} as="span" maxLength={400} style={ts(`team.m${member.n}.bio`)} />
                   </p>
                 </article>
               </FadeIn>

@@ -4,9 +4,10 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
 import { ContactForm } from "@/components/contact/contact-form";
+import { EditableText } from "@/components/cms/editable-text";
 import { site } from "@/lib/site";
-import { getPublishedContent } from "@/lib/data/content";
-import { getSpacingClass, getText } from "@/lib/content";
+import { getPublishedContent, getViewContent } from "@/lib/data/content";
+import { getSpacingClass, getText, getTextStyle } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -39,9 +40,15 @@ const socials = [
   },
 ];
 
-export default async function ContattiPage() {
-  const content = await getPublishedContent();
+export default async function ContattiPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ preview?: string }>;
+}) {
+  const { preview } = await searchParams;
+  const content = await getViewContent(preview === "1");
   const t = (key: string) => getText(content, "contatti", key);
+  const ts = (key: string) => getTextStyle(content, "contatti", key);
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -55,17 +62,17 @@ export default async function ContattiPage() {
       >
         <FadeIn className="text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">
-            {t("intro.eyebrow")}
+            <EditableText page="contatti" k="intro.eyebrow" value={t("intro.eyebrow")} as="span" maxLength={60} style={ts("intro.eyebrow")} />
           </p>
           <h1 className="mx-auto mt-4 max-w-2xl text-balance text-4xl font-semibold tracking-tight sm:text-6xl">
-            {t("intro.titleLine1")}
+            <EditableText page="contatti" k="intro.titleLine1" value={t("intro.titleLine1")} maxLength={80} style={ts("intro.titleLine1")} />
             <br />
             <span className="text-muted-foreground">
-              {t("intro.titleLine2")}
+              <EditableText page="contatti" k="intro.titleLine2" value={t("intro.titleLine2")} maxLength={80} style={ts("intro.titleLine2")} />
             </span>
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-balance text-lg text-muted-foreground">
-            {t("intro.subtitle")}
+            <EditableText page="contatti" k="intro.subtitle" value={t("intro.subtitle")} as="span" maxLength={300} style={ts("intro.subtitle")} />
           </p>
         </FadeIn>
 

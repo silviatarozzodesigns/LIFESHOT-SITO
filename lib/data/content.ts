@@ -1,10 +1,21 @@
 import { connectDB } from "@/lib/db";
 import { SiteContent } from "@/models/SiteContent";
+import { isAdmin } from "@/lib/auth";
 import {
   DEFAULT_CONTENT,
   normalizeContent,
   type CmsData,
 } from "@/lib/content";
+
+/**
+ * Contenuto da mostrare in una pagina pubblica: la BOZZA quando la pagina è
+ * aperta in anteprima dall'admin (`?preview=1` dentro l'editor), altrimenti il
+ * PUBBLICATO. Così l'editor mostra le modifiche non ancora pubblicate.
+ */
+export async function getViewContent(preview: boolean): Promise<CmsData> {
+  if (preview && (await isAdmin())) return getDraftContent();
+  return getPublishedContent();
+}
 
 /**
  * Contenuti PUBBLICATI — usati dalle pagine pubbliche e dai metadata.
