@@ -163,12 +163,14 @@ function isNoNumberQuery(value: string): boolean {
 }
 
 /**
- * Regex che riconosce TUTTE le diciture "senza numero" salvate come tag:
- * "S/N", "SN", "S.N.", "S-N", "S N", "senza numero", "senzanumero"…
- * (^…$ ancorato così non matcha numeri/parole che contengono "sn").
+ * Regex che riconosce la sigla "senza numero" ANCHE dentro un testo più
+ * lungo (es. tipo moto + sigla: "KTM S/N", "Husqvarna SN"). Maiuscole/
+ * minuscole indifferenti. I confini `(^|[^a-z0-9])…([^a-z0-9]|$)` evitano
+ * i falsi positivi: "snake", "san", "USN" non vengono matchati, mentre
+ * "S/N", "SN", "S.N.", "S-N", "S N" e "senza numero" sì.
  */
 const NO_NUMBER_REGEX = {
-  $regex: "^\\s*(s[\\s./_-]*n[\\s./_-]*|senza\\s*numero)\\s*$",
+  $regex: "(^|[^a-z0-9])(s[\\s./_-]*n|senza\\s*numero)([^a-z0-9]|$)",
   $options: "i",
 };
 
