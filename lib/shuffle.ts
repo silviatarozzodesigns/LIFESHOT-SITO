@@ -18,15 +18,19 @@ export function shuffle<T>(arr: T[]): T[] {
 }
 
 /**
- * Riordina gli elementi in modo che due adiacenti non condividano la stessa
- * chiave, quando possibile. Strategia greedy "gruppo più numeroso diverso
- * dall'ultimo usato": è la regola che garantisce zero adiacenze uguali ogni
- * volta che la distribuzione lo consente (nessun soggetto supera la metà + 1).
- * Quando è impossibile (un soggetto domina), degrada raggruppando il minimo
- * indispensabile invece di fallire.
+ * Riordina gli elementi alternando i soggetti per la MASSIMA varietà.
+ *
+ * Strategia round-robin: a ogni "giro" pesca un elemento da OGNI soggetto
+ * ancora disponibile (dal più numeroso al meno numeroso), poi ripete. Così
+ * con soggetti 16/95/99 la sequenza è 16,95,99,16,95,99… invece di
+ * incollare i due dominanti (16,95,16,95…) e relegare i rari alla fine.
+ *
+ * Garantisce zero adiacenze uguali finché è matematicamente possibile
+ * (nessun soggetto supera la metà+1); quando un soggetto domina, degrada
+ * accodando i suoi residui invece di fallire.
  *
  * L'input va già mischiato (vedi `shuffle`): l'ordine dentro ogni gruppo
- * resta casuale, l'interleave decide solo la sequenza tra gruppi diversi.
+ * resta casuale, il round-robin decide solo la sequenza tra gruppi diversi.
  */
 export function interleaveByKey<T>(
   items: T[],
@@ -45,23 +49,33 @@ export function interleaveByKey<T>(
   // Un solo gruppo: niente da alternare.
   if (groups.size <= 1) return items;
 
-  const buckets = [...groups.entries()].map(([key, arr]) => ({ key, arr }));
+  // Ordine iniziale dei soggetti casuale (a parità di residui resta tale).
+  const buckets = shuffle(
+    [...groups.entries()].map(([key, arr]) => ({ key, arr }))
+  );
   const result: T[] = [];
   let lastKey: string | null = null;
 
   while (result.length < items.length) {
-    // Gruppo con più elementi rimasti, diverso dall'ultimo inserito.
-    let pick: { key: string; arr: T[] } | null = null;
+    // Soggetti più numerosi per primi a ogni giro: massimizza la distanza
+    // tra ripetizioni dello stesso soggetto.
+    buckets.sort((a, b) => b.arr.length - a.arr.length);
+
+    let progressed = false;
     for (const b of buckets) {
       if (!b.arr.length || b.key === lastKey) continue;
-      if (!pick || b.arr.length > pick.arr.length) pick = b;
+      result.push(b.arr.pop()!);
+      lastKey = b.key;
+      progressed = true;
     }
-    // Resta solo il gruppo dell'ultimo soggetto: adiacenza inevitabile.
-    if (!pick) pick = buckets.find((b) => b.arr.length) ?? null;
-    if (!pick) break;
 
-    result.push(pick.arr.pop()!);
-    lastKey = pick.key;
+    // Resta solo il soggetto dell'ultimo inserito: adiacenza inevitabile.
+    if (!progressed) {
+      const b = buckets.find((x) => x.arr.length);
+      if (!b) break;
+      result.push(b.arr.pop()!);
+      lastKey = b.key;
+    }
   }
 
   return result;

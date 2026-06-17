@@ -148,15 +148,28 @@ function toDTO(doc: {
   };
 }
 
+/** Alias riconosciuti per le moto senza pettorale (intero + abbreviazione). */
+const NO_NUMBER_ALIASES = ["senza numero", "sn"];
+
+/** True se la query indica "senza numero" (in forma estesa o "SN"). */
+function isNoNumberQuery(value: string): boolean {
+  return NO_NUMBER_ALIASES.includes(value.trim().toLowerCase());
+}
+
 /**
  * Costruisce il filtro Mongo per un numero di gara digitato, considerando
  * sia i nuovi array (`raceNumbers`) sia il vecchio campo singolo
  * (`raceNumber`). Per i numeri puri matcha anche le varianti con zeri
- * ("45" → "045"); per il testo libero ("senza numero", "A12") usa un
- * match parziale case-insensitive.
+ * ("45" → "045"); "senza numero"/"SN" matcha entrambe le forme del tag;
+ * per il resto del testo libero ("A12") usa un match parziale.
  */
 function raceNumberOr(input: string): Record<string, unknown>[] {
   const trimmed = input.trim();
+  // "senza numero" o "SN" → matcha esattamente entrambe le diciture del tag
+  if (isNoNumberQuery(trimmed)) {
+    const rx = { $regex: "^(senza numero|sn)$", $options: "i" };
+    return [{ raceNumbers: rx }, { raceNumber: rx }];
+  }
   if (/^\d+$/.test(trimmed)) {
     const variants = [trimmed, String(Number(trimmed)), trimmed.padStart(3, "0")];
     return [{ raceNumbers: { $in: variants } }, { raceNumber: { $in: variants } }];

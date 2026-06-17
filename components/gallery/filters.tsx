@@ -94,9 +94,9 @@ export function GalleryFilters({
         <input
           value={number}
           onChange={(e) => setNumber(e.target.value)}
-          inputMode="numeric"
-          placeholder="Numero di gara"
-          aria-label="Filtra per numero di gara"
+          inputMode="text"
+          placeholder="Numero di gara o senza numero"
+          aria-label="Filtra per numero di gara o senza numero"
           className={cn(inputClasses, "pl-11 pr-5")}
         />
       </div>
