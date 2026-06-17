@@ -10,7 +10,18 @@ import {
   updatePhotoMeta,
 } from "@/app/actions/photos";
 import type { AdminPhotoDTO } from "@/lib/data/admin";
+import { TagInput } from "@/components/admin/tag-input";
 import { cn } from "@/lib/utils";
+
+/** Confronto ordine-insensitive di due liste di tag. */
+function sameTags(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  const norm = (list: string[]) =>
+    [...list].map((t) => t.toLowerCase()).sort();
+  const na = norm(a);
+  const nb = norm(b);
+  return na.every((t, i) => t === nb[i]);
+}
 
 /**
  * Griglia foto della dashboard: numero di gara e nome pilota modificabili
@@ -38,8 +49,8 @@ export function PhotoAdminGrid({ photos }: { photos: AdminPhotoDTO[] }) {
 function PhotoAdminCard({ photo }: { photo: AdminPhotoDTO }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [number, setNumber] = useState(photo.raceNumber ?? "");
-  const [pilot, setPilot] = useState(photo.pilotName ?? "");
+  const [numbers, setNumbers] = useState<string[]>(photo.raceNumbers);
+  const [pilots, setPilots] = useState<string[]>(photo.pilotNames);
   const [saved, setSaved] = useState(false);
   const [featured, setFeatured] = useState(photo.featured);
 
@@ -54,15 +65,15 @@ function PhotoAdminCard({ photo }: { photo: AdminPhotoDTO }) {
   }
 
   const dirty =
-    number.trim() !== (photo.raceNumber ?? "") ||
-    pilot.trim() !== (photo.pilotName ?? "");
+    !sameTags(numbers, photo.raceNumbers) ||
+    !sameTags(pilots, photo.pilotNames);
 
   function saveMeta() {
     if (!dirty) return;
     startTransition(async () => {
       const result = await updatePhotoMeta(photo.id, {
-        raceNumber: number,
-        pilotName: pilot,
+        raceNumbers: numbers,
+        pilotNames: pilots,
       });
       if (result.ok) {
         setSaved(true);
@@ -79,9 +90,6 @@ function PhotoAdminCard({ photo }: { photo: AdminPhotoDTO }) {
       if (result.ok) router.refresh();
     });
   }
-
-  const fieldClasses =
-    "h-7 w-full min-w-0 rounded-md border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring";
 
   return (
     <figure
@@ -135,39 +143,31 @@ function PhotoAdminCard({ photo }: { photo: AdminPhotoDTO }) {
         </button>
       </div>
       <figcaption className="space-y-1.5 p-2.5">
-        <p
-          className="truncate text-xs text-muted-foreground"
-          title={photo.originalFilename}
-        >
-          {photo.originalFilename}
-        </p>
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 shrink-0 text-xs text-muted-foreground">#</span>
-          <input
-            value={number}
-            onChange={(e) => setNumber(e.target.value)}
-            onBlur={saveMeta}
-            onKeyDown={(e) => e.key === "Enter" && saveMeta()}
-            placeholder="n. gara"
-            aria-label="Numero di gara"
-            className={fieldClasses}
-          />
+        <div className="flex items-center justify-between gap-1.5">
+          <p
+            className="truncate text-xs text-muted-foreground"
+            title={photo.originalFilename}
+          >
+            {photo.originalFilename}
+          </p>
           {saved && <Check className="h-3.5 w-3.5 shrink-0 text-primary" />}
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 shrink-0 text-center text-[10px] text-muted-foreground">
-            P
-          </span>
-          <input
-            value={pilot}
-            onChange={(e) => setPilot(e.target.value)}
-            onBlur={saveMeta}
-            onKeyDown={(e) => e.key === "Enter" && saveMeta()}
-            placeholder="pilota"
-            aria-label="Nome pilota"
-            className={fieldClasses}
-          />
-        </div>
+        <TagInput
+          value={numbers}
+          onChange={setNumbers}
+          onCommit={saveMeta}
+          prefix="#"
+          placeholder="numeri di gara"
+          ariaLabel="Numeri di gara"
+        />
+        <TagInput
+          value={pilots}
+          onChange={setPilots}
+          onCommit={saveMeta}
+          prefix="P"
+          placeholder="nomi piloti"
+          ariaLabel="Nomi piloti"
+        />
       </figcaption>
     </figure>
   );

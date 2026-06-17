@@ -96,11 +96,18 @@ export default async function PhotoPage({
           <FadeIn delay={0.12}>
             <aside className="lg:sticky lg:top-24">
               <div className="rounded-2xl border bg-card p-6">
-                {photo.raceNumber && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-sm font-semibold text-primary">
-                    <Hash className="h-3.5 w-3.5" />
-                    {photo.raceNumber}
-                  </span>
+                {photo.raceNumbers.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {photo.raceNumbers.map((n) => (
+                      <span
+                        key={n}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-sm font-semibold text-primary"
+                      >
+                        <Hash className="h-3.5 w-3.5" />
+                        {n}
+                      </span>
+                    ))}
+                  </div>
                 )}
 
                 <h1 className="mt-4 text-2xl font-semibold tracking-tight">
@@ -108,10 +115,10 @@ export default async function PhotoPage({
                 </h1>
 
                 <dl className="mt-4 space-y-2 text-sm text-muted-foreground">
-                  {photo.pilotName && (
+                  {photo.pilotNames.length > 0 && (
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 shrink-0" />
-                      <dd>{photo.pilotName}</dd>
+                      <dd>{photo.pilotNames.join(", ")}</dd>
                     </div>
                   )}
                   {photo.event && (

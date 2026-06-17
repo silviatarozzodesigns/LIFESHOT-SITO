@@ -82,35 +82,56 @@ export async function togglePhotoFeatured(
   }
 }
 
+/** Massimi per evitare abusi/payload enormi dai campi multi-tag. */
+const MAX_TAGS = 20;
+const MAX_TAG_LEN = 100;
+
 /**
- * Aggiorna i metadati di una foto: numero di gara (per i file senza
- * convenzione nel nome) e nome del pilota (per la ricerca testuale).
+ * Pulisce una lista di tag liberi: trim, scarta i vuoti, taglia quelli
+ * troppo lunghi, deduplica (case-insensitive) preservando l'ordine.
+ */
+function cleanTags(tags: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of tags) {
+    const value = String(raw).trim().slice(0, MAX_TAG_LEN);
+    if (!value) continue;
+    const key = value.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(value);
+    if (out.length >= MAX_TAGS) break;
+  }
+  return out;
+}
+
+/**
+ * Aggiorna i tag di una foto: numeri di gara e nomi pilota (multi-tag,
+ * testo libero — es. "senza numero"). Scrive sugli array `raceNumbers` /
+ * `pilotNames` e azzera i vecchi campi singoli per evitare doppioni.
  */
 export async function updatePhotoMeta(
   id: string,
-  meta: { raceNumber?: string; pilotName?: string }
+  meta: { raceNumbers?: string[]; pilotNames?: string[] }
 ): Promise<PhotoActionResult> {
   if (!(await isAdmin())) return UNAUTHORIZED;
   if (!Types.ObjectId.isValid(id)) return { ok: false, error: "ID non valido." };
 
-  const update: Record<string, string | null> = {};
-  if (meta.raceNumber !== undefined) {
-    const trimmed = meta.raceNumber.trim();
-    if (trimmed.length > 20)
-      return { ok: false, error: "Numero di gara troppo lungo." };
-    update.raceNumber = trimmed || null;
+  const set: Record<string, string[]> = {};
+  const unset: Record<string, "" > = {};
+  if (meta.raceNumbers !== undefined) {
+    set.raceNumbers = cleanTags(meta.raceNumbers);
+    unset.raceNumber = ""; // rimuovi il campo legacy: ora vale l'array
   }
-  if (meta.pilotName !== undefined) {
-    const trimmed = meta.pilotName.trim();
-    if (trimmed.length > 100)
-      return { ok: false, error: "Nome pilota troppo lungo." };
-    update.pilotName = trimmed || null;
+  if (meta.pilotNames !== undefined) {
+    set.pilotNames = cleanTags(meta.pilotNames);
+    unset.pilotName = "";
   }
-  if (Object.keys(update).length === 0) return { ok: true };
+  if (Object.keys(set).length === 0) return { ok: true };
 
   try {
     await connectDB();
-    const updated = await Photo.findByIdAndUpdate(id, update);
+    const updated = await Photo.findByIdAndUpdate(id, { $set: set, $unset: unset });
     if (!updated) return { ok: false, error: "Foto non trovata." };
 
     revalidatePublicPages();

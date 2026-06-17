@@ -4,15 +4,22 @@ import { connectDB } from "@/lib/db";
 import { Event } from "@/models/Event";
 import { Photo } from "@/models/Photo";
 import { BEHIND_LENS_SLUG } from "@/lib/site";
+import { shuffle, interleaveByKey } from "@/lib/shuffle";
 
 /** Tag cache foto pubbliche (rivalidato a upload/modifica/eliminazione) */
 export const PHOTOS_TAG = "photos";
 
 export interface PhotoDTO {
   id: string;
-  url: string;
+  /** Tutti i numeri di gara taggati (multi-tag) */
+  raceNumbers: string[];
+  /** Tutti i nomi pilota taggati (multi-tag) */
+  pilotNames: string[];
+  /** Primo numero di gara — comodo per badge/anteprime (retro-compat) */
   raceNumber: string | null;
+  /** Primo pilota — comodo per anteprime (retro-compat) */
   pilotName: string | null;
+  url: string;
   originalFilename: string;
   width: number | null;
   height: number | null;
@@ -24,6 +31,49 @@ export interface PhotoDTO {
     date: string;
     location: string;
   } | null;
+}
+
+/**
+ * Normalizza i tag di una foto: usa gli array multi-tag se presenti,
+ * altrimenti ricade sul vecchio campo singolo (retro-compatibilità).
+ */
+export function normalizeTags(doc: {
+  raceNumbers?: string[] | null;
+  pilotNames?: string[] | null;
+  raceNumber?: string | null;
+  pilotName?: string | null;
+}): { raceNumbers: string[]; pilotNames: string[] } {
+  const raceNumbers =
+    doc.raceNumbers && doc.raceNumbers.length
+      ? doc.raceNumbers
+      : doc.raceNumber
+        ? [doc.raceNumber]
+        : [];
+  const pilotNames =
+    doc.pilotNames && doc.pilotNames.length
+      ? doc.pilotNames
+      : doc.pilotName
+        ? [doc.pilotName]
+        : [];
+  return { raceNumbers, pilotNames };
+}
+
+/**
+ * Chiave-soggetto per l'interleave dello shuffle: identifica "chi" è nello
+ * scatto. Nelle gare il numero coincide col pilota, quindi alternando sul
+ * primo numero (poi pilota, poi id) si evitano sia numeri sia piloti
+ * consecutivi uguali.
+ */
+function subjectKey(doc: {
+  _id: unknown;
+  raceNumbers?: string[] | null;
+  pilotNames?: string[] | null;
+  raceNumber?: string | null;
+  pilotName?: string | null;
+}): string {
+  const { raceNumbers, pilotNames } = normalizeTags(doc);
+  const key = raceNumbers[0] ?? pilotNames[0];
+  return key ? key.trim().toLowerCase() : String(doc._id);
 }
 
 export interface PhotoSearchParams {
@@ -62,6 +112,8 @@ interface PopulatedEvent {
 function toDTO(doc: {
   _id: unknown;
   url: string;
+  raceNumbers?: string[] | null;
+  pilotNames?: string[] | null;
   raceNumber?: string | null;
   pilotName?: string | null;
   originalFilename: string;
@@ -80,11 +132,14 @@ function toDTO(doc: {
           location: doc.event.location ?? "",
         }
       : null;
+  const { raceNumbers, pilotNames } = normalizeTags(doc);
   return {
     id: String(doc._id),
+    raceNumbers,
+    pilotNames,
+    raceNumber: raceNumbers[0] ?? null,
+    pilotName: pilotNames[0] ?? null,
     url: doc.url,
-    raceNumber: doc.raceNumber ?? null,
-    pilotName: doc.pilotName ?? null,
     originalFilename: doc.originalFilename,
     width: doc.width ?? null,
     height: doc.height ?? null,
@@ -94,8 +149,94 @@ function toDTO(doc: {
 }
 
 /**
- * Motore di ricerca della galleria: filtra per evento e/o numero di gara,
- * con paginazione. Sfrutta l'indice composto { event, raceNumber }.
+ * Costruisce il filtro Mongo per un numero di gara digitato, considerando
+ * sia i nuovi array (`raceNumbers`) sia il vecchio campo singolo
+ * (`raceNumber`). Per i numeri puri matcha anche le varianti con zeri
+ * ("45" → "045"); per il testo libero ("senza numero", "A12") usa un
+ * match parziale case-insensitive.
+ */
+function raceNumberOr(input: string): Record<string, unknown>[] {
+  const trimmed = input.trim();
+  if (/^\d+$/.test(trimmed)) {
+    const variants = [trimmed, String(Number(trimmed)), trimmed.padStart(3, "0")];
+    return [{ raceNumbers: { $in: variants } }, { raceNumber: { $in: variants } }];
+  }
+  const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const rx = { $regex: escaped, $options: "i" };
+  return [{ raceNumbers: rx }, { raceNumber: rx }];
+}
+
+/** Filtro Mongo per un nome pilota (parziale, case-insensitive), array + legacy. */
+function pilotNameOr(input: string): Record<string, unknown>[] {
+  const escaped = input.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const rx = { $regex: escaped, $options: "i" };
+  return [{ pilotNames: rx }, { pilotName: rx }];
+}
+
+/** Costruisce il filtro Mongo (evento + numero + pilota) per la galleria. */
+async function buildPhotoFilter({
+  eventSlug,
+  raceNumber,
+  pilotName,
+}: PhotoSearchParams): Promise<Record<string, unknown> | null> {
+  const filter: Record<string, unknown> = {};
+
+  if (eventSlug) {
+    const event = await Event.findOne({ slug: eventSlug, published: true })
+      .select("_id")
+      .lean();
+    if (!event) return null; // evento inesistente → zero risultati
+    filter.event = event._id;
+  } else {
+    // Galleria generale: escludi l'evento di sistema "Dietro l'obiettivo"
+    const sys = await Event.findOne({ slug: BEHIND_LENS_SLUG })
+      .select("_id")
+      .lean();
+    if (sys) filter.event = { $ne: sys._id };
+  }
+
+  // Più condizioni (numero E pilota) vanno combinate in $and: ciascuna è già
+  // un $or interno (array + campo legacy), quindi non si possono fondere.
+  const and: Record<string, unknown>[] = [];
+  if (raceNumber?.trim()) and.push({ $or: raceNumberOr(raceNumber) });
+  if (pilotName?.trim()) and.push({ $or: pilotNameOr(pilotName) });
+  if (and.length) filter.$and = and;
+
+  return filter;
+}
+
+/**
+ * Ordine "shuffle intelligente" della galleria per una combinazione di filtri.
+ * Calcola UNA volta (cache-ato, senza `page`) la sequenza completa di id:
+ * mischia tutte le foto del filtro e le alterna per soggetto così che la
+ * paginazione resti coerente tra le pagine.
+ */
+const getGalleryOrder = unstable_cache(
+  async (params: Omit<PhotoSearchParams, "page" | "perPage">): Promise<string[]> => {
+    try {
+      await connectDB();
+      const filter = await buildPhotoFilter(params);
+      if (!filter) return [];
+
+      const docs = await Photo.find(filter)
+        .select("_id raceNumbers pilotNames raceNumber pilotName")
+        .lean();
+
+      return interleaveByKey(shuffle(docs), subjectKey).map((d) =>
+        String(d._id)
+      );
+    } catch (error) {
+      console.error("[lifeshot] ordine galleria fallito:", error);
+      return [];
+    }
+  },
+  ["gallery-order"],
+  { tags: [PHOTOS_TAG], revalidate: 120 }
+);
+
+/**
+ * Motore di ricerca della galleria: filtra per evento / numero / pilota,
+ * applica lo shuffle intelligente e pagina sull'ordine così calcolato.
  */
 async function searchPhotosUncached({
   eventSlug,
@@ -107,56 +248,29 @@ async function searchPhotosUncached({
   try {
     await connectDB();
 
-    const filter: Record<string, unknown> = {};
-
-    if (eventSlug) {
-      const event = await Event.findOne({ slug: eventSlug, published: true })
-        .select("_id")
-        .lean();
-      if (!event) return EMPTY_RESULT;
-      filter.event = event._id;
-    } else {
-      // Galleria generale: escludi l'evento di sistema "Dietro l'obiettivo"
-      const sys = await Event.findOne({ slug: BEHIND_LENS_SLUG })
-        .select("_id")
-        .lean();
-      if (sys) filter.event = { $ne: sys._id };
-    }
-
-    if (raceNumber?.trim()) {
-      // "45" trova anche "045": confronto sul valore numerico quando possibile,
-      // altrimenti match esatto (per pettorali alfanumerici tipo "A12")
-      const trimmed = raceNumber.trim();
-      if (/^\d+$/.test(trimmed)) {
-        filter.raceNumber = {
-          $in: [trimmed, String(Number(trimmed)), trimmed.padStart(3, "0")],
-        };
-      } else {
-        filter.raceNumber = trimmed;
-      }
-    }
-
-    if (pilotName?.trim()) {
-      // Match parziale case-insensitive sul nome del pilota
-      const escaped = pilotName
-        .trim()
-        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      filter.pilotName = { $regex: escaped, $options: "i" };
-    }
+    const orderedIds = await getGalleryOrder({ eventSlug, raceNumber, pilotName });
+    const total = orderedIds.length;
+    if (total === 0) return EMPTY_RESULT;
 
     const currentPage = Math.max(1, page);
-    const [total, docs] = await Promise.all([
-      Photo.countDocuments(filter),
-      Photo.find(filter)
-        .sort({ createdAt: -1 })
-        .skip((currentPage - 1) * perPage)
-        .limit(perPage)
-        .populate<{ event: PopulatedEvent }>("event", "name slug date location")
-        .lean(),
-    ]);
+    const slice = orderedIds.slice(
+      (currentPage - 1) * perPage,
+      currentPage * perPage
+    );
+
+    const docs = await Photo.find({ _id: { $in: slice } })
+      .populate<{ event: PopulatedEvent }>("event", "name slug date location")
+      .lean();
+
+    // Rispetta l'ordine dello shuffle (il $in non garantisce l'ordine).
+    const byId = new Map(docs.map((d) => [String(d._id), d]));
+    const photos = slice
+      .map((id) => byId.get(id))
+      .filter((d): d is NonNullable<typeof d> => Boolean(d))
+      .map(toDTO);
 
     return {
-      photos: docs.map(toDTO),
+      photos,
       total,
       page: currentPage,
       totalPages: Math.ceil(total / perPage),
@@ -186,19 +300,9 @@ export async function searchPhotosByQuery(
   if (trimmed.length < 1) return [];
   try {
     await connectDB();
-    const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const or: Record<string, unknown>[] = [
-      { pilotName: { $regex: escaped, $options: "i" } },
-    ];
-    if (/^\d+$/.test(trimmed)) {
-      or.push({
-        raceNumber: {
-          $in: [trimmed, String(Number(trimmed)), trimmed.padStart(3, "0")],
-        },
-      });
-    } else {
-      or.push({ raceNumber: { $regex: escaped, $options: "i" } });
-    }
+    // Una sola stringa matcha numero di gara OPPURE pilota (array + legacy);
+    // il testo libero (es. "senza numero") rientra nel ramo non-numerico.
+    const or = [...raceNumberOr(trimmed), ...pilotNameOr(trimmed)];
     const docs = await Photo.find({ $or: or })
       .sort({ createdAt: -1 })
       .limit(limit)

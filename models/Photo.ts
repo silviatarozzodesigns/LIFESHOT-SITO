@@ -43,14 +43,28 @@ const PhotoSchema = new Schema(
       type: String,
       default: null,
     },
-    // Numero di gara estratto dal nome file; stringa per supportare "045", "A12"
+    // Numeri di gara (multi-tag). Stringhe libere per supportare "045", "A12"
+    // e anche testo come "senza numero" per le moto senza pettorale.
+    raceNumbers: {
+      type: [String],
+      default: undefined,
+      index: true,
+    },
+    // Nomi piloti (multi-tag), taggati liberamente dalla dashboard.
+    pilotNames: {
+      type: [String],
+      default: undefined,
+      index: true,
+    },
+    // [LEGACY] Campi singoli pre multi-tag: mantenuti per retro-compatibilità
+    // (foto taggate prima del passaggio agli array). In lettura/ricerca fanno
+    // da fallback agli array; le nuove modifiche scrivono su raceNumbers/pilotNames.
     raceNumber: {
       type: String,
       trim: true,
       default: null,
       index: true,
     },
-    // Nome del pilota (taggato manualmente dalla dashboard)
     pilotName: {
       type: String,
       trim: true,
@@ -78,8 +92,10 @@ const PhotoSchema = new Schema(
   { timestamps: true }
 );
 
-// Query principale del motore di ricerca: evento + numero di gara
-PhotoSchema.index({ event: 1, raceNumber: 1 });
+// Query principale del motore di ricerca: evento + numeri di gara
+PhotoSchema.index({ event: 1, raceNumbers: 1 });
+PhotoSchema.index({ event: 1, pilotNames: 1 });
+PhotoSchema.index({ event: 1, raceNumber: 1 }); // legacy
 PhotoSchema.index({ event: 1, createdAt: -1 });
 
 export type PhotoDoc = InferSchemaType<typeof PhotoSchema> & {

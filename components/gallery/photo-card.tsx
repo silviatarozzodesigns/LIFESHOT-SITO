@@ -41,7 +41,11 @@ export function PhotoCard({
         !loaded && "skeleton"
       )}
     >
-      {/* SEMPRE la rotta watermark protetta, mai l'URL diretto del bucket */}
+      {/* SEMPRE la rotta watermark protetta, mai l'URL diretto del bucket.
+          h-full/w-full + object-cover blindano il ritaglio 3:2: l'immagine non
+          può mai mostrarsi alla sua dimensione naturale (bug "card rettangolari"
+          in hover). La transizione è limitata a opacity+transform per non
+          animare proprietà di layout. */}
       <Image
         loader={photoLoader}
         src={photoSrc(id)}
@@ -51,7 +55,7 @@ export function PhotoCard({
         priority={priority}
         onLoad={() => setLoaded(true)}
         className={cn(
-          "object-cover transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,0.61,0.36,1)] group-hover:scale-[1.06]",
+          "absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-700 [transition-timing-function:cubic-bezier(0.22,0.61,0.36,1)] group-hover:scale-[1.06]",
           loaded ? "opacity-100" : "opacity-0"
         )}
       />

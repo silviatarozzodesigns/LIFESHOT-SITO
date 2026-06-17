@@ -135,7 +135,8 @@ export async function POST(request: Request) {
       storageKey: key,
       url: `/api/images/${photoId}`,
       originalKey: key,
-      raceNumber,
+      // Numero dedotto dal nome file → primo tag del campo multi-tag
+      raceNumbers: raceNumber ? [raceNumber] : undefined,
       width: dimensions.width,
       height: dimensions.height,
       sizeBytes: size || original.length,
