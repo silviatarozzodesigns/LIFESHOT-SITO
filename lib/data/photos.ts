@@ -148,27 +148,48 @@ function toDTO(doc: {
   };
 }
 
-/** Alias riconosciuti per le moto senza pettorale (intero + abbreviazione). */
-const NO_NUMBER_ALIASES = ["senza numero", "sn"];
-
-/** True se la query indica "senza numero" (in forma estesa o "SN"). */
-function isNoNumberQuery(value: string): boolean {
-  return NO_NUMBER_ALIASES.includes(value.trim().toLowerCase());
+/**
+ * "Firma" normalizzata di una query: minuscolo e senza spazi/punteggiatura.
+ * Così "S/N", "s.n.", "S N", "SN" → "sn" e "Senza Numero" → "senzanumero".
+ */
+function noNumberSignature(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
+
+/** True se la query indica "senza numero" (S/N, SN, S.N., senza numero…). */
+function isNoNumberQuery(value: string): boolean {
+  const sig = noNumberSignature(value);
+  return sig === "sn" || sig === "senzanumero";
+}
+
+/**
+ * Regex che riconosce TUTTE le diciture "senza numero" salvate come tag:
+ * "S/N", "SN", "S.N.", "S-N", "S N", "senza numero", "senzanumero"…
+ * (^…$ ancorato così non matcha numeri/parole che contengono "sn").
+ */
+const NO_NUMBER_REGEX = {
+  $regex: "^\\s*(s[\\s./_-]*n[\\s./_-]*|senza\\s*numero)\\s*$",
+  $options: "i",
+};
 
 /**
  * Costruisce il filtro Mongo per un numero di gara digitato, considerando
  * sia i nuovi array (`raceNumbers`) sia il vecchio campo singolo
  * (`raceNumber`). Per i numeri puri matcha anche le varianti con zeri
- * ("45" → "045"); "senza numero"/"SN" matcha entrambe le forme del tag;
- * per il resto del testo libero ("A12") usa un match parziale.
+ * ("45" → "045"); "senza numero"/"SN"/"S/N" matcha tutte le forme del tag
+ * (anche se finito per errore tra i piloti); per il resto del testo libero
+ * ("A12") usa un match parziale.
  */
 function raceNumberOr(input: string): Record<string, unknown>[] {
   const trimmed = input.trim();
-  // "senza numero" o "SN" → matcha esattamente entrambe le diciture del tag
+  // "senza numero" e varianti → matcha tutte le diciture, in numeri E piloti
   if (isNoNumberQuery(trimmed)) {
-    const rx = { $regex: "^(senza numero|sn)$", $options: "i" };
-    return [{ raceNumbers: rx }, { raceNumber: rx }];
+    return [
+      { raceNumbers: NO_NUMBER_REGEX },
+      { raceNumber: NO_NUMBER_REGEX },
+      { pilotNames: NO_NUMBER_REGEX },
+      { pilotName: NO_NUMBER_REGEX },
+    ];
   }
   if (/^\d+$/.test(trimmed)) {
     const variants = [trimmed, String(Number(trimmed)), trimmed.padStart(3, "0")];
