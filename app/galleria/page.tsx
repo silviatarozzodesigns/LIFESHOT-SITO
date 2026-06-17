@@ -93,6 +93,7 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
                     <PhotoCard
                       id={photo.id}
                       raceNumber={photo.raceNumber}
+                      pilotName={photo.pilotName}
                       eventName={photo.event?.name}
                       priority={index < 4}
                       backTo={galleryReturn}

@@ -8,6 +8,8 @@ import { cn, photoLoader, photoSrc } from "@/lib/utils";
 interface PhotoCardProps {
   id: string;
   raceNumber: string | null;
+  /** Nome pilota: mostrato sul badge come fallback se manca il numero */
+  pilotName?: string | null;
   eventName?: string;
   /** Per il preload delle prime card above-the-fold */
   priority?: boolean;
@@ -22,11 +24,15 @@ interface PhotoCardProps {
 export function PhotoCard({
   id,
   raceNumber,
+  pilotName,
   eventName,
   priority = false,
   backTo,
 }: PhotoCardProps) {
   const [loaded, setLoaded] = useState(false);
+
+  // Badge: numero di gara se presente, altrimenti il nome del pilota.
+  const badge = raceNumber ? `#${raceNumber}` : pilotName || null;
 
   return (
     <Link
@@ -67,11 +73,11 @@ export function PhotoCard({
           )}
         />
 
-        {/* Velo + badge numero di gara on hover */}
+        {/* Velo + badge (numero di gara o, in mancanza, nome pilota) on hover */}
         <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-        {raceNumber && (
-          <span className="absolute bottom-3 left-3 z-30 rounded-full bg-black/55 px-2.5 py-1 text-xs font-semibold tracking-wide text-white backdrop-blur-sm transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
-            #{raceNumber}
+        {badge && (
+          <span className="absolute bottom-3 left-3 z-30 max-w-[calc(100%-1.5rem)] truncate rounded-full bg-black/55 px-2.5 py-1 text-xs font-semibold tracking-wide text-white backdrop-blur-sm transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
+            {badge}
           </span>
         )}
       </div>
