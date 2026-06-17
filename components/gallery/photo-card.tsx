@@ -52,18 +52,21 @@ export function PhotoCard({
         backTo ? `/foto/${id}?ritorno=${encodeURIComponent(backTo)}` : `/foto/${id}`
       }
       className={cn(
-        "group block overflow-hidden rounded-2xl bg-muted",
+        "group block rounded-2xl bg-muted",
         "ring-1 ring-transparent transition-[transform,box-shadow,border-color] duration-500 ease-out",
         "hover:-translate-y-1 hover:shadow-[0_20px_50px_-20px_rgba(0,0,0,0.7)] hover:ring-primary/50",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       )}
     >
-      {/* Box con proporzione 3:2 FORZATA via inline style: non può essere
-          rimossa dal purge di Tailwind e vincola sempre l'immagine, anche
-          in hover (fix bug "card rettangolari"). */}
+      {/* Box-clip con proporzione 3:2 (inline, non eliminabile dal purge).
+          rounded-2xl + overflow-hidden QUI (sull'elemento che contiene davvero
+          l'immagine) e translateZ(0)+isolate per forzare un layer di
+          compositing proprio: così Safari/WebKit ritaglia anche l'immagine
+          SCALATA in hover dentro gli angoli arrotondati (fix bug "rettangolo
+          fuori dal frame in hover"). */}
       <div
         className={cn(
-          "relative w-full overflow-hidden",
+          "relative isolate w-full overflow-hidden rounded-2xl [transform:translateZ(0)]",
           !loaded && "skeleton"
         )}
         style={{ aspectRatio: "3 / 2" }}
