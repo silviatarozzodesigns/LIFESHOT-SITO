@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { matchesNoNumber } from "@/lib/tag-match";
 import { cn, photoLoader, photoSrc } from "@/lib/utils";
 
 interface PhotoCardProps {
@@ -31,8 +32,19 @@ export function PhotoCard({
 }: PhotoCardProps) {
   const [loaded, setLoaded] = useState(false);
 
-  // Badge: numero di gara se presente, altrimenti il nome del pilota.
-  const badge = raceNumber ? `#${raceNumber}` : pilotName || null;
+  // Badge dell'anteprima:
+  // - numero di gara reale → "#16"
+  // - "senza numero" (S/N) → mostra la sigla E ANCHE il nome pilota, così
+  //   la moto resta identificabile
+  // - solo pilota → il nome
+  const isNoNumber = raceNumber ? matchesNoNumber(raceNumber) : false;
+  const badges: string[] =
+    raceNumber && !isNoNumber
+      ? [`#${raceNumber}`]
+      : [
+          ...(raceNumber ? [raceNumber] : []),
+          ...(pilotName ? [pilotName] : []),
+        ];
 
   return (
     <Link
@@ -73,12 +85,19 @@ export function PhotoCard({
           )}
         />
 
-        {/* Velo + badge (numero di gara o, in mancanza, nome pilota) on hover */}
+        {/* Velo + badge (numero di gara, oppure S/N + pilota, oppure pilota) */}
         <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-        {badge && (
-          <span className="absolute bottom-3 left-3 z-30 max-w-[calc(100%-1.5rem)] truncate rounded-full bg-black/55 px-2.5 py-1 text-xs font-semibold tracking-wide text-white backdrop-blur-sm transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
-            {badge}
-          </span>
+        {badges.length > 0 && (
+          <div className="absolute bottom-3 left-3 z-30 flex max-w-[calc(100%-1.5rem)] flex-wrap gap-1.5">
+            {badges.map((label) => (
+              <span
+                key={label}
+                className="max-w-full truncate rounded-full bg-black/55 px-2.5 py-1 text-xs font-semibold tracking-wide text-white backdrop-blur-sm transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground"
+              >
+                {label}
+              </span>
+            ))}
+          </div>
         )}
       </div>
     </Link>
