@@ -5,6 +5,7 @@ import { Event } from "@/models/Event";
 import { Photo } from "@/models/Photo";
 import { BEHIND_LENS_SLUG } from "@/lib/site";
 import { shuffle, interleaveByKey } from "@/lib/shuffle";
+import { isNoNumberQuery, NO_NUMBER_REGEX } from "@/lib/tag-match";
 
 /** Tag cache foto pubbliche (rivalidato a upload/modifica/eliminazione) */
 export const PHOTOS_TAG = "photos";
@@ -148,31 +149,8 @@ function toDTO(doc: {
   };
 }
 
-/**
- * "Firma" normalizzata di una query: minuscolo e senza spazi/punteggiatura.
- * Così "S/N", "s.n.", "S N", "SN" → "sn" e "Senza Numero" → "senzanumero".
- */
-function noNumberSignature(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-/** True se la query indica "senza numero" (S/N, SN, S.N., senza numero…). */
-function isNoNumberQuery(value: string): boolean {
-  const sig = noNumberSignature(value);
-  return sig === "sn" || sig === "senzanumero";
-}
-
-/**
- * Regex che riconosce la sigla "senza numero" ANCHE dentro un testo più
- * lungo (es. tipo moto + sigla: "KTM S/N", "Husqvarna SN"). Maiuscole/
- * minuscole indifferenti. I confini `(^|[^a-z0-9])…([^a-z0-9]|$)` evitano
- * i falsi positivi: "snake", "san", "USN" non vengono matchati, mentre
- * "S/N", "SN", "S.N.", "S-N", "S N" e "senza numero" sì.
- */
-const NO_NUMBER_REGEX = {
-  $regex: "(^|[^a-z0-9])(s[\\s./_-]*n|senza\\s*numero)([^a-z0-9]|$)",
-  $options: "i",
-};
+/** Forma Mongo della regex "senza numero" (stesso pattern di lib/tag-match). */
+const NO_NUMBER_MONGO = { $regex: NO_NUMBER_REGEX.source, $options: "i" };
 
 /**
  * Costruisce il filtro Mongo per un numero di gara digitato, considerando

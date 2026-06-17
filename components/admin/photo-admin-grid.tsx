@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Check, Loader2, Star, Trash2 } from "lucide-react";
+import { Check, Loader2, Search, Star, Trash2, X } from "lucide-react";
 import {
   deletePhoto,
   togglePhotoFeatured,
@@ -11,24 +11,31 @@ import {
 } from "@/app/actions/photos";
 import type { AdminPhotoDTO } from "@/lib/data/admin";
 import { TagInput } from "@/components/admin/tag-input";
+import { photoMatchesQuery } from "@/lib/tag-match";
 import { cn } from "@/lib/utils";
 
 /** Confronto ordine-insensitive di due liste di tag. */
 function sameTags(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false;
-  const norm = (list: string[]) =>
-    [...list].map((t) => t.toLowerCase()).sort();
+  const norm = (list: string[]) => [...list].map((t) => t.toLowerCase()).sort();
   const na = norm(a);
   const nb = norm(b);
   return na.every((t, i) => t === nb[i]);
 }
 
 /**
- * Griglia foto della dashboard: numero di gara e nome pilota modificabili
- * inline, cancellazione singola. Le anteprime passano dalla rotta
- * watermark (/api/images), mai dall'URL diretto del bucket.
+ * Griglia foto della dashboard: filtro rapido (numero / "senza numero" /
+ * pilota / nome file) + tag modificabili inline con autosave, cancellazione
+ * singola. Le anteprime passano dalla rotta watermark (/api/images).
  */
 export function PhotoAdminGrid({ photos }: { photos: AdminPhotoDTO[] }) {
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(
+    () => photos.filter((p) => photoMatchesQuery(p, query)),
+    [photos, query]
+  );
+
   if (!photos.length) {
     return (
       <p className="mt-4 text-sm text-muted-foreground">
@@ -38,10 +45,47 @@ export function PhotoAdminGrid({ photos }: { photos: AdminPhotoDTO[] }) {
   }
 
   return (
-    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-      {photos.map((photo) => (
-        <PhotoAdminCard key={photo.id} photo={photo} />
-      ))}
+    <div className="mt-4">
+      {/* Filtro: numero di gara (anche "senza numero"/S/N), pilota o nome file */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Filtra: numero di gara, senza numero, pilota o nome file…"
+            aria-label="Filtra foto"
+            className="h-10 w-full rounded-lg border bg-background pl-9 pr-9 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label="Azzera filtro"
+              className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        <span className="shrink-0 text-xs text-muted-foreground">
+          {query
+            ? `${filtered.length} di ${photos.length}`
+            : `${photos.length} foto`}
+        </span>
+      </div>
+
+      {filtered.length === 0 ? (
+        <p className="mt-6 text-sm text-muted-foreground">
+          Nessuna foto corrisponde a “{query}”.
+        </p>
+      ) : (
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {filtered.map((photo) => (
+            <PhotoAdminCard key={photo.id} photo={photo} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -54,6 +98,9 @@ function PhotoAdminCard({ photo }: { photo: AdminPhotoDTO }) {
   const [saved, setSaved] = useState(false);
   const [featured, setFeatured] = useState(photo.featured);
 
+  // Ultimo stato realmente salvato: per capire cosa autosalvare.
+  const savedSnapshot = useRef({ numbers: photo.raceNumbers, pilotNames: photo.pilotNames });
+
   function toggleFeatured() {
     const next = !featured;
     setFeatured(next); // ottimistico
@@ -64,24 +111,31 @@ function PhotoAdminCard({ photo }: { photo: AdminPhotoDTO }) {
     });
   }
 
-  const dirty =
-    !sameTags(numbers, photo.raceNumbers) ||
-    !sameTags(pilots, photo.pilotNames);
-
-  function saveMeta() {
-    if (!dirty) return;
-    startTransition(async () => {
-      const result = await updatePhotoMeta(photo.id, {
-        raceNumbers: numbers,
-        pilotNames: pilots,
+  // Autosave robusto: parte a ogni modifica dei tag (aggiunta O rimozione),
+  // leggendo SEMPRE lo stato aggiornato — niente più salvataggi con valori
+  // vecchi (causa del bug "non salva le correzioni"). Debounce per non
+  // scrivere a ogni tasto.
+  useEffect(() => {
+    const snap = savedSnapshot.current;
+    if (sameTags(numbers, snap.numbers) && sameTags(pilots, snap.pilotNames)) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      startTransition(async () => {
+        const result = await updatePhotoMeta(photo.id, {
+          raceNumbers: numbers,
+          pilotNames: pilots,
+        });
+        if (result.ok) {
+          savedSnapshot.current = { numbers, pilotNames: pilots };
+          setSaved(true);
+          setTimeout(() => setSaved(false), 1500);
+          router.refresh();
+        }
       });
-      if (result.ok) {
-        setSaved(true);
-        setTimeout(() => setSaved(false), 1500);
-        router.refresh();
-      }
-    });
-  }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [numbers, pilots, photo.id, router]);
 
   function handleDelete() {
     if (!window.confirm(`Eliminare "${photo.originalFilename}"?`)) return;
@@ -155,7 +209,6 @@ function PhotoAdminCard({ photo }: { photo: AdminPhotoDTO }) {
         <TagInput
           value={numbers}
           onChange={setNumbers}
-          onCommit={saveMeta}
           prefix="#"
           placeholder="numeri di gara"
           ariaLabel="Numeri di gara"
@@ -163,7 +216,6 @@ function PhotoAdminCard({ photo }: { photo: AdminPhotoDTO }) {
         <TagInput
           value={pilots}
           onChange={setPilots}
-          onCommit={saveMeta}
           prefix="P"
           placeholder="nomi piloti"
           ariaLabel="Nomi piloti"
