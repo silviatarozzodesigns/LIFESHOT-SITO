@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { cn, photoSrc } from "@/lib/utils";
+import { cn, photoLoader, photoSrc } from "@/lib/utils";
 
 interface PhotoCardProps {
   id: string;
@@ -43,6 +43,7 @@ export function PhotoCard({
     >
       {/* SEMPRE la rotta watermark protetta, mai l'URL diretto del bucket */}
       <Image
+        loader={photoLoader}
         src={photoSrc(id)}
         alt={eventName ? `Foto — ${eventName}` : "Foto Lifeshot"}
         fill

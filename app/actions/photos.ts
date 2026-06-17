@@ -1,12 +1,14 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { Types } from "mongoose";
 import { connectDB } from "@/lib/db";
 import { Event } from "@/models/Event";
 import { Photo } from "@/models/Photo";
 import { getStorage } from "@/lib/storage";
 import { isAdmin } from "@/lib/auth";
+import { PHOTOS_TAG } from "@/lib/data/photos";
+import { EVENTS_TAG } from "@/lib/data/events";
 
 export type PhotoActionResult = { ok: true } | { ok: false; error: string };
 
@@ -16,6 +18,8 @@ const UNAUTHORIZED = {
 };
 
 function revalidatePublicPages() {
+  revalidateTag(PHOTOS_TAG);
+  revalidateTag(EVENTS_TAG);
   revalidatePath("/");
   revalidatePath("/galleria");
 }
@@ -69,6 +73,7 @@ export async function togglePhotoFeatured(
     await connectDB();
     const updated = await Photo.findByIdAndUpdate(id, { featured });
     if (!updated) return { ok: false, error: "Foto non trovata." };
+    revalidateTag(PHOTOS_TAG);
     revalidatePath("/");
     return { ok: true };
   } catch (error) {

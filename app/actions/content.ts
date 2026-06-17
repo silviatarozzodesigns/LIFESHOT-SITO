@@ -1,8 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { connectDB } from "@/lib/db";
 import { SiteContent } from "@/models/SiteContent";
+import { CONTENT_TAG } from "@/lib/data/content";
 import { isAdmin } from "@/lib/auth";
 import { getStorage } from "@/lib/storage";
 import {
@@ -255,7 +256,8 @@ export async function publishContent(
       { $set: { draft: content, published: content } },
       { upsert: true }
     );
-    // layout incluso: i metadata SEO vivono nel root layout
+    // Rinfresca la cache dei contenuti pubblicati + le pagine (SEO nel layout)
+    revalidateTag(CONTENT_TAG);
     revalidatePath("/", "layout");
     return { ok: true, content };
   } catch (error) {

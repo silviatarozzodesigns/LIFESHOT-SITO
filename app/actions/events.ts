@@ -1,6 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { EVENTS_TAG } from "@/lib/data/events";
+import { PHOTOS_TAG } from "@/lib/data/photos";
 import { Types } from "mongoose";
 import { connectDB } from "@/lib/db";
 import { Event } from "@/models/Event";
@@ -59,6 +61,8 @@ async function uniqueSlug(name: string, excludeId?: string): Promise<string> {
 }
 
 function revalidatePublicPages() {
+  revalidateTag(EVENTS_TAG);
+  revalidateTag(PHOTOS_TAG);
   revalidatePath("/");
   revalidatePath("/galleria");
 }

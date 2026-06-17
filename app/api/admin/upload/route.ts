@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { PHOTOS_TAG } from "@/lib/data/photos";
+import { EVENTS_TAG } from "@/lib/data/events";
 import { Types } from "mongoose";
 import { connectDB } from "@/lib/db";
 import { Event } from "@/models/Event";
@@ -211,6 +213,8 @@ export async function POST(request: Request) {
     });
     await Event.updateOne({ _id: event._id }, { $inc: { photoCount: 1 } });
 
+    revalidateTag(PHOTOS_TAG);
+    revalidateTag(EVENTS_TAG);
     revalidatePath("/");
     revalidatePath("/galleria");
 

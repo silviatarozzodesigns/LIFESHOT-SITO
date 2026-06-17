@@ -17,6 +17,22 @@ export function photoSrc(id: string): string {
   return `/api/images/${id}?v=${WATERMARK_VERSION}`;
 }
 
+/**
+ * Loader per next/image: chiede alla rotta /api/images la foto già della
+ * larghezza giusta (`?w=`). Così la galleria scarica anteprime piccole e
+ * non si passa due volte da sharp (niente ri-ottimizzazione di Next).
+ */
+export function photoLoader({
+  src,
+  width,
+}: {
+  src: string;
+  width: number;
+}): string {
+  const sep = src.includes("?") ? "&" : "?";
+  return `${src}${sep}w=${width}`;
+}
+
 /** Formatta una data in italiano (es. "12 giugno 2026") */
 export function formatDate(date: Date | string): string {
   return new Intl.DateTimeFormat("it-IT", {

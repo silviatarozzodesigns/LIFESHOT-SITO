@@ -1,5 +1,9 @@
+import { unstable_cache } from "next/cache";
 import { connectDB } from "@/lib/db";
 import { Event } from "@/models/Event";
+
+/** Tag cache eventi pubblici (rivalidato a upload/modifica/eliminazione) */
+export const EVENTS_TAG = "events";
 
 /**
  * DTO serializzabili: i documenti Mongoose non possono attraversare il
@@ -57,26 +61,32 @@ async function safe<T>(fallback: T, query: () => Promise<T>): Promise<T> {
   }
 }
 
-/** Eventi recenti pubblicati, per la griglia in homepage */
-export async function getRecentEvents(limit = 6): Promise<EventDTO[]> {
-  return safe([], async () => {
-    const docs = await Event.find({ published: true })
-      .sort({ date: -1 })
-      .limit(limit)
-      .lean();
-    return docs.map(toDTO);
-  });
-}
+/** Eventi recenti pubblicati, per la griglia in homepage (cache-ati) */
+export const getRecentEvents = unstable_cache(
+  async (limit = 6): Promise<EventDTO[]> =>
+    safe([], async () => {
+      const docs = await Event.find({ published: true })
+        .sort({ date: -1 })
+        .limit(limit)
+        .lean();
+      return docs.map(toDTO);
+    }),
+  ["recent-events"],
+  { tags: [EVENTS_TAG], revalidate: 120 }
+);
 
 /** Tutti gli eventi pubblicati (nome + slug), per la combobox dei filtri */
-export async function getEventsForFilter(): Promise<EventDTO[]> {
-  return safe([], async () => {
-    const docs = await Event.find({ published: true })
-      .sort({ date: -1 })
-      .lean();
-    return docs.map(toDTO);
-  });
-}
+export const getEventsForFilter = unstable_cache(
+  async (): Promise<EventDTO[]> =>
+    safe([], async () => {
+      const docs = await Event.find({ published: true })
+        .sort({ date: -1 })
+        .lean();
+      return docs.map(toDTO);
+    }),
+  ["events-for-filter"],
+  { tags: [EVENTS_TAG], revalidate: 120 }
+);
 
 export async function getEventBySlug(slug: string): Promise<EventDTO | null> {
   return safe(null, async () => {

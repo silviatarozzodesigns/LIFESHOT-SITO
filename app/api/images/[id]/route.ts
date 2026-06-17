@@ -23,13 +23,17 @@ export const runtime = "nodejs";
 export const maxDuration = 30;
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
   if (!Types.ObjectId.isValid(id)) {
     return new Response("Not found", { status: 404 });
   }
+  // Larghezza richiesta (loader next/image): anteprime piccole = più veloci
+  const wParam = Number(new URL(request.url).searchParams.get("w"));
+  const targetWidth =
+    Number.isFinite(wParam) && wParam >= 64 ? Math.min(1600, wParam) : 1600;
 
   try {
     await connectDB();
@@ -54,7 +58,8 @@ export async function GET(
     const body =
       photo.watermark === false
         ? await createCoverImage(original)
-        : (await createWatermarkedPreview(original, wmOptions)).buffer;
+        : (await createWatermarkedPreview(original, wmOptions, targetWidth))
+            .buffer;
 
     return new Response(new Uint8Array(body), {
       headers: {

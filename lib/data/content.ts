@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { connectDB } from "@/lib/db";
 import { SiteContent } from "@/models/SiteContent";
 import { isAdmin } from "@/lib/auth";
@@ -6,6 +7,9 @@ import {
   normalizeContent,
   type CmsData,
 } from "@/lib/content";
+
+/** Tag di cache per i contenuti pubblicati (rivalidato alla pubblicazione) */
+export const CONTENT_TAG = "cms-published";
 
 /**
  * Contenuto da mostrare in una pagina pubblica: la BOZZA quando la pagina è
@@ -18,16 +22,29 @@ export async function getViewContent(preview: boolean): Promise<CmsData> {
 }
 
 /**
- * Contenuti PUBBLICATI — usati dalle pagine pubbliche e dai metadata.
- * Senza database o prima della prima pubblicazione: default del codice.
+ * Lettura grezza del pubblicato dal DB — incapsulata in unstable_cache così
+ * le pagine (anche force-dynamic) NON colpiscono MongoDB ad ogni richiesta.
+ * Si rinfresca alla pubblicazione (revalidateTag) o, come rete, ogni ora.
  */
-export async function getPublishedContent(): Promise<CmsData> {
-  try {
+const readPublishedContent = unstable_cache(
+  async (): Promise<CmsData> => {
     await connectDB();
     const doc = await SiteContent.findOne({ key: "site" })
       .select("published")
       .lean();
     return normalizeContent(doc?.published);
+  },
+  ["cms-published-content"],
+  { tags: [CONTENT_TAG], revalidate: 3600 }
+);
+
+/**
+ * Contenuti PUBBLICATI — usati dalle pagine pubbliche e dai metadata.
+ * Senza database o prima della prima pubblicazione: default del codice.
+ */
+export async function getPublishedContent(): Promise<CmsData> {
+  try {
+    return await readPublishedContent();
   } catch (error) {
     console.error("[lifeshot] lettura contenuti pubblicati fallita:", error);
     return DEFAULT_CONTENT;

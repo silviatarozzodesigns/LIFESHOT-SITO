@@ -79,12 +79,18 @@ export interface PreviewResult {
  */
 export async function createWatermarkedPreview(
   input: Buffer,
-  options: WatermarkOptions = {}
+  options: WatermarkOptions = {},
+  /** Larghezza target: anteprime di galleria più piccole = più veloci */
+  maxWidth: number = PREVIEW_MAX_WIDTH
 ): Promise<PreviewResult> {
+  const targetWidth = Math.min(
+    PREVIEW_MAX_WIDTH,
+    Math.max(64, Math.round(maxWidth) || PREVIEW_MAX_WIDTH)
+  );
   // .rotate() senza argomenti applica l'orientamento EXIF
   const resized = await sharp(input)
     .rotate()
-    .resize({ width: PREVIEW_MAX_WIDTH, withoutEnlargement: true })
+    .resize({ width: targetWidth, withoutEnlargement: true })
     .toBuffer({ resolveWithObject: true });
 
   const { width, height } = resized.info;

@@ -1,8 +1,12 @@
 import { Types } from "mongoose";
+import { unstable_cache } from "next/cache";
 import { connectDB } from "@/lib/db";
 import { Event } from "@/models/Event";
 import { Photo } from "@/models/Photo";
 import { BEHIND_LENS_SLUG } from "@/lib/site";
+
+/** Tag cache foto pubbliche (rivalidato a upload/modifica/eliminazione) */
+export const PHOTOS_TAG = "photos";
 
 export interface PhotoDTO {
   id: string;
@@ -93,7 +97,7 @@ function toDTO(doc: {
  * Motore di ricerca della galleria: filtra per evento e/o numero di gara,
  * con paginazione. Sfrutta l'indice composto { event, raceNumber }.
  */
-export async function searchPhotos({
+async function searchPhotosUncached({
   eventSlug,
   raceNumber,
   pilotName,
@@ -167,6 +171,13 @@ export async function searchPhotos({
  * Ricerca istantanea: una sola stringa che matcha numero di gara OPPURE
  * nome pilota (usata dalla barra hero). Numerico → match anche su "045".
  */
+/** Ricerca galleria — cache-ata per combinazione di filtri (tag PHOTOS_TAG) */
+export const searchPhotos = unstable_cache(
+  searchPhotosUncached,
+  ["search-photos"],
+  { tags: [PHOTOS_TAG], revalidate: 120 }
+);
+
 export async function searchPhotosByQuery(
   q: string,
   limit = 12
@@ -205,20 +216,24 @@ export async function searchPhotosByQuery(
  * Mostra ESCLUSIVAMENTE gli scatti marcati come `featured` dall'admin
  * (stella o upload diretto): se non ce n'è nessuno la sezione resta vuota.
  */
-export async function getFeaturedPhotos(limit = 12): Promise<PhotoDTO[]> {
-  try {
-    await connectDB();
-    const docs = await Photo.find({ featured: true })
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .populate<{ event: PopulatedEvent }>("event", "name slug date location")
-      .lean();
-    return docs.map(toDTO);
-  } catch (error) {
-    console.error("[lifeshot] foto featured fallito:", error);
-    return [];
-  }
-}
+export const getFeaturedPhotos = unstable_cache(
+  async (limit = 12): Promise<PhotoDTO[]> => {
+    try {
+      await connectDB();
+      const docs = await Photo.find({ featured: true })
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .populate<{ event: PopulatedEvent }>("event", "name slug date location")
+        .lean();
+      return docs.map(toDTO);
+    } catch (error) {
+      console.error("[lifeshot] foto featured fallito:", error);
+      return [];
+    }
+  },
+  ["featured-photos"],
+  { tags: [PHOTOS_TAG], revalidate: 120 }
+);
 
 /** Foto più recenti, per il marquee auto-scroll della homepage. */
 export async function getMarqueePhotos(limit = 16): Promise<PhotoDTO[]> {
@@ -236,7 +251,8 @@ export async function getMarqueePhotos(limit = 16): Promise<PhotoDTO[]> {
   }
 }
 
-export async function getPhotoById(id: string): Promise<PhotoDTO | null> {
+export const getPhotoById = unstable_cache(
+  async (id: string): Promise<PhotoDTO | null> => {
   if (!Types.ObjectId.isValid(id)) return null;
   try {
     await connectDB();
@@ -248,4 +264,7 @@ export async function getPhotoById(id: string): Promise<PhotoDTO | null> {
     console.error("[lifeshot] lettura foto fallita:", error);
     return null;
   }
-}
+  },
+  ["photo-by-id"],
+  { tags: [PHOTOS_TAG], revalidate: 120 }
+);

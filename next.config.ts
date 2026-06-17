@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    // Cache lunga delle immagini ottimizzate + formati moderni più leggeri
+    minimumCacheTTL: 31536000,
+    formats: ["image/avif", "image/webp"],
     // Anteprime servite da R2 in produzione; localhost in sviluppo.
     remotePatterns: [
       {

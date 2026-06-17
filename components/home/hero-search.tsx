@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Hash, Loader2, Search, User } from "lucide-react";
-import { cn, photoSrc } from "@/lib/utils";
+import { cn, photoLoader, photoSrc } from "@/lib/utils";
 
 interface Result {
   id: string;
@@ -140,6 +140,7 @@ export function HeroSearch({
                     >
                       <span className="relative h-12 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
                         <Image
+                          loader={photoLoader}
                           src={photoSrc(r.id)}
                           alt=""
                           fill
