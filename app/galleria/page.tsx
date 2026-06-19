@@ -89,7 +89,7 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
               </p>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {result.photos.map((photo, index) => (
-                  <FadeIn key={photo.id} delay={Math.min(index * 0.04, 0.4)}>
+                  <FadeIn key={photo.id} delay={Math.min(index * 0.02, 0.12)}>
                     <PhotoCard
                       id={photo.id}
                       raceNumber={photo.raceNumber}

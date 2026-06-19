@@ -5,6 +5,11 @@ const nextConfig: NextConfig = {
     // Cache lunga delle immagini ottimizzate + formati moderni più leggeri
     minimumCacheTTL: 31536000,
     formats: ["image/avif", "image/webp"],
+    // Set ridotto di larghezze: la rotta /api/images genera UNA variante per
+    // ogni `?w=` richiesto, quindi meno larghezze = più anteprime già in cache
+    // (più veloci) e meno lavoro di sharp. Cap a 1600 (max della preview).
+    deviceSizes: [640, 828, 1080, 1280, 1600],
+    imageSizes: [256, 384],
     // Anteprime servite da R2 in produzione; localhost in sviluppo.
     remotePatterns: [
       {
