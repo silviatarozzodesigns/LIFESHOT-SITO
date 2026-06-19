@@ -12,7 +12,7 @@ import {
   User,
 } from "lucide-react";
 import { site } from "@/lib/site";
-import { photoSrc, photoLoader } from "@/lib/utils";
+import { photoSrc } from "@/lib/utils";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
@@ -79,7 +79,7 @@ export default async function PhotoPage({
             <div className="relative overflow-hidden rounded-2xl bg-muted">
               {/* Sempre la rotta watermark protetta, mai l'URL del bucket */}
               <Image
-                loader={photoLoader}
+                unoptimized
                 src={photoSrc(photo.id)}
                 alt={
                   photo.event ? `Foto — ${photo.event.name}` : "Foto Lifeshot"

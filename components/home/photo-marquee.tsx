@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { photoSrc, photoLoader } from "@/lib/utils";
+import { photoSrc } from "@/lib/utils";
 
 interface MarqueeItem {
   id: string;
@@ -39,8 +39,10 @@ export function PhotoMarquee({ items }: { items: MarqueeItem[] }) {
               className="relative block aspect-[3/2] h-40 overflow-hidden rounded-xl bg-muted ring-1 ring-border transition-all duration-500 hover:ring-primary/50 sm:h-52"
             >
               <Image
-                loader={photoLoader}
-                src={photoSrc(item.id)}
+                unoptimized
+                // Larghezza richiesta direttamente a /api/images (anteprima
+                // piccola); unoptimized = niente ottimizzatore Vercel.
+                src={`${photoSrc(item.id)}&w=640`}
                 alt={item.raceNumber ? `Scatto #${item.raceNumber}` : "Scatto Lifeshot"}
                 fill
                 sizes="320px"
