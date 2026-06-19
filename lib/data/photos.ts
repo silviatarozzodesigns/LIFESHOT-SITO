@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 import { unstable_cache } from "next/cache";
 import { connectDB } from "@/lib/db";
 import { Event } from "@/models/Event";
+import { EVENTS_TAG } from "@/lib/data/events";
 import { Photo } from "@/models/Photo";
 import { BEHIND_LENS_SLUG } from "@/lib/site";
 import { shuffle, interleaveByKey } from "@/lib/shuffle";
@@ -385,4 +386,34 @@ export const getPhotoById = unstable_cache(
   },
   ["photo-by-id"],
   { tags: [PHOTOS_TAG], revalidate: 120 }
+);
+
+/**
+ * Elenco leggero (id + data ultima modifica) di tutte le foto appartenenti a
+ * eventi pubblicati, per la sitemap. Niente populate né tag: solo i campi che
+ * servono a generare gli URL /foto/[id].
+ */
+export const getPhotoSitemapEntries = unstable_cache(
+  async (): Promise<{ id: string; updatedAt: string }[]> => {
+    try {
+      await connectDB();
+      const events = await Event.find({ published: true }).select("_id").lean();
+      const eventIds = events.map((e) => e._id);
+      if (eventIds.length === 0) return [];
+      const docs = await Photo.find({ event: { $in: eventIds } })
+        .select("_id updatedAt")
+        .lean();
+      return docs.map((d) => ({
+        id: String(d._id),
+        updatedAt: (
+          (d as { updatedAt?: Date }).updatedAt ?? new Date()
+        ).toISOString(),
+      }));
+    } catch (error) {
+      console.error("[lifeshot] sitemap foto fallita:", error);
+      return [];
+    }
+  },
+  ["photo-sitemap"],
+  { tags: [PHOTOS_TAG, EVENTS_TAG], revalidate: 3600 }
 );
