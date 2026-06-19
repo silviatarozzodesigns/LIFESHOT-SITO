@@ -25,6 +25,10 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(
       process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
     ),
+    // Verifica proprietà Google Search Console
+    verification: {
+      google: "ZSyk7T7rgChCmf2B1doVV7L0p9i7Gt--KuGry9w2DG8",
+    },
     openGraph: {
       title: seo.metaTitle,
       description: seo.metaDescription,
