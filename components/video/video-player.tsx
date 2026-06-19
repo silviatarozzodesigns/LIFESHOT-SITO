@@ -79,6 +79,7 @@ export function VideoPlayer({ video }: { video: VideoDTO }) {
         src={`https://i.ytimg.com/vi/${video.embedId}/hqdefault.jpg`}
         alt={video.title}
         fill
+        unoptimized
         sizes="(max-width: 768px) 100vw, 50vw"
         className="object-cover opacity-80 transition-all duration-700 group-hover:scale-[1.04] group-hover:opacity-100"
       />

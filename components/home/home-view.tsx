@@ -144,6 +144,7 @@ export function HomeView({
                           src={event.coverImage}
                           alt={event.name}
                           fill
+                          unoptimized
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           className="object-cover transition-transform duration-700 [transition-timing-function:cubic-bezier(0.22,0.61,0.36,1)] group-hover:scale-[1.06]"
                         />

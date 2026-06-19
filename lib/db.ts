@@ -38,7 +38,13 @@ export async function connectDB(): Promise<typeof mongoose> {
   if (!cache.promise) {
     cache.promise = mongoose.connect(MONGODB_URI, {
       bufferCommands: false,
-      maxPoolSize: 10,
+      // Pool piccolo: in serverless ogni istanza apre il proprio pool, quindi
+      // tante connessioni × tante istanze possono saturare il tier Free di
+      // Atlas. 5 bastano per il carico reale; minPoolSize 0 + idleTimeout
+      // fanno chiudere le connessioni inattive invece di tenerle aperte.
+      maxPoolSize: 5,
+      minPoolSize: 0,
+      maxIdleTimeMS: 30000,
     });
   }
 
