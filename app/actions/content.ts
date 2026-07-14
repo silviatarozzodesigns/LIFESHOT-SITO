@@ -203,15 +203,18 @@ export async function setTextStyle(
   }
 }
 
-/** Rilegge il contenuto corrente (published) — usato dall'editor per
- *  risincronizzarsi dopo le modifiche in-place fatte dentro l'iframe. */
+/** Rilegge la BOZZA corrente — usato dall'editor per risincronizzarsi dopo
+ *  le modifiche in-place fatte dentro l'iframe (che salvano in draft).
+ *  DEVE leggere draft prima di published: leggendo il pubblicato vecchio,
+ *  lo stato dell'editor regrediva e "Pubblica" sovrascriveva le modifiche. */
 export async function loadContent(): Promise<CmsData> {
+  if (!(await isAdmin())) return normalizeContent(null);
   try {
     await connectDB();
     const doc = await SiteContent.findOne({ key: "site" })
       .select("published draft")
       .lean();
-    return normalizeContent(doc?.published ?? doc?.draft);
+    return normalizeContent(doc?.draft ?? doc?.published);
   } catch (error) {
     console.error("[lifeshot] loadContent fallita:", error);
     return normalizeContent(null);
