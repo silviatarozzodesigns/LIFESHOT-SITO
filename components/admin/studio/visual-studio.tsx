@@ -402,10 +402,17 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
                       keys: ["hero.background", "hero.foreground"],
                     },
                     {
-                      label: "Tablet",
+                      label: "Tablet verticale",
                       keys: [
                         "hero.backgroundTablet",
                         "hero.foregroundTablet",
+                      ],
+                    },
+                    {
+                      label: "Tablet orizzontale",
+                      keys: [
+                        "hero.backgroundTabletLandscape",
+                        "hero.foregroundTabletLandscape",
                       ],
                     },
                     {

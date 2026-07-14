@@ -299,16 +299,27 @@ export const PAGES: Record<PageSlug, PageDef> = {
         default: "",
         hint: "PNG con sfondo trasparente del pilota in azione.",
       },
-      // ── TABLET ── (vuoti = usa lo sfondo desktop, senza rider)
+      // ── TABLET VERTICALE ── (vuoti = usa lo sfondo desktop, senza rider)
       "hero.backgroundTablet": {
-        label: "Hero Tablet — sfondo (opzionale)",
+        label: "Hero Tablet verticale — sfondo (opzionale)",
         default: "",
-        hint: "Usata su iPad/tablet in verticale E orizzontale. Se vuoto usa lo sfondo desktop. ~1500px.",
+        hint: "iPad/tablet in verticale. Se vuoto usa lo sfondo desktop. ~1500px.",
       },
       "hero.foregroundTablet": {
-        label: "Hero Tablet — PNG rider (opzionale)",
+        label: "Hero Tablet verticale — PNG rider (opzionale)",
         default: "",
-        hint: "Il rider su tablet compare SOLO se carichi questo PNG.",
+        hint: "Il rider su tablet verticale compare SOLO se carichi questo PNG.",
+      },
+      // ── TABLET ORIZZONTALE ── (vuoti = usa la versione verticale, poi desktop)
+      "hero.backgroundTabletLandscape": {
+        label: "Hero Tablet orizzontale — sfondo (opzionale)",
+        default: "",
+        hint: "iPad/tablet in orizzontale. Se vuoto usa il tablet verticale, poi il desktop. ~2000px.",
+      },
+      "hero.foregroundTabletLandscape": {
+        label: "Hero Tablet orizzontale — PNG rider (opzionale)",
+        default: "",
+        hint: "Se vuoto usa il rider del tablet verticale (se caricato).",
       },
       // ── MOBILE ── (vuoti = usa lo sfondo desktop, senza rider)
       "hero.backgroundMobile": {

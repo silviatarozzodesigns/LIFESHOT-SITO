@@ -20,12 +20,15 @@ export interface Hero3DProps {
   subtitle: string;
   searchPlaceholder: string;
   backgroundUrl: string;
-  /** Sfondi dedicati per viewport (opzionali): se vuoti usano il desktop */
+  /** Sfondi dedicati per viewport (opzionali): se vuoti usano il desktop.
+      Tablet orizzontale: se vuoto usa il tablet verticale, poi il desktop. */
   backgroundTabletUrl?: string;
+  backgroundTabletLandscapeUrl?: string;
   backgroundMobileUrl?: string;
   /** Rider PNG per viewport. Su tablet/mobile compare SOLO se caricato qui. */
   foregroundUrl: string;
   foregroundTabletUrl?: string;
+  foregroundTabletLandscapeUrl?: string;
   foregroundMobileUrl?: string;
   /** Classi tipografiche dal CMS (vincolate alla scala Tailwind) */
   eventNameClass: string;
@@ -35,12 +38,16 @@ export interface Hero3DProps {
   bgScale?: number;
   bgTabletPosition?: string;
   bgTabletScale?: number;
+  bgTabletLandscapePosition?: string;
+  bgTabletLandscapeScale?: number;
   bgMobilePosition?: string;
   bgMobileScale?: number;
   fgPosition?: string;
   fgScale?: number;
   fgTabletPosition?: string;
   fgTabletScale?: number;
+  fgTabletLandscapePosition?: string;
+  fgTabletLandscapeScale?: number;
   fgMobilePosition?: string;
   fgMobileScale?: number;
   /** In preview disattiviamo il parallax legato al mouse */
@@ -69,9 +76,11 @@ export function Hero3D({
   searchPlaceholder,
   backgroundUrl,
   backgroundTabletUrl = "",
+  backgroundTabletLandscapeUrl = "",
   backgroundMobileUrl = "",
   foregroundUrl,
   foregroundTabletUrl = "",
+  foregroundTabletLandscapeUrl = "",
   foregroundMobileUrl = "",
   eventNameClass,
   dateClass,
@@ -79,12 +88,16 @@ export function Hero3D({
   bgScale = 100,
   bgTabletPosition = "center",
   bgTabletScale = 100,
+  bgTabletLandscapePosition = "center",
+  bgTabletLandscapeScale = 100,
   bgMobilePosition = "center",
   bgMobileScale = 100,
   fgPosition = "center bottom",
   fgScale = 100,
   fgTabletPosition = "center bottom",
   fgTabletScale = 100,
+  fgTabletLandscapePosition = "center bottom",
+  fgTabletLandscapeScale = 100,
   fgMobilePosition = "center bottom",
   fgMobileScale = 100,
   interactive = true,
@@ -94,9 +107,31 @@ export function Hero3D({
   const tabletBgUrl = backgroundTabletUrl || backgroundUrl;
   const tabletBgPosition = backgroundTabletUrl ? bgTabletPosition : bgPosition;
   const tabletBgScale = backgroundTabletUrl ? bgTabletScale : bgScale;
+  // Tablet orizzontale: dedicato → verticale → desktop (con i settaggi
+  // della variante effettivamente usata)
+  const tabletLandBgUrl =
+    backgroundTabletLandscapeUrl || backgroundTabletUrl || backgroundUrl;
+  const tabletLandBgPosition = backgroundTabletLandscapeUrl
+    ? bgTabletLandscapePosition
+    : backgroundTabletUrl
+      ? bgTabletPosition
+      : bgPosition;
+  const tabletLandBgScale = backgroundTabletLandscapeUrl
+    ? bgTabletLandscapeScale
+    : backgroundTabletUrl
+      ? bgTabletScale
+      : bgScale;
   const mobileBgUrl = backgroundMobileUrl || backgroundUrl;
   const mobileBgPosition = backgroundMobileUrl ? bgMobilePosition : bgPosition;
   const mobileBgScale = backgroundMobileUrl ? bgMobileScale : bgScale;
+  // Rider tablet orizzontale: dedicato, altrimenti quello verticale
+  const tabletLandFgUrl = foregroundTabletLandscapeUrl || foregroundTabletUrl;
+  const tabletLandFgPosition = foregroundTabletLandscapeUrl
+    ? fgTabletLandscapePosition
+    : fgTabletPosition;
+  const tabletLandFgScale = foregroundTabletLandscapeUrl
+    ? fgTabletLandscapeScale
+    : fgTabletScale;
   const ref = useRef<HTMLDivElement>(null);
   const [p, setP] = useState({ x: 0, y: 0 });
   // Niente parallax 3D su touch o schermi piccoli: solo puntatore fine + desktop
@@ -142,7 +177,10 @@ export function Hero3D({
           transform: `translate3d(${p.x * -18}px, ${p.y * -18}px, 0) scale(1.06)`,
         }}
       >
-        {backgroundUrl || backgroundTabletUrl || backgroundMobileUrl ? (
+        {backgroundUrl ||
+        backgroundTabletUrl ||
+        backgroundTabletLandscapeUrl ||
+        backgroundMobileUrl ? (
           <>
             {/* Desktop (≥1024px con mouse/trackpad) */}
             <img
@@ -154,7 +192,7 @@ export function Hero3D({
               }}
               className="hero-asset-desktop h-full w-full object-cover"
             />
-            {/* Tablet (≥768px touch — iPad anche orizzontale — o 768–1023px) */}
+            {/* Tablet VERTICALE (≥768px, orientamento portrait) */}
             <img
               src={tabletBgUrl}
               alt=""
@@ -162,7 +200,17 @@ export function Hero3D({
                 objectPosition: tabletBgPosition,
                 transform: `scale(${Math.max(1.1, tabletBgScale / 100)})`,
               }}
-              className="hero-asset-tablet h-full w-full object-cover"
+              className="hero-asset-tablet-portrait h-full w-full object-cover"
+            />
+            {/* Tablet ORIZZONTALE (≥768px landscape touch — iPad landscape) */}
+            <img
+              src={tabletLandBgUrl}
+              alt=""
+              style={{
+                objectPosition: tabletLandBgPosition,
+                transform: `scale(${Math.max(1.1, tabletLandBgScale / 100)})`,
+              }}
+              className="hero-asset-tablet-landscape h-full w-full object-cover"
             />
             {/* Mobile (<768px) */}
             <img
@@ -250,7 +298,13 @@ export function Hero3D({
           url: foregroundTabletUrl,
           position: fgTabletPosition,
           scale: fgTabletScale,
-          vis: "hero-asset-tablet",
+          vis: "hero-asset-tablet-portrait",
+        },
+        {
+          url: tabletLandFgUrl,
+          position: tabletLandFgPosition,
+          scale: tabletLandFgScale,
+          vis: "hero-asset-tablet-landscape",
         },
         {
           url: foregroundMobileUrl,
