@@ -355,8 +355,9 @@ export function Hero3D({
           )}
 
           {/* CTA principale — grande e prioritaria (unico bottone d'azione).
-              Centrata su mobile/tablet (<1024px), in riga a sinistra su desktop. */}
-          <div className="mt-8 flex flex-col items-center gap-2.5 text-center lg:flex-row lg:items-center lg:gap-4 lg:text-left">
+              Centrata SOLO su telefono (<768px); da tablet in su in riga,
+              allineata a sinistra con le intestazioni. */}
+          <div className="mt-8 flex flex-col items-center gap-2.5 text-center md:flex-row md:items-center md:gap-4 md:text-left">
             <a
               href={site.instagramDmUrl}
               target="_blank"
@@ -371,9 +372,9 @@ export function Hero3D({
             </span>
           </div>
 
-          {/* Blocco RICERCA — separato e arioso. Centrato su mobile/tablet,
-              allineato a sinistra su desktop. */}
-          <div className="mx-auto mt-7 pt-12 sm:mt-12 sm:pt-20 max-w-md border-t border-border/40 text-center lg:mx-0 lg:text-left">
+          {/* Blocco RICERCA — separato e arioso. Centrato SOLO su telefono;
+              da tablet in su allineato a sinistra con le intestazioni. */}
+          <div className="mx-auto mt-7 pt-12 sm:mt-12 sm:pt-20 max-w-md border-t border-border/40 text-center md:mx-0 md:text-left">
             <p className="text-balance text-sm text-muted-foreground sm:text-base">
               <EditableText
                 page="home"
