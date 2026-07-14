@@ -303,7 +303,7 @@ export const PAGES: Record<PageSlug, PageDef> = {
       "hero.backgroundTablet": {
         label: "Hero Tablet — sfondo (opzionale)",
         default: "",
-        hint: "Se vuoto usa lo sfondo desktop adattato. ~1500px.",
+        hint: "Usata su iPad/tablet in verticale E orizzontale. Se vuoto usa lo sfondo desktop. ~1500px.",
       },
       "hero.foregroundTablet": {
         label: "Hero Tablet — PNG rider (opzionale)",

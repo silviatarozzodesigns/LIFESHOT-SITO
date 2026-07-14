@@ -108,6 +108,37 @@ html {
     );
   }
 
+  /* Asset hero per DISPOSITIVO (non solo larghezza):
+     - mobile   → schermi < 768px
+     - tablet   → da 768px in su SU DISPOSITIVI TOUCH (iPad anche in
+                  orizzontale: pointer coarse), o comunque tra 768 e 1023px
+     - desktop  → da 1024px in su con puntatore fine (mouse/trackpad)
+     Così l'iPad orizzontale (~1180px) usa le immagini tablet del CMS,
+     mentre computer e laptop restano sulle immagini desktop. */
+  .hero-asset-mobile {
+    display: block;
+  }
+  .hero-asset-tablet,
+  .hero-asset-desktop {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .hero-asset-mobile {
+      display: none;
+    }
+    .hero-asset-tablet {
+      display: block;
+    }
+  }
+  @media (min-width: 1024px) and (pointer: fine) {
+    .hero-asset-tablet {
+      display: none;
+    }
+    .hero-asset-desktop {
+      display: block;
+    }
+  }
+
   /* Rispetta chi preferisce meno animazioni: ferma il marquee */
   @media (prefers-reduced-motion: reduce) {
     .animate-marquee {

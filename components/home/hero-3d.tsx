@@ -144,7 +144,7 @@ export function Hero3D({
       >
         {backgroundUrl || backgroundTabletUrl || backgroundMobileUrl ? (
           <>
-            {/* Desktop (≥1024px) */}
+            {/* Desktop (≥1024px con mouse/trackpad) */}
             <img
               src={backgroundUrl || tabletBgUrl}
               alt=""
@@ -152,9 +152,9 @@ export function Hero3D({
                 objectPosition: bgPosition,
                 transform: `scale(${Math.max(1.1, bgScale / 100)})`,
               }}
-              className="hidden h-full w-full object-cover lg:block"
+              className="hero-asset-desktop h-full w-full object-cover"
             />
-            {/* Tablet (768–1023px) */}
+            {/* Tablet (≥768px touch — iPad anche orizzontale — o 768–1023px) */}
             <img
               src={tabletBgUrl}
               alt=""
@@ -162,7 +162,7 @@ export function Hero3D({
                 objectPosition: tabletBgPosition,
                 transform: `scale(${Math.max(1.1, tabletBgScale / 100)})`,
               }}
-              className="hidden h-full w-full object-cover md:block lg:hidden"
+              className="hero-asset-tablet h-full w-full object-cover"
             />
             {/* Mobile (<768px) */}
             <img
@@ -172,7 +172,7 @@ export function Hero3D({
                 objectPosition: mobileBgPosition,
                 transform: `scale(${Math.max(1.1, mobileBgScale / 100)})`,
               }}
-              className="h-full w-full object-cover md:hidden"
+              className="hero-asset-mobile h-full w-full object-cover"
             />
           </>
         ) : (
@@ -244,19 +244,19 @@ export function Hero3D({
           url: foregroundUrl,
           position: fgPosition,
           scale: fgScale,
-          vis: "hidden lg:block",
+          vis: "hero-asset-desktop",
         },
         {
           url: foregroundTabletUrl,
           position: fgTabletPosition,
           scale: fgTabletScale,
-          vis: "hidden md:block lg:hidden",
+          vis: "hero-asset-tablet",
         },
         {
           url: foregroundMobileUrl,
           position: fgMobilePosition,
           scale: fgMobileScale,
-          vis: "block md:hidden",
+          vis: "hero-asset-mobile",
         },
       ].map((rider, i) =>
         rider.url ? (
