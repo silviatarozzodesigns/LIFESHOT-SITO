@@ -15,7 +15,7 @@ const inter = Inter({
 
 // SEO gestita dal Visual CMS (pannello admin → Contenuti)
 export async function generateMetadata(): Promise<Metadata> {
-  const { seo } = (await getPublishedContent()).pages.home;
+  const { seo } = (await getPublishedContent()).pages.agenzia;
   return {
     title: {
       default: seo.metaTitle,

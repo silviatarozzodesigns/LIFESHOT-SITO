@@ -10,6 +10,7 @@ import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
+  { href: "/motorsport", label: "Motorsport" },
   { href: "/galleria", label: "Galleria" },
   { href: "/video", label: "Video" },
   { href: "/chi-siamo", label: "Chi siamo" },

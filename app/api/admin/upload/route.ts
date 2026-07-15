@@ -175,6 +175,7 @@ export async function POST(request: Request) {
         await deleteByPublicUrl(previousCover);
       }
       revalidatePath("/");
+      revalidatePath("/motorsport");
       return NextResponse.json({ ok: true, url });
     }
 
@@ -217,6 +218,7 @@ export async function POST(request: Request) {
     revalidateTag(PHOTOS_TAG);
     revalidateTag(EVENTS_TAG);
     revalidatePath("/");
+    revalidatePath("/motorsport");
     revalidatePath("/galleria");
 
     return NextResponse.json({

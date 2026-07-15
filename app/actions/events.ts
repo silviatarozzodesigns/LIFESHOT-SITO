@@ -64,6 +64,7 @@ function revalidatePublicPages() {
   revalidateTag(EVENTS_TAG);
   revalidateTag(PHOTOS_TAG);
   revalidatePath("/");
+  revalidatePath("/motorsport");
   revalidatePath("/galleria");
 }
 

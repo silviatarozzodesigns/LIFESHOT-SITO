@@ -21,6 +21,7 @@ function revalidatePublicPages() {
   revalidateTag(PHOTOS_TAG);
   revalidateTag(EVENTS_TAG);
   revalidatePath("/");
+  revalidatePath("/motorsport");
   revalidatePath("/galleria");
 }
 
@@ -75,6 +76,7 @@ export async function togglePhotoFeatured(
     if (!updated) return { ok: false, error: "Foto non trovata." };
     revalidateTag(PHOTOS_TAG);
     revalidatePath("/");
+    revalidatePath("/motorsport");
     return { ok: true };
   } catch (error) {
     console.error("[lifeshot] togglePhotoFeatured fallita:", error);

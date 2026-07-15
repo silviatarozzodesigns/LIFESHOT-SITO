@@ -1,19 +1,22 @@
-import { HomeView } from "@/components/home/home-view";
-import { getRecentEvents } from "@/lib/data/events";
+import { AgencyView } from "@/components/agency/agency-view";
 import { getFeaturedPhotos } from "@/lib/data/photos";
 import { getPublishedContent } from "@/lib/data/content";
 
 // ISR: la home è servita da cache (navigazione istantanea) e rigenerata
-// on-demand — ogni upload/pubblicazione/eliminazione chiama revalidatePath("/").
+// on-demand — upload/pubblicazioni chiamano revalidatePath("/").
 // Il revalidate orario è solo una rete di sicurezza.
 export const revalidate = 3600;
 
+/**
+ * HOMEPAGE AGENZIA — "Tutto il tuo digitale. Un'unica agenzia."
+ * La vetrina di tutti i servizi; il mondo motorsport (ex homepage)
+ * vive nella sua pagina dedicata /motorsport.
+ */
 export default async function HomePage() {
-  const [events, marquee, content] = await Promise.all([
-    getRecentEvents(6),
-    getFeaturedPhotos(12),
+  const [content, motorsportPhotos] = await Promise.all([
     getPublishedContent(),
+    getFeaturedPhotos(8),
   ]);
 
-  return <HomeView content={content} events={events} marquee={marquee} />;
+  return <AgencyView content={content} motorsportPhotos={motorsportPhotos} />;
 }

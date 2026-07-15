@@ -17,7 +17,7 @@
 export type Level = 1 | 2 | 3 | 4 | 5;
 /** Alias storico per le spaziature */
 export type SpacingLevel = Level;
-export type PageSlug = "home" | "video" | "chi-siamo" | "contatti";
+export type PageSlug = "agenzia" | "home" | "video" | "chi-siamo" | "contatti";
 
 export interface SeoContent {
   metaTitle: string;
@@ -206,13 +206,221 @@ export const TYPOGRAPHY_LABELS: Record<Level, string> = {
 /* ─────────────────────────── REGISTRY PAGINE ─────────────────────────── */
 
 export const PAGES: Record<PageSlug, PageDef> = {
-  home: {
+  /* ── HOMEPAGE AGENZIA — vetrina "un'unica agenzia per ogni bisogno" ── */
+  agenzia: {
     label: "Homepage",
     path: "/",
     seo: {
-      metaTitle: "Lifeshot — Fotografia, Video e Grafica",
+      metaTitle: "Lifeshot — Un'unica agenzia per il tuo digitale",
       metaDescription:
-        "Lifeshot è l'agenzia creativa specializzata in fotografia sportiva, video e grafica. Trova e acquista le foto dei tuoi eventi.",
+        "Siti web, grafiche, loghi, branding, social, foto e video professionali: Lifeshot è l'agenzia media unica per tutta la tua immagine digitale.",
+      ogImage: "",
+    },
+    fields: {
+      "hero.sloganLine1": {
+        label: "Hero — slogan riga 1",
+        default: "Tutto il tuo digitale.",
+        max: 60,
+        typographyKnob: "hero.slogan",
+      },
+      "hero.sloganLine2": {
+        label: "Hero — slogan riga 2",
+        default: "Un'unica agenzia.",
+        max: 60,
+      },
+      "hero.ctaLabel": {
+        label: "Hero — testo bottone",
+        default: "Contattaci ora",
+        max: 40,
+      },
+      "ribbon.items": {
+        label: "Nastro servizi (voci separate da ·)",
+        default:
+          "Siti web · Grafiche · Loghi · Tipografia · Branding · Social media · Video · Foto",
+        max: 300,
+      },
+      "categories.title": {
+        label: "Categorie — titolo sezione",
+        default: "Un solo team, tanti mondi",
+        max: 80,
+      },
+      "categories.subtitle": {
+        label: "Categorie — sottotitolo",
+        default:
+          "Scorri i mondi che seguiamo ogni giorno: dentro ognuno trovi il nostro lavoro.",
+        max: 200,
+        multiline: true,
+      },
+      "cat.ristorazione.title": {
+        label: "Ristorazione — titolo",
+        default: "Ristorazione",
+        max: 40,
+      },
+      "cat.ristorazione.description": {
+        label: "Ristorazione — descrizione",
+        default:
+          "Shooting dei piatti, menù, sito e social per far venire fame prima ancora di sedersi al tavolo.",
+        max: 300,
+        multiline: true,
+      },
+      "cat.motorsport.title": {
+        label: "Motorsport — titolo",
+        default: "Motorsport",
+        max: 40,
+      },
+      "cat.motorsport.description": {
+        label: "Motorsport — descrizione",
+        default:
+          "Foto e video a bordo pista, ricerca degli scatti per numero di gara e contenuti su misura per team e piloti.",
+        max: 300,
+        multiline: true,
+      },
+      "cat.business.title": {
+        label: "Business — titolo",
+        default: "Business",
+        max: 40,
+      },
+      "cat.business.description": {
+        label: "Business — descrizione",
+        default:
+          "Identità visiva, siti web e contenuti professionali per aziende, professionisti e progetti in crescita.",
+        max: 300,
+        multiline: true,
+      },
+      "reviews.title": {
+        label: "Testimonianze — titolo",
+        default: "Dicono di noi",
+        max: 80,
+      },
+      "reviews.subtitle": {
+        label: "Testimonianze — sottotitolo",
+        default: "Chi ha lavorato con Lifeshot, in pista e fuori.",
+        max: 160,
+      },
+      "reviews.r1.quote": {
+        label: "Testimonianza 1 — testo",
+        default:
+          "Foto pazzesche, sembrano uscite da una rivista. Ho trovato i miei scatti in un attimo col numero di gara.",
+        max: 240,
+        multiline: true,
+      },
+      "reviews.r1.name": {
+        label: "Testimonianza 1 — nome",
+        default: "Luca B.",
+        max: 60,
+      },
+      "reviews.r1.meta": {
+        label: "Testimonianza 1 — categoria",
+        default: "#42 · Motorsport",
+        max: 60,
+      },
+      "reviews.r2.quote": {
+        label: "Testimonianza 2 — testo",
+        default:
+          "Le foto dei piatti e il nuovo menù hanno dato un'altra faccia al locale: ora i clienti ordinano con gli occhi.",
+        max: 240,
+        multiline: true,
+      },
+      "reviews.r2.name": {
+        label: "Testimonianza 2 — nome",
+        default: "Osteria del Corso",
+        max: 60,
+      },
+      "reviews.r2.meta": {
+        label: "Testimonianza 2 — categoria",
+        default: "Ristorazione",
+        max: 60,
+      },
+      "reviews.r3.quote": {
+        label: "Testimonianza 3 — testo",
+        default:
+          "Dal logo al sito, finalmente tutta la nostra immagine parla la stessa lingua. Un unico interlocutore, zero caos.",
+        max: 240,
+        multiline: true,
+      },
+      "reviews.r3.name": {
+        label: "Testimonianza 3 — nome",
+        default: "Elisa R.",
+        max: 60,
+      },
+      "reviews.r3.meta": {
+        label: "Testimonianza 3 — categoria",
+        default: "Business · Branding",
+        max: 60,
+      },
+      "contact.title": {
+        label: "Contatti — titolo",
+        default: "Parliamo del tuo progetto",
+        max: 80,
+      },
+      "contact.subtitle": {
+        label: "Contatti — sottotitolo",
+        default:
+          "Un'idea, un evento, un brand da far crescere: scrivici e ti rispondiamo in giornata.",
+        max: 200,
+        multiline: true,
+      },
+    },
+    images: {
+      "hero.slide1": {
+        label: "Hero — slide 1 (opzionale)",
+        default: "",
+        hint: "Le slide si alternano in dissolvenza dietro lo slogan. Senza slide la hero resta tipografica con la costellazione dei servizi.",
+      },
+      "hero.slide2": { label: "Hero — slide 2 (opzionale)", default: "" },
+      "hero.slide3": { label: "Hero — slide 3 (opzionale)", default: "" },
+      "hero.slide4": { label: "Hero — slide 4 (opzionale)", default: "" },
+      "cat.ristorazione.img1": {
+        label: "Ristorazione — foto 1",
+        default: "",
+        hint: "Galleria della categoria in homepage.",
+      },
+      "cat.ristorazione.img2": { label: "Ristorazione — foto 2", default: "" },
+      "cat.ristorazione.img3": { label: "Ristorazione — foto 3", default: "" },
+      "cat.ristorazione.img4": { label: "Ristorazione — foto 4", default: "" },
+      "cat.business.img1": {
+        label: "Business — foto 1",
+        default: "",
+        hint: "Galleria della categoria in homepage.",
+      },
+      "cat.business.img2": { label: "Business — foto 2", default: "" },
+      "cat.business.img3": { label: "Business — foto 3", default: "" },
+      "cat.business.img4": { label: "Business — foto 4", default: "" },
+    },
+    spacing: {
+      categories: {
+        label: "Spazio sezione categorie",
+        classes: SECTION_SCALE,
+        default: 4,
+      },
+      reviews: {
+        label: "Spazio testimonianze",
+        classes: SECTION_SCALE,
+        default: 3,
+      },
+      contact: {
+        label: "Spazio sezione contatti",
+        classes: SECTION_SCALE,
+        default: 4,
+      },
+    },
+    typography: {
+      "hero.slogan": {
+        label: "Dimensione slogan",
+        classes: DISPLAY_SCALE,
+        default: 3,
+      },
+    },
+  },
+
+  /* ── MOTORSPORT — l'ex homepage: eventi, ricerca per numero di gara ── */
+  home: {
+    label: "Motorsport",
+    path: "/motorsport",
+    seo: {
+      metaTitle: "Motorsport · Lifeshot — Foto e video dagli eventi",
+      metaDescription:
+        "Lifeshot a bordo pista: cerca e acquista le foto dei tuoi eventi motorsport per numero di gara, con video e reel su misura.",
       ogImage: "",
     },
     fields: {

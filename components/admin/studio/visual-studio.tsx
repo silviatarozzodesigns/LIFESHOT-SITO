@@ -71,7 +71,7 @@ const DEVICE_WIDTH: Record<Device, string> = {
  */
 export function VisualStudio({ initial }: { initial: CmsData }) {
   const [content, setContent] = useState<CmsData>(initial);
-  const [activePage, setActivePage] = useState<PageSlug>("home");
+  const [activePage, setActivePage] = useState<PageSlug>("agenzia");
   const [selected, setSelected] = useState<PreviewSelection | null>(null);
   const [device, setDevice] = useState<Device>("desktop");
   const [realNonce, setRealNonce] = useState(0);
@@ -300,15 +300,19 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
             style={{ width: DEVICE_WIDTH[device], maxWidth: "100%" }}
             className="mx-auto overflow-hidden rounded-2xl border shadow-[0_16px_50px_-20px_rgba(0,0,0,0.7)] transition-all duration-500 ease-out"
           >
-            {/* VISTA UNICA: il sito REALE in iframe. Sulla home carica la
-                bozza editabile (/anteprima); sulle altre pagine l'anteprima
-                reale. Dentro l'iframe l'edit-mode è automatico per l'admin. */}
+            {/* VISTA UNICA: il sito REALE in iframe. Homepage agenzia e
+                pagina motorsport hanno le loro anteprime bozza dedicate
+                (route ISR: niente ?preview); le altre pagine usano
+                l'anteprima reale con ?preview=1. Dentro l'iframe
+                l'edit-mode è automatico per l'admin. */}
             <iframe
               key={`site-${activePage}-${realNonce}`}
               src={
-                activePage === "home"
+                activePage === "agenzia"
                   ? `/anteprima?n=${realNonce}`
-                  : `${pageDef.path}?preview=1&n=${realNonce}`
+                  : activePage === "home"
+                    ? `/anteprima/motorsport?n=${realNonce}`
+                    : `${pageDef.path}?preview=1&n=${realNonce}`
               }
               title="Sito reale (modificabile)"
               className="block h-[80vh] w-full border-0 bg-background"
@@ -474,6 +478,61 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
                     })}
                   </div>
                 ))}
+              </div>
+            </SidebarCard>
+          )}
+
+          {/* Immagini della pagina (hero slide, gallerie categorie…):
+              pannello generico per ogni pagina che ha slot immagine
+              (la home motorsport ha già il suo pannello dedicato sopra). */}
+          {activePage !== "home" && Object.keys(pageDef.images).length > 0 && (
+            <SidebarCard title={`Immagini — ${pageDef.label}`}>
+              <div className="space-y-3">
+                {Object.entries(pageDef.images).map(([key, def]) => {
+                  const s = page.imageSettings[key] ?? DEFAULT_IMAGE_SETTINGS;
+                  return (
+                    <div
+                      key={key}
+                      className="space-y-2 rounded-xl border bg-background/40 p-2.5"
+                    >
+                      <ImageField
+                        def={def}
+                        value={page.images[key] ?? ""}
+                        onChange={(url) => setImage(key, url)}
+                        onError={setError}
+                      />
+                      {page.images[key] && (
+                        <div className="space-y-1.5 pt-1">
+                          <RangeRow
+                            label="Orizzontale"
+                            value={s.posX}
+                            min={0}
+                            max={100}
+                            suffix="%"
+                            onChange={(v) => setImageSettings(key, { posX: v })}
+                          />
+                          <RangeRow
+                            label="Verticale"
+                            value={s.posY}
+                            min={0}
+                            max={100}
+                            suffix="%"
+                            onChange={(v) => setImageSettings(key, { posY: v })}
+                          />
+                          <RangeRow
+                            label="Zoom"
+                            value={s.scale}
+                            min={100}
+                            max={280}
+                            step={5}
+                            suffix="%"
+                            onChange={(v) => setImageSettings(key, { scale: v })}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </SidebarCard>
           )}
