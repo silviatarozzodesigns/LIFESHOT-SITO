@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getEventsForFilter } from "@/lib/data/events";
+import { getEventsForFilter, getRecentEvents } from "@/lib/data/events";
 import { getPhotoSitemapEntries } from "@/lib/data/photos";
 
 /** URL pubblico del sito (in dev NEXT_PUBLIC_SITE_URL è localhost: usa il dominio reale). */
@@ -34,6 +34,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
+  // Pagine progetto di ristorazione e business
+  const [ristorazione, business] = await Promise.all([
+    getRecentEvents(100, "ristorazione"),
+    getRecentEvents(100, "business"),
+  ]);
+  const projectPages: MetadataRoute.Sitemap = [
+    ...ristorazione.map((p) => ({ base: "ristorazione", p })),
+    ...business.map((p) => ({ base: "business", p })),
+  ].map(({ base, p }) => ({
+    url: `${BASE}/${base}/${encodeURIComponent(p.slug)}`,
+    lastModified: p.date ? new Date(p.date) : now,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
   // Pagina di dettaglio di ogni foto pubblicata
   const photos = await getPhotoSitemapEntries();
   const photoPages: MetadataRoute.Sitemap = photos.map((p) => ({
@@ -43,5 +58,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
-  return [...staticPages, ...eventPages, ...photoPages];
+  return [...staticPages, ...eventPages, ...projectPages, ...photoPages];
 }

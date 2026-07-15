@@ -679,14 +679,25 @@ export const PAGES: Record<PageSlug, PageDef> = {
         max: 40,
       },
       "gallery.title": {
-        label: "Galleria — titolo",
-        default: "I nostri lavori",
+        label: "In evidenza — titolo",
+        default: "In evidenza",
         max: 80,
       },
       "gallery.subtitle": {
-        label: "Galleria — sottotitolo",
+        label: "In evidenza — sottotitolo",
         default:
           "Una selezione di scatti e progetti per il mondo della ristorazione.",
+        max: 200,
+        multiline: true,
+      },
+      "projects.title": {
+        label: "Progetti recenti — titolo",
+        default: "Progetti recenti",
+        max: 80,
+      },
+      "projects.subtitle": {
+        label: "Progetti recenti — sottotitolo",
+        default: "Gli ultimi progetti firmati Lifeshot per la ristorazione.",
         max: 200,
         multiline: true,
       },
@@ -753,14 +764,25 @@ export const PAGES: Record<PageSlug, PageDef> = {
         max: 40,
       },
       "gallery.title": {
-        label: "Galleria — titolo",
-        default: "I nostri lavori",
+        label: "In evidenza — titolo",
+        default: "In evidenza",
         max: 80,
       },
       "gallery.subtitle": {
-        label: "Galleria — sottotitolo",
+        label: "In evidenza — sottotitolo",
         default:
           "Loghi, siti e progetti di branding realizzati per aziende e professionisti.",
+        max: 200,
+        multiline: true,
+      },
+      "projects.title": {
+        label: "Progetti recenti — titolo",
+        default: "Progetti recenti",
+        max: 80,
+      },
+      "projects.subtitle": {
+        label: "Progetti recenti — sottotitolo",
+        default: "Gli ultimi progetti firmati Lifeshot per aziende e brand.",
         max: 200,
         multiline: true,
       },

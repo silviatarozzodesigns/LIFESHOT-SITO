@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { CategoryPageView } from "@/components/agency/category-page";
 import { getPublishedContent, getViewContent } from "@/lib/data/content";
+import { getRecentEvents } from "@/lib/data/events";
+import { getFeaturedPhotos } from "@/lib/data/photos";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +25,17 @@ export default async function RistorazionePage({
   searchParams: Promise<{ preview?: string }>;
 }) {
   const { preview } = await searchParams;
-  const content = await getViewContent(preview === "1");
-  return <CategoryPageView content={content} slug="ristorazione" />;
+  const [content, featured, projects] = await Promise.all([
+    getViewContent(preview === "1"),
+    getFeaturedPhotos(12, "ristorazione"),
+    getRecentEvents(12, "ristorazione"),
+  ]);
+  return (
+    <CategoryPageView
+      content={content}
+      slug="ristorazione"
+      featured={featured}
+      projects={projects}
+    />
+  );
 }

@@ -20,7 +20,20 @@ interface SliderItem {
  *   muovendo solo `transform` → animazione fluida sulla GPU
  * - scroll-snap nativo: su mobile è swipe puro, su desktop le frecce
  */
-export function PhotoSlider({ items }: { items: SliderItem[] }) {
+export function PhotoSlider({
+  items,
+  eyebrow = "Gallery",
+  title,
+  returnPath = "/",
+}: {
+  items: SliderItem[];
+  /** Occhiello sopra il titolo della sezione */
+  eyebrow?: string;
+  /** Titolo sezione (default: "Dietro l'obiettivo") */
+  title?: React.ReactNode;
+  /** Path di ritorno dal dettaglio foto (link "torna indietro") */
+  returnPath?: string;
+}) {
   const scroller = useRef<HTMLDivElement>(null);
   const cards = useRef<Array<HTMLElement | null>>([]);
   const raf = useRef<number | null>(null);
@@ -93,10 +106,10 @@ export function PhotoSlider({ items }: { items: SliderItem[] }) {
       <div className="container mb-8 flex items-end justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">
-            Gallery
+            {eyebrow}
           </p>
           <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-            Dietro l&apos;obiettivo
+            {title ?? <>Dietro l&apos;obiettivo</>}
           </h2>
         </div>
         {/* Frecce — desktop */}
@@ -133,7 +146,7 @@ export function PhotoSlider({ items }: { items: SliderItem[] }) {
             ref={(node) => {
               cards.current[i] = node;
             }}
-            href={`/foto/${item.id}?ritorno=%2F`}
+            href={`/foto/${item.id}?ritorno=${encodeURIComponent(returnPath)}`}
             style={{
               transformStyle: "preserve-3d",
               willChange: "transform",
