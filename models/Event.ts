@@ -1,11 +1,27 @@
 import mongoose, { Schema, type InferSchemaType, type Model } from "mongoose";
 
+/** Macrocategorie del sito: ogni evento/progetto appartiene a una sola. */
+export const EVENT_CATEGORIES = [
+  "motorsport",
+  "ristorazione",
+  "business",
+] as const;
+export type EventCategory = (typeof EVENT_CATEGORIES)[number];
+
 /**
- * Evento — es. una gara, un matrimonio, uno shooting.
+ * Evento — una gara motorsport o un "progetto" ristorazione/business.
  * Contiene le foto (modello Photo) tramite riferimento `event`.
  */
 const EventSchema = new Schema(
   {
+    // Macrocategoria: gli eventi storici (senza campo) sono motorsport.
+    // Le query usano { $in: [cat, null] } per il fallback, senza migrazioni.
+    category: {
+      type: String,
+      enum: EVENT_CATEGORIES,
+      default: "motorsport",
+      index: true,
+    },
     name: {
       type: String,
       required: [true, "Il nome dell'evento è obbligatorio"],

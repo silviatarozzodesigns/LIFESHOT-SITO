@@ -17,7 +17,7 @@ export default async function AnteprimaMotorsportPage() {
   await requireAdmin();
   const [events, marquee, content] = await Promise.all([
     getRecentEvents(6),
-    getFeaturedPhotos(12),
+    getFeaturedPhotos(12, "motorsport"),
     getDraftContent(),
   ]);
 

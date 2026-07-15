@@ -4,7 +4,8 @@ import { Event } from "@/models/Event";
 import { Photo } from "@/models/Photo";
 import { BEHIND_LENS_SLUG } from "@/lib/site";
 import { normalizeTags } from "@/lib/data/photos";
-import type { EventDTO } from "@/lib/data/events";
+import { categoryFilter, type EventDTO } from "@/lib/data/events";
+import type { EventCategory } from "@/models/Event";
 
 /**
  * Query riservate alla dashboard admin: includono anche gli eventi
@@ -15,6 +16,7 @@ function eventToDTO(doc: {
   _id: unknown;
   name: string;
   slug: string;
+  category?: EventCategory;
   date: Date;
   location?: string;
   description?: string;
@@ -26,6 +28,7 @@ function eventToDTO(doc: {
     id: String(doc._id),
     name: doc.name,
     slug: doc.slug,
+    category: doc.category ?? "motorsport",
     date: doc.date.toISOString(),
     location: doc.location ?? "",
     description: doc.description ?? "",
@@ -35,11 +38,16 @@ function eventToDTO(doc: {
   };
 }
 
-export async function getAllEventsAdmin(): Promise<EventDTO[]> {
+export async function getAllEventsAdmin(
+  category?: EventCategory
+): Promise<EventDTO[]> {
   try {
     await connectDB();
     // Esclude l'evento di sistema "Dietro l'obiettivo" dalla lista eventi
-    const docs = await Event.find({ slug: { $ne: BEHIND_LENS_SLUG } })
+    const docs = await Event.find({
+      slug: { $ne: BEHIND_LENS_SLUG },
+      ...(category ? categoryFilter(category) : {}),
+    })
       .sort({ date: -1 })
       .lean();
     return docs.map(eventToDTO);
@@ -68,11 +76,23 @@ export async function getOrCreateBehindLensEventId(): Promise<string> {
   return String(created._id);
 }
 
-/** Tutte le foto marcate "Dietro l'obiettivo" (featured), per l'admin. */
-export async function getAllFeaturedPhotosAdmin(): Promise<AdminPhotoDTO[]> {
+/**
+ * Foto con la stella (featured) per la sezione GALLERY dell'admin,
+ * filtrate per categoria dell'evento di appartenenza.
+ */
+export async function getAllFeaturedPhotosAdmin(
+  category?: EventCategory
+): Promise<AdminPhotoDTO[]> {
   try {
     await connectDB();
-    const docs = await Photo.find({ featured: true })
+    const filter: Record<string, unknown> = { featured: true };
+    if (category) {
+      const events = await Event.find(categoryFilter(category))
+        .select("_id")
+        .lean();
+      filter.event = { $in: events.map((e) => e._id) };
+    }
+    const docs = await Photo.find(filter)
       .sort({ createdAt: -1 })
       .lean();
     return docs.map(photoToAdminDTO);

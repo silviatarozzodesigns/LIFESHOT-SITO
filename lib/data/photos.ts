@@ -1,8 +1,8 @@
 import { Types } from "mongoose";
 import { unstable_cache } from "next/cache";
 import { connectDB } from "@/lib/db";
-import { Event } from "@/models/Event";
-import { EVENTS_TAG } from "@/lib/data/events";
+import { Event, type EventCategory } from "@/models/Event";
+import { EVENTS_TAG, categoryFilter } from "@/lib/data/events";
 import { Photo } from "@/models/Photo";
 import { BEHIND_LENS_SLUG } from "@/lib/site";
 import { shuffle, interleaveByKey } from "@/lib/shuffle";
@@ -203,11 +203,18 @@ async function buildPhotoFilter({
     if (!event) return null; // evento inesistente → zero risultati
     filter.event = event._id;
   } else {
-    // Galleria generale: escludi l'evento di sistema "Dietro l'obiettivo"
-    const sys = await Event.findOne({ slug: BEHIND_LENS_SLUG })
+    // Galleria generale (ricerca motorsport): escludi l'evento di sistema
+    // "Dietro l'obiettivo" e i progetti ristorazione/business
+    const excluded = await Event.find({
+      $or: [
+        { slug: BEHIND_LENS_SLUG },
+        { category: { $in: ["ristorazione", "business"] } },
+      ],
+    })
       .select("_id")
       .lean();
-    if (sys) filter.event = { $ne: sys._id };
+    if (excluded.length)
+      filter.event = { $nin: excluded.map((e) => e._id) };
   }
 
   // Più condizioni (numero E pilota) vanno combinate in $and: ciascuna è già
@@ -331,15 +338,23 @@ export async function searchPhotosByQuery(
 }
 
 /**
- * Foto curate per la sezione homepage "Dietro l'obiettivo".
- * Mostra ESCLUSIVAMENTE gli scatti marcati come `featured` dall'admin
- * (stella o upload diretto): se non ce n'è nessuno la sezione resta vuota.
+ * Foto curate (stella dell'admin): "Dietro l'obiettivo" su motorsport,
+ * "In evidenza" su ristorazione/business. Senza categoria mostra i
+ * preferiti di tutto il sito (slide della homepage agenzia).
  */
 export const getFeaturedPhotos = unstable_cache(
-  async (limit = 12): Promise<PhotoDTO[]> => {
+  async (limit = 12, category?: EventCategory): Promise<PhotoDTO[]> => {
     try {
       await connectDB();
-      const docs = await Photo.find({ featured: true })
+      const filter: Record<string, unknown> = { featured: true };
+      if (category) {
+        // Le foto non hanno categoria propria: la ereditano dall'evento
+        const events = await Event.find(categoryFilter(category))
+          .select("_id")
+          .lean();
+        filter.event = { $in: events.map((e) => e._id) };
+      }
+      const docs = await Photo.find(filter)
         .sort({ createdAt: -1 })
         .limit(limit)
         .populate<{ event: PopulatedEvent }>("event", "name slug date location")
@@ -351,6 +366,30 @@ export const getFeaturedPhotos = unstable_cache(
     }
   },
   ["featured-photos"],
+  { tags: [PHOTOS_TAG, EVENTS_TAG], revalidate: 120 }
+);
+
+/**
+ * Tutte le foto di un progetto/evento pubblicato, in ordine di caricamento —
+ * la galleria scorrevole della pagina progetto.
+ */
+export const getEventPhotos = unstable_cache(
+  async (eventId: string, limit = 60): Promise<PhotoDTO[]> => {
+    if (!Types.ObjectId.isValid(eventId)) return [];
+    try {
+      await connectDB();
+      const docs = await Photo.find({ event: eventId })
+        .sort({ createdAt: 1 })
+        .limit(limit)
+        .populate<{ event: PopulatedEvent }>("event", "name slug date location")
+        .lean();
+      return docs.map(toDTO);
+    } catch (error) {
+      console.error("[lifeshot] foto progetto fallito:", error);
+      return [];
+    }
+  },
+  ["event-photos"],
   { tags: [PHOTOS_TAG], revalidate: 120 }
 );
 
@@ -397,7 +436,14 @@ export const getPhotoSitemapEntries = unstable_cache(
   async (): Promise<{ id: string; updatedAt: string }[]> => {
     try {
       await connectDB();
-      const events = await Event.find({ published: true }).select("_id").lean();
+      // Solo eventi motorsport: le pagine /foto/[id] servono alla ricerca
+      // e all'acquisto degli scatti gara, non ai progetti vetrina
+      const events = await Event.find({
+        published: true,
+        ...categoryFilter("motorsport"),
+      })
+        .select("_id")
+        .lean();
       const eventIds = events.map((e) => e._id);
       if (eventIds.length === 0) return [];
       const docs = await Photo.find({ event: { $in: eventIds } })

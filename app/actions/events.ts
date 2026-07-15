@@ -5,7 +5,11 @@ import { EVENTS_TAG } from "@/lib/data/events";
 import { PHOTOS_TAG } from "@/lib/data/photos";
 import { Types } from "mongoose";
 import { connectDB } from "@/lib/db";
-import { Event } from "@/models/Event";
+import {
+  Event,
+  EVENT_CATEGORIES,
+  type EventCategory,
+} from "@/models/Event";
 import { Photo } from "@/models/Photo";
 import { getStorage, deleteByPublicUrl } from "@/lib/storage";
 import { slugify } from "@/lib/parse-filename";
@@ -25,6 +29,8 @@ export interface EventInput {
   name: string;
   /** Data in formato ISO o yyyy-mm-dd (input type="date") */
   date: string;
+  /** Macrocategoria (default motorsport per retro-compatibilità) */
+  category?: EventCategory;
   location?: string;
   description?: string;
   coverImage?: string;
@@ -40,6 +46,8 @@ function validate(input: EventInput): string | null {
   if (input.name.trim().length > 200) return "Nome troppo lungo (max 200 caratteri).";
   if (!input.date || Number.isNaN(Date.parse(input.date)))
     return "Data dell'evento mancante o non valida.";
+  if (input.category && !EVENT_CATEGORIES.includes(input.category))
+    return "Categoria non valida.";
   return null;
 }
 
@@ -66,6 +74,8 @@ function revalidatePublicPages() {
   revalidatePath("/");
   revalidatePath("/motorsport");
   revalidatePath("/galleria");
+  revalidatePath("/ristorazione");
+  revalidatePath("/business");
 }
 
 export async function createEvent(input: EventInput): Promise<ActionResult> {
@@ -78,6 +88,7 @@ export async function createEvent(input: EventInput): Promise<ActionResult> {
     const event = await Event.create({
       name: input.name.trim(),
       slug: await uniqueSlug(input.name),
+      category: input.category ?? "motorsport",
       date: new Date(input.date),
       location: input.location?.trim() ?? "",
       description: input.description?.trim() ?? "",
@@ -111,6 +122,7 @@ export async function updateEvent(
       event.slug = await uniqueSlug(input.name, id);
     }
     event.name = input.name.trim();
+    if (input.category) event.category = input.category;
     event.date = new Date(input.date);
     event.location = input.location?.trim() ?? "";
     event.description = input.description?.trim() ?? "";

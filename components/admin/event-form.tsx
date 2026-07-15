@@ -6,18 +6,26 @@ import { useRouter } from "next/navigation";
 import { Loader2, Save } from "lucide-react";
 import { createEvent, updateEvent, type EventInput } from "@/app/actions/events";
 import { uploadFile } from "@/lib/upload-client";
-import type { EventDTO } from "@/lib/data/events";
+import type { EventCategory, EventDTO } from "@/lib/data/events";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+const CATEGORY_LABELS: Record<EventCategory, string> = {
+  motorsport: "Motorsport",
+  ristorazione: "Ristorazione",
+  business: "Business",
+};
+
 interface EventFormProps {
   /** Se presente è una modifica, altrimenti creazione */
   event?: EventDTO;
+  /** Categoria preselezionata in creazione (dalla macrocartella admin) */
+  defaultCategory?: EventCategory;
 }
 
-export function EventForm({ event }: EventFormProps) {
+export function EventForm({ event, defaultCategory }: EventFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +37,7 @@ export function EventForm({ event }: EventFormProps) {
     const input: EventInput = {
       name: String(formData.get("name") ?? ""),
       date: String(formData.get("date") ?? ""),
+      category: String(formData.get("category") ?? "motorsport") as EventCategory,
       location: String(formData.get("location") ?? ""),
       description: String(formData.get("description") ?? ""),
       published: formData.get("published") === "on",
@@ -76,6 +85,27 @@ export function EventForm({ event }: EventFormProps) {
           defaultValue={event?.name}
           placeholder="es. Granfondo Modena 2026"
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="category">Categoria *</Label>
+        <select
+          id="category"
+          name="category"
+          required
+          defaultValue={event?.category ?? defaultCategory ?? "motorsport"}
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          {(Object.keys(CATEGORY_LABELS) as EventCategory[]).map((c) => (
+            <option key={c} value={c}>
+              {CATEGORY_LABELS[c]}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-muted-foreground">
+          Motorsport finisce tra gli eventi con ricerca per numero di gara;
+          Ristorazione e Business tra i Progetti recenti della loro pagina.
+        </p>
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2">
