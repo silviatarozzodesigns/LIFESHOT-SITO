@@ -44,7 +44,12 @@ const readPublishedContent = unstable_cache(
  */
 export async function getPublishedContent(): Promise<CmsData> {
   try {
-    return await readPublishedContent();
+    // Ri-normalizza SEMPRE il valore uscito dalla cache: se era stato
+    // salvato con un registry più vecchio (pagine/campi aggiunti in un
+    // deploy successivo), i default mancanti vengono reintegrati qui —
+    // altrimenti pages.<nuova-pagina> risulterebbe undefined fino alla
+    // scadenza della cache.
+    return normalizeContent(await readPublishedContent());
   } catch (error) {
     console.error("[lifeshot] lettura contenuti pubblicati fallita:", error);
     return DEFAULT_CONTENT;

@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { Constellation } from "@/components/agency/constellation";
+import { ServiceCursors } from "@/components/agency/service-cursors";
 import { ContactCta } from "@/components/agency/contact-cta";
 import { EditableText } from "@/components/cms/editable-text";
 import { EditableImage } from "@/components/cms/editable-image";
@@ -96,8 +96,8 @@ export function AgencyHero({
         )}
       </div>
 
-      {/* Costellazione dei servizi: protagonista senza slide, sussurro con */}
-      <Constellation dim={hasSlides} />
+      {/* Cursori dei servizi: entrano dai bordi e si fermano attorno allo slogan */}
+      <ServiceCursors dim={hasSlides} />
 
       {/* SLOGAN + CTA — la zona che la linea non tocca mai */}
       <div className="relative z-10 max-w-4xl">

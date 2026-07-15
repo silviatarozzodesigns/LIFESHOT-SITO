@@ -54,14 +54,14 @@ export function AgencyView({
     return { key, url, position: settings.position, scale: settings.scale };
   }).filter((s) => s.url);
 
-  const urlMedia = (cat: "ristorazione" | "business") =>
+  // Anteprima in home = i primi 4 "lavori" caricati sulla pagina categoria
+  const workMedia = (cat: "ristorazione" | "business") =>
     [1, 2, 3, 4]
-      .map((n) => getImage(content, "agenzia", `cat.${cat}.img${n}`))
+      .map((n) => getImage(content, cat, `work${n}`))
       .filter(Boolean)
       .map((src) => ({ kind: "url" as const, src }));
 
-  const imageKeys = (cat: "ristorazione" | "business") =>
-    [1, 2, 3, 4].map((n) => `cat.${cat}.img${n}`);
+  const workKeys = [1, 2, 3, 4].map((n) => `work${n}`);
 
   const categories: ShowcaseCategory[] = [
     {
@@ -70,8 +70,11 @@ export function AgencyView({
       description: t("cat.ristorazione.description"),
       titleStyle: ts("cat.ristorazione.title"),
       descriptionStyle: ts("cat.ristorazione.description"),
-      media: urlMedia("ristorazione"),
-      imageKeys: imageKeys("ristorazione"),
+      href: "/ristorazione",
+      linkLabel: "Scopri la ristorazione",
+      media: workMedia("ristorazione"),
+      imagePage: "ristorazione",
+      imageKeys: workKeys,
     },
     {
       id: "motorsport",
@@ -93,8 +96,11 @@ export function AgencyView({
       description: t("cat.business.description"),
       titleStyle: ts("cat.business.title"),
       descriptionStyle: ts("cat.business.description"),
-      media: urlMedia("business"),
-      imageKeys: imageKeys("business"),
+      href: "/business",
+      linkLabel: "Scopri il business",
+      media: workMedia("business"),
+      imagePage: "business",
+      imageKeys: workKeys,
     },
   ];
 

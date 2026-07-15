@@ -9,10 +9,12 @@ import { Logo, LogoMark } from "@/components/brand/logo";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
+// Le categorie hanno le loro pagine; la galleria si raggiunge SOLO
+// dall'interno del motorsport (ricerca numero di gara / eventi recenti).
 const NAV_LINKS = [
   { href: "/motorsport", label: "Motorsport" },
-  { href: "/galleria", label: "Galleria" },
-  { href: "/video", label: "Video" },
+  { href: "/ristorazione", label: "Ristorazione" },
+  { href: "/business", label: "Business" },
   { href: "/chi-siamo", label: "Chi siamo" },
   { href: "/contatti", label: "Contatti" },
 ];

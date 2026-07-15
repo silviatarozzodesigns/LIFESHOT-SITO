@@ -17,7 +17,14 @@
 export type Level = 1 | 2 | 3 | 4 | 5;
 /** Alias storico per le spaziature */
 export type SpacingLevel = Level;
-export type PageSlug = "agenzia" | "home" | "video" | "chi-siamo" | "contatti";
+export type PageSlug =
+  | "agenzia"
+  | "home"
+  | "ristorazione"
+  | "business"
+  | "video"
+  | "chi-siamo"
+  | "contatti";
 
 export interface SeoContent {
   metaTitle: string;
@@ -370,22 +377,8 @@ export const PAGES: Record<PageSlug, PageDef> = {
       "hero.slide2": { label: "Hero — slide 2 (opzionale)", default: "" },
       "hero.slide3": { label: "Hero — slide 3 (opzionale)", default: "" },
       "hero.slide4": { label: "Hero — slide 4 (opzionale)", default: "" },
-      "cat.ristorazione.img1": {
-        label: "Ristorazione — foto 1",
-        default: "",
-        hint: "Galleria della categoria in homepage.",
-      },
-      "cat.ristorazione.img2": { label: "Ristorazione — foto 2", default: "" },
-      "cat.ristorazione.img3": { label: "Ristorazione — foto 3", default: "" },
-      "cat.ristorazione.img4": { label: "Ristorazione — foto 4", default: "" },
-      "cat.business.img1": {
-        label: "Business — foto 1",
-        default: "",
-        hint: "Galleria della categoria in homepage.",
-      },
-      "cat.business.img2": { label: "Business — foto 2", default: "" },
-      "cat.business.img3": { label: "Business — foto 3", default: "" },
-      "cat.business.img4": { label: "Business — foto 4", default: "" },
+      // Le anteprime delle categorie in home leggono i "lavori" caricati
+      // sulle pagine Ristorazione e Business: un'unica fonte, zero doppioni.
     },
     spacing: {
       categories: {
@@ -557,6 +550,152 @@ export const PAGES: Record<PageSlug, PageDef> = {
       },
       "hero.date": {
         label: "Dimensione data evento",
+        classes: DISPLAY_SCALE,
+        default: 4,
+      },
+    },
+  },
+
+  /* ── RISTORAZIONE — pagina categoria con galleria lavori interna ── */
+  ristorazione: {
+    label: "Ristorazione",
+    path: "/ristorazione",
+    seo: {
+      metaTitle: "Ristorazione · Lifeshot — Foto, menù e social per il food",
+      metaDescription:
+        "Shooting dei piatti, menù, siti web e social per ristoranti e locali: Lifeshot racconta il tuo locale così com'è quando profuma di buono.",
+      ogImage: "",
+    },
+    fields: {
+      "hero.title": {
+        label: "Titolo pagina",
+        default: "Ristorazione",
+        max: 60,
+        typographyKnob: "hero.title",
+      },
+      "hero.subtitle": {
+        label: "Sottotitolo",
+        default:
+          "Shooting dei piatti, menù, siti web e social: raccontiamo il tuo locale così com'è quando profuma di buono.",
+        max: 220,
+        multiline: true,
+      },
+      "hero.cta": {
+        label: "Testo bottone lavori",
+        default: "Guarda i nostri lavori",
+        max: 40,
+      },
+      "gallery.title": {
+        label: "Galleria — titolo",
+        default: "I nostri lavori",
+        max: 80,
+      },
+      "gallery.subtitle": {
+        label: "Galleria — sottotitolo",
+        default:
+          "Una selezione di scatti e progetti per il mondo della ristorazione.",
+        max: 200,
+        multiline: true,
+      },
+    },
+    images: {
+      work1: {
+        label: "Lavoro 1",
+        default: "",
+        hint: "I primi 4 lavori appaiono anche nell'anteprima in homepage.",
+      },
+      work2: { label: "Lavoro 2", default: "" },
+      work3: { label: "Lavoro 3", default: "" },
+      work4: { label: "Lavoro 4", default: "" },
+      work5: { label: "Lavoro 5", default: "" },
+      work6: { label: "Lavoro 6", default: "" },
+      work7: { label: "Lavoro 7", default: "" },
+      work8: { label: "Lavoro 8", default: "" },
+    },
+    spacing: {
+      hero: { label: "Respiro d'apertura", classes: HERO_SCALE, default: 2 },
+      gallery: {
+        label: "Spazio galleria",
+        classes: SECTION_SCALE,
+        default: 3,
+      },
+    },
+    typography: {
+      "hero.title": {
+        label: "Dimensione titolo",
+        classes: DISPLAY_SCALE,
+        default: 4,
+      },
+    },
+  },
+
+  /* ── BUSINESS — pagina categoria con galleria lavori interna ── */
+  business: {
+    label: "Business",
+    path: "/business",
+    seo: {
+      metaTitle: "Business · Lifeshot — Branding, siti e contenuti aziendali",
+      metaDescription:
+        "Identità visiva, loghi, siti web e contenuti professionali per aziende e professionisti: un'unica firma per tutta la tua immagine.",
+      ogImage: "",
+    },
+    fields: {
+      "hero.title": {
+        label: "Titolo pagina",
+        default: "Business",
+        max: 60,
+        typographyKnob: "hero.title",
+      },
+      "hero.subtitle": {
+        label: "Sottotitolo",
+        default:
+          "Identità visiva, siti web e contenuti professionali: un'unica firma per tutta l'immagine della tua azienda.",
+        max: 220,
+        multiline: true,
+      },
+      "hero.cta": {
+        label: "Testo bottone lavori",
+        default: "Guarda i nostri lavori",
+        max: 40,
+      },
+      "gallery.title": {
+        label: "Galleria — titolo",
+        default: "I nostri lavori",
+        max: 80,
+      },
+      "gallery.subtitle": {
+        label: "Galleria — sottotitolo",
+        default:
+          "Loghi, siti e progetti di branding realizzati per aziende e professionisti.",
+        max: 200,
+        multiline: true,
+      },
+    },
+    images: {
+      work1: {
+        label: "Lavoro 1",
+        default: "",
+        hint: "I primi 4 lavori appaiono anche nell'anteprima in homepage.",
+      },
+      work2: { label: "Lavoro 2", default: "" },
+      work3: { label: "Lavoro 3", default: "" },
+      work4: { label: "Lavoro 4", default: "" },
+      work5: { label: "Lavoro 5", default: "" },
+      work6: { label: "Lavoro 6", default: "" },
+      work7: { label: "Lavoro 7", default: "" },
+      work8: { label: "Lavoro 8", default: "" },
+    },
+    spacing: {
+      hero: { label: "Respiro d'apertura", classes: HERO_SCALE, default: 2 },
+      gallery: {
+        label: "Spazio galleria",
+        classes: SECTION_SCALE,
+        default: 3,
+      },
+    },
+    typography: {
+      "hero.title": {
+        label: "Dimensione titolo",
         classes: DISPLAY_SCALE,
         default: 4,
       },
