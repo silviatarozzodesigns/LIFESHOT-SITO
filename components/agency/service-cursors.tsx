@@ -42,10 +42,10 @@ const DESKTOP: Chip[] = [
 
 /** Tablet e mobile: i 4 settori dell'agenzia */
 const TOUCH: Chip[] = [
-  { label: "Grafiche", x: 24, y: 22, from: "left", delay: 0.3 },
-  { label: "Social", x: 72, y: 22, from: "right", delay: 0.65 },
-  { label: "Foto", x: 26, y: 77, from: "left", delay: 1.0 },
-  { label: "Video", x: 70, y: 84, from: "bottom", delay: 1.35 },
+  { label: "Grafiche", x: 24, y: 18, from: "left", delay: 0.3 },
+  { label: "Social", x: 72, y: 24, from: "right", delay: 0.65 },
+  { label: "Foto", x: 26, y: 80, from: "left", delay: 1.0 },
+  { label: "Video", x: 70, y: 89, from: "bottom", delay: 1.35 },
 ];
 
 /** Punto di partenza fuori campo per ogni lato d'ingresso */
