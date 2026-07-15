@@ -133,7 +133,7 @@ export function ServiceCursors({ dim = false }: { dim?: boolean }) {
       className={cn(
         "pointer-events-none absolute inset-0 z-[5] transition-opacity duration-700",
         // Con le slide fotografiche i cursori diventano un sussurro
-        dim ? "opacity-25" : "opacity-100"
+        dim ? "opacity-80" : "opacity-100"
       )}
     >
       <div className="hidden lg:block">
