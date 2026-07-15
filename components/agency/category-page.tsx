@@ -1,10 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
 
-import { ArrowDown, ArrowUpRight, Camera, Instagram } from "lucide-react";
+import { Camera } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
 import { ContactSection } from "@/components/agency/contact-section";
+import { CategoryHero } from "@/components/agency/category-hero";
 import { EditableText } from "@/components/cms/editable-text";
 import { EditableImage } from "@/components/cms/editable-image";
 import {
@@ -13,7 +14,6 @@ import {
   getSpacingClass,
   getText,
   getTextStyle,
-  getTypographyClass,
   type CmsData,
 } from "@/lib/content";
 import { site } from "@/lib/site";
@@ -56,75 +56,11 @@ export function CategoryPageView({
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <SiteHeader />
+      <SiteHeader floating />
 
       <main className="flex-1">
-        {/* INTESTAZIONE — titolo, sottotitolo, CTA verso i lavori */}
-        <section
-          className={cn(
-            "container relative",
-            getSpacingClass(content, slug, "hero")
-          )}
-        >
-          <div
-            aria-hidden
-            className="glow-primary pointer-events-none absolute left-1/2 top-0 h-[22rem] w-[44rem] -translate-x-1/2 -translate-y-1/3"
-          />
-          <FadeIn className="relative mx-auto max-w-2xl text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">
-              Categoria
-            </p>
-            <h1
-              className={cn(
-                "mt-3 font-semibold tracking-tight",
-                getTypographyClass(content, slug, "hero.title")
-              )}
-            >
-              <EditableText
-                page={slug}
-                k="hero.title"
-                value={t("hero.title")}
-                maxLength={60}
-                style={ts("hero.title")}
-              />
-            </h1>
-            <p className="mx-auto mt-4 max-w-xl text-balance text-muted-foreground">
-              <EditableText
-                page={slug}
-                k="hero.subtitle"
-                value={t("hero.subtitle")}
-                as="span"
-                maxLength={220}
-                style={ts("hero.subtitle")}
-              />
-            </p>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <a
-                href="#lavori"
-                className="group inline-flex items-center gap-2.5 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:scale-[1.03] hover:shadow-primary/40 active:scale-95"
-              >
-                <EditableText
-                  page={slug}
-                  k="hero.cta"
-                  value={t("hero.cta")}
-                  maxLength={40}
-                  style={ts("hero.cta")}
-                />
-                <ArrowDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
-              </a>
-              <a
-                href={site.instagramDmUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border px-6 py-3.5 text-sm font-medium transition-colors hover:border-primary/50 hover:text-primary"
-              >
-                <Instagram className="h-4 w-4" />
-                Scrivici in DM
-                <ArrowUpRight className="h-4 w-4" />
-              </a>
-            </div>
-          </FadeIn>
-        </section>
+        {/* HERO 3D — sfondo + soggetto in overlay, come /motorsport */}
+        <CategoryHero content={content} slug={slug} />
 
         {/* GALLERIA LAVORI — griglia semplice, si sfoglia e basta */}
         <section

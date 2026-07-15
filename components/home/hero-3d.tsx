@@ -1,13 +1,10 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-
-import { useEffect, useRef, useState } from "react";
 import { Clock, Instagram, MapPin } from "lucide-react";
+import { Hero3DShell } from "@/components/hero/hero-3d-shell";
 import { HeroSearch } from "@/components/home/hero-search";
 import { EditableText } from "@/components/cms/editable-text";
-import { EditableImage } from "@/components/cms/editable-image";
-import type { TextStyle } from "@/lib/content";
+import type { HeroAssets, TextStyle } from "@/lib/content";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -19,37 +16,11 @@ export interface Hero3DProps {
   eventLocation: string;
   subtitle: string;
   searchPlaceholder: string;
-  backgroundUrl: string;
-  /** Sfondi dedicati per viewport (opzionali): se vuoti usano il desktop.
-      Tablet orizzontale: se vuoto usa il tablet verticale, poi il desktop. */
-  backgroundTabletUrl?: string;
-  backgroundTabletLandscapeUrl?: string;
-  backgroundMobileUrl?: string;
-  /** Rider PNG per viewport. Su tablet/mobile compare SOLO se caricato qui. */
-  foregroundUrl: string;
-  foregroundTabletUrl?: string;
-  foregroundTabletLandscapeUrl?: string;
-  foregroundMobileUrl?: string;
+  /** Sfondi e rider per i 4 dispositivi, con inquadrature dal CMS */
+  assets: HeroAssets;
   /** Classi tipografiche dal CMS (vincolate alla scala Tailwind) */
   eventNameClass: string;
   dateClass: string;
-  /** Override di inquadratura manuale dal CMS */
-  bgPosition?: string;
-  bgScale?: number;
-  bgTabletPosition?: string;
-  bgTabletScale?: number;
-  bgTabletLandscapePosition?: string;
-  bgTabletLandscapeScale?: number;
-  bgMobilePosition?: string;
-  bgMobileScale?: number;
-  fgPosition?: string;
-  fgScale?: number;
-  fgTabletPosition?: string;
-  fgTabletScale?: number;
-  fgTabletLandscapePosition?: string;
-  fgTabletLandscapeScale?: number;
-  fgMobilePosition?: string;
-  fgMobileScale?: number;
   /** In preview disattiviamo il parallax legato al mouse */
   interactive?: boolean;
   /** Stili per-testo (allineamento/dimensione) modificabili in-place */
@@ -57,14 +28,10 @@ export interface Hero3DProps {
 }
 
 /**
- * HERO 3D — vetrina del prossimo evento coperto da Lifeshot.
- *
- * Profondità a 3 livelli con parallax al mouse:
- *   1. sfondo (pista/paesaggio)  → si muove poco
- *   2. testi/badge               → fermi, sopra il velo
- *   3. rider scontornato (PNG)   → si muove di più → effetto 3D
- *
- * Tutto il contenuto (testi, immagini, tipografia) arriva dal CMS.
+ * HERO 3D MOTORSPORT — vetrina del prossimo evento coperto da Lifeshot.
+ * La scenografia (sfondo + rider + parallax) vive in Hero3DShell, condivisa
+ * con le hero di Ristorazione e Business; qui c'è il contenuto: badge,
+ * nome evento, data, CTA e ricerca per numero di gara. Tutto dal CMS.
  */
 export function Hero3D({
   badge,
@@ -74,384 +41,124 @@ export function Hero3D({
   eventLocation,
   subtitle,
   searchPlaceholder,
-  backgroundUrl,
-  backgroundTabletUrl = "",
-  backgroundTabletLandscapeUrl = "",
-  backgroundMobileUrl = "",
-  foregroundUrl,
-  foregroundTabletUrl = "",
-  foregroundTabletLandscapeUrl = "",
-  foregroundMobileUrl = "",
+  assets,
   eventNameClass,
   dateClass,
-  bgPosition = "center",
-  bgScale = 100,
-  bgTabletPosition = "center",
-  bgTabletScale = 100,
-  bgTabletLandscapePosition = "center",
-  bgTabletLandscapeScale = 100,
-  bgMobilePosition = "center",
-  bgMobileScale = 100,
-  fgPosition = "center bottom",
-  fgScale = 100,
-  fgTabletPosition = "center bottom",
-  fgTabletScale = 100,
-  fgTabletLandscapePosition = "center bottom",
-  fgTabletLandscapeScale = 100,
-  fgMobilePosition = "center bottom",
-  fgMobileScale = 100,
   interactive = true,
   textStyles = {},
 }: Hero3DProps) {
-  // Sfondi per viewport: usano quello dedicato se caricato, altrimenti il desktop
-  const tabletBgUrl = backgroundTabletUrl || backgroundUrl;
-  const tabletBgPosition = backgroundTabletUrl ? bgTabletPosition : bgPosition;
-  const tabletBgScale = backgroundTabletUrl ? bgTabletScale : bgScale;
-  // Tablet orizzontale: dedicato → verticale → desktop (con i settaggi
-  // della variante effettivamente usata)
-  const tabletLandBgUrl =
-    backgroundTabletLandscapeUrl || backgroundTabletUrl || backgroundUrl;
-  const tabletLandBgPosition = backgroundTabletLandscapeUrl
-    ? bgTabletLandscapePosition
-    : backgroundTabletUrl
-      ? bgTabletPosition
-      : bgPosition;
-  const tabletLandBgScale = backgroundTabletLandscapeUrl
-    ? bgTabletLandscapeScale
-    : backgroundTabletUrl
-      ? bgTabletScale
-      : bgScale;
-  const mobileBgUrl = backgroundMobileUrl || backgroundUrl;
-  const mobileBgPosition = backgroundMobileUrl ? bgMobilePosition : bgPosition;
-  const mobileBgScale = backgroundMobileUrl ? bgMobileScale : bgScale;
-  // Rider tablet orizzontale: dedicato, altrimenti quello verticale
-  const tabletLandFgUrl = foregroundTabletLandscapeUrl || foregroundTabletUrl;
-  const tabletLandFgPosition = foregroundTabletLandscapeUrl
-    ? fgTabletLandscapePosition
-    : fgTabletPosition;
-  const tabletLandFgScale = foregroundTabletLandscapeUrl
-    ? fgTabletLandscapeScale
-    : fgTabletScale;
-  const ref = useRef<HTMLDivElement>(null);
-  const [p, setP] = useState({ x: 0, y: 0 });
-  // Niente parallax 3D su touch o schermi piccoli: solo puntatore fine + desktop
-  const [coarse, setCoarse] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(pointer: coarse), (max-width: 1023px)");
-    const update = () => setCoarse(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-
-  function onMove(e: React.MouseEvent<HTMLDivElement>) {
-    if (!interactive || coarse) return;
-    const rect = ref.current?.getBoundingClientRect();
-    if (!rect) return;
-    setP({
-      x: (e.clientX - rect.left) / rect.width - 0.5,
-      y: (e.clientY - rect.top) / rect.height - 0.5,
-    });
-  }
-
   return (
-    <section
-      ref={ref}
-      onMouseMove={onMove}
-      onMouseLeave={() => setP({ x: 0, y: 0 })}
-      className="relative isolate flex flex-col overflow-hidden rounded-b-[2.5rem] lg:min-h-[100svh]"
+    <Hero3DShell
+      page="home"
+      assets={assets}
+      overlayLabel="Rider"
+      interactive={interactive}
     >
-      {/* Chip cambio immagini in-place (solo admin in edit mode).
-          Sotto la navbar fluttuante e z alto così restano sempre visibili. */}
-      <div className="pointer-events-none absolute right-4 top-24 z-[60] flex flex-wrap justify-end gap-2 sm:top-28">
-        <EditableImage page="home" k="hero.background" label="Sfondo" />
-        <EditableImage page="home" k="hero.foreground" label="Rider" />
-      </div>
-
-      {/* LIVELLO 1 — sfondo (swap responsive desktop / mobile-tablet).
-          scale(1.06) di sicurezza: overscan che assorbe la traslazione del
-          parallasse → nessun bordo nero ai limiti del movimento del mouse. */}
-      <div
-        className="absolute inset-0 -z-10 transition-transform duration-300 ease-out"
-        style={{
-          transform: `translate3d(${p.x * -18}px, ${p.y * -18}px, 0) scale(1.06)`,
-        }}
-      >
-        {backgroundUrl ||
-        backgroundTabletUrl ||
-        backgroundTabletLandscapeUrl ||
-        backgroundMobileUrl ? (
-          <>
-            {/* Desktop (≥1024px con mouse/trackpad) */}
-            <img
-              src={backgroundUrl || tabletBgUrl}
-              alt=""
-              style={{
-                objectPosition: bgPosition,
-                transform: `scale(${Math.max(1.1, bgScale / 100)})`,
-              }}
-              className="hero-asset-desktop h-full w-full object-cover"
-            />
-            {/* Tablet VERTICALE (≥768px, orientamento portrait) */}
-            <img
-              src={tabletBgUrl}
-              alt=""
-              style={{
-                objectPosition: tabletBgPosition,
-                transform: `scale(${Math.max(1.1, tabletBgScale / 100)})`,
-              }}
-              className="hero-asset-tablet-portrait h-full w-full object-cover"
-            />
-            {/* Tablet ORIZZONTALE (≥768px landscape touch — iPad landscape) */}
-            <img
-              src={tabletLandBgUrl}
-              alt=""
-              style={{
-                objectPosition: tabletLandBgPosition,
-                transform: `scale(${Math.max(1.1, tabletLandBgScale / 100)})`,
-              }}
-              className="hero-asset-tablet-landscape h-full w-full object-cover"
-            />
-            {/* Mobile (<768px) */}
-            <img
-              src={mobileBgUrl}
-              alt=""
-              style={{
-                objectPosition: mobileBgPosition,
-                transform: `scale(${Math.max(1.1, mobileBgScale / 100)})`,
-              }}
-              className="hero-asset-mobile h-full w-full object-cover"
-            />
-          </>
-        ) : (
-          <div className="h-full w-full bg-gradient-to-b from-secondary to-background" />
-        )}
-        {/* Velo per leggibilità + tinta cinematografica */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
-      </div>
-
-      {/* OVERLAY 3D GENERATO — griglia prospettica + mesh, anche senza foto:
-          dà profondità "out-of-the-box" prima ancora di caricare gli asset */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-[8] overflow-hidden opacity-[0.5]"
-        style={{ transform: `translate3d(${p.x * -10}px, ${p.y * -10}px, 0) scale(1.05)` }}
-      >
-        <svg className="h-full w-full" preserveAspectRatio="xMidYMax slice" viewBox="0 0 1200 600">
-          <defs>
-            <linearGradient id="hero-grid" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0" />
-              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.5" />
-            </linearGradient>
-            <radialGradient id="hero-mesh" cx="70%" cy="35%" r="55%">
-              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.22" />
-              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
-            </radialGradient>
-          </defs>
-          <rect width="1200" height="600" fill="url(#hero-mesh)" />
-          {/* Linee orizzontali in prospettiva (pavimento che fugge) */}
-          {Array.from({ length: 9 }).map((_, i) => {
-            const y = 320 + Math.pow(i / 8, 2) * 280;
-            return (
-              <line
-                key={`h${i}`}
-                x1="0"
-                x2="1200"
-                y1={y}
-                y2={y}
-                stroke="url(#hero-grid)"
-                strokeWidth="1"
-              />
-            );
-          })}
-          {/* Linee verticali convergenti verso il punto di fuga */}
-          {Array.from({ length: 17 }).map((_, i) => {
-            const x = (i / 16) * 1200;
-            return (
-              <line
-                key={`v${i}`}
-                x1={x}
-                y1="600"
-                x2={600 + (x - 600) * 0.15}
-                y2="320"
-                stroke="hsl(var(--primary))"
-                strokeOpacity="0.14"
-                strokeWidth="1"
-              />
-            );
-          })}
-        </svg>
-      </div>
-
-      {/* LIVELLO 3 — rider scontornato, per viewport. Su tablet/mobile compare
-          SOLO se è stato caricato un PNG dedicato per quel dispositivo
-          (altrimenti niente rider → sfondo pulito). Posizione/zoom dal CMS. */}
-      {[
-        {
-          url: foregroundUrl,
-          position: fgPosition,
-          scale: fgScale,
-          vis: "hero-asset-desktop",
-        },
-        {
-          url: foregroundTabletUrl,
-          position: fgTabletPosition,
-          scale: fgTabletScale,
-          vis: "hero-asset-tablet-portrait",
-        },
-        {
-          url: tabletLandFgUrl,
-          position: tabletLandFgPosition,
-          scale: tabletLandFgScale,
-          vis: "hero-asset-tablet-landscape",
-        },
-        {
-          url: foregroundMobileUrl,
-          position: fgMobilePosition,
-          scale: fgMobileScale,
-          vis: "hero-asset-mobile",
-        },
-      ].map((rider, i) =>
-        rider.url ? (
-          <div
-            key={i}
-            aria-hidden
-            className={cn(
-              "pointer-events-none absolute inset-y-0 right-0 z-20 w-[58%] transition-transform duration-300 ease-out",
-              rider.vis
-            )}
-            style={{
-              transform: `translate3d(${p.x * 38}px, ${p.y * 24}px, 0) scale(${rider.scale / 100})`,
-              transformOrigin: "bottom right",
-            }}
-          >
-            <img
-              src={rider.url}
-              alt=""
-              style={{ objectPosition: rider.position }}
-              className="relative z-20 h-full w-full object-contain drop-shadow-[0_35px_65px_rgba(0,0,0,0.7)]"
-            />
-          </div>
-        ) : null
-      )}
-
-      {/* LIVELLO 2 — contenuto in colonna SINISTRA. Centro/destra liberi per
-          valorizzare lo scatto del pilota. Spazio ampio per più "respiro". */}
-      <div className="container flex flex-1 flex-col justify-center py-24 sm:py-32 lg:py-40">
-        <div className="max-w-xl">
-          <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-            </span>
-            <EditableText page="home" k="hero.badge" value={badge} maxLength={40} style={textStyles["hero.badge"]} />
+      <div className="max-w-xl">
+        <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
           </span>
+          <EditableText page="home" k="hero.badge" value={badge} maxLength={40} style={textStyles["hero.badge"]} />
+        </span>
 
-          <h1
+        <h1
+          className={cn(
+            "mt-6 font-semibold uppercase leading-[0.95] tracking-tight lg:whitespace-nowrap",
+            eventNameClass
+          )}
+        >
+          <EditableText
+            page="home"
+            k="hero.eventName"
+            value={eventName}
+            maxLength={80}
+            style={textStyles["hero.eventName"]}
+          />
+        </h1>
+
+        {/* Data + ora in grande, stile locandina evento */}
+        <div className="mt-6 flex flex-col md:flex-row md:items-center gap-x-6 gap-y-2">
+          {/* Data grande con "whitespace-nowrap" per obbligarla a stare su una riga sola */}
+          <span
             className={cn(
-              "mt-6 font-semibold uppercase leading-[0.95] tracking-tight lg:whitespace-nowrap",
-              eventNameClass
+              "font-semibold tabular-nums tracking-tight text-primary whitespace-nowrap",
+              dateClass
             )}
           >
             <EditableText
               page="home"
-              k="hero.eventName"
-              value={eventName}
-              maxLength={80}
-            style={textStyles["hero.eventName"]}
-              />
-          </h1>
-
-          {/* Data + ora in grande, stile locandina evento */}
-          <div className="mt-6 flex flex-col md:flex-row md:items-center gap-x-6 gap-y-2">
-          {/* Data grande con "whitespace-nowrap" per obbligarla a stare su una riga sola */}
-            <span
-              className={cn(
-                "font-semibold tabular-nums tracking-tight text-primary whitespace-nowrap",
-                dateClass
-              )}
-            >
+              k="hero.eventDate"
+              value={eventDate}
+              maxLength={40}
+              style={textStyles["hero.eventDate"]}
+            />
+          </span>
+          {eventTime && (
+            <span className="inline-flex items-center gap-1.5 text-lg font-medium text-foreground pb-0 md:pb-1">
+              <Clock className="h-4 w-4 text-white/80" />
               <EditableText
                 page="home"
-                k="hero.eventDate"
-                value={eventDate}
-                maxLength={40}
-              style={textStyles["hero.eventDate"]}
-              />
-            </span>
-            {eventTime && (
-              <span className="inline-flex items-center gap-1.5 text-lg font-medium text-foreground pb-0 md:pb-1">
-                <Clock className="h-4 w-4 text-white/80" />
-                <EditableText
-                  page="home"
-                  k="hero.eventTime"
-                  value={eventTime}
-                  maxLength={20}
+                k="hero.eventTime"
+                value={eventTime}
+                maxLength={20}
                 style={textStyles["hero.eventTime"]}
               />
-              </span>
-            )}
-          </div>
-
-          {/* Luogo (rimossa la riga "Copertura Lifeshot") */}
-          {eventLocation && (
-            <p className="mt-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground sm:text-base">
-              <MapPin className="h-4 w-4 text-primary" />
-              <EditableText
-                page="home"
-                k="hero.eventLocation"
-                value={eventLocation}
-                maxLength={100}
-              style={textStyles["hero.eventLocation"]}
-              />
-            </p>
-          )}
-
-          {/* CTA principale — grande e prioritaria (unico bottone d'azione).
-              Centrata SOLO su telefono (<768px); da tablet in su in riga,
-              allineata a sinistra con le intestazioni. */}
-          <div className="mt-8 flex flex-col items-center gap-2.5 text-center md:flex-row md:items-center md:gap-4 md:text-left">
-            <a
-              href={site.instagramDmUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex items-center justify-center gap-2.5 whitespace-nowrap rounded-full bg-primary px-8 py-4 text-base font-semibold text-primary-foreground shadow-xl shadow-primary/30 transition-all hover:scale-[1.03] hover:shadow-primary/50 active:scale-95"
-            >
-              <Instagram className="h-6 w-6 transition-transform group-hover:rotate-[8deg]" />
-              Prenota ora i tuoi contenuti
-            </a>
-            <span className="text-xs text-muted-foreground sm:text-sm">
-              Rispondiamo in DM, di solito in giornata.
             </span>
-          </div>
+          )}
+        </div>
 
-          {/* Blocco RICERCA — separato e arioso. Centrato SOLO su telefono;
-              da tablet in su allineato a sinistra con le intestazioni. */}
-          <div className="mx-auto mt-7 pt-12 sm:mt-12 sm:pt-20 max-w-md border-t border-border/40 text-center md:mx-0 md:text-left">
-            <p className="text-balance text-sm text-muted-foreground sm:text-base">
-              <EditableText
-                page="home"
-                k="hero.subtitle"
-                value={subtitle}
-                as="span"
-                maxLength={200}
+        {/* Luogo (rimossa la riga "Copertura Lifeshot") */}
+        {eventLocation && (
+          <p className="mt-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground sm:text-base">
+            <MapPin className="h-4 w-4 text-primary" />
+            <EditableText
+              page="home"
+              k="hero.eventLocation"
+              value={eventLocation}
+              maxLength={100}
+              style={textStyles["hero.eventLocation"]}
+            />
+          </p>
+        )}
+
+        {/* CTA principale — grande e prioritaria (unico bottone d'azione).
+            Centrata SOLO su telefono (<768px); da tablet in su in riga,
+            allineata a sinistra con le intestazioni. */}
+        <div className="mt-8 flex flex-col items-center gap-2.5 text-center md:flex-row md:items-center md:gap-4 md:text-left">
+          <a
+            href={site.instagramDmUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex items-center justify-center gap-2.5 whitespace-nowrap rounded-full bg-primary px-8 py-4 text-base font-semibold text-primary-foreground shadow-xl shadow-primary/30 transition-all hover:scale-[1.03] hover:shadow-primary/50 active:scale-95"
+          >
+            <Instagram className="h-6 w-6 transition-transform group-hover:rotate-[8deg]" />
+            Prenota ora i tuoi contenuti
+          </a>
+          <span className="text-xs text-muted-foreground sm:text-sm">
+            Rispondiamo in DM, di solito in giornata.
+          </span>
+        </div>
+
+        {/* Blocco RICERCA — separato e arioso. Centrato SOLO su telefono;
+            da tablet in su allineato a sinistra con le intestazioni. */}
+        <div className="mx-auto mt-7 pt-12 sm:mt-12 sm:pt-20 max-w-md border-t border-border/40 text-center md:mx-0 md:text-left">
+          <p className="text-balance text-sm text-muted-foreground sm:text-base">
+            <EditableText
+              page="home"
+              k="hero.subtitle"
+              value={subtitle}
+              as="span"
+              maxLength={200}
               style={textStyles["hero.subtitle"]}
-              />
-            </p>
-            <div className="mt-4">
-              <HeroSearch placeholder={searchPlaceholder} large />
-            </div>
+            />
+          </p>
+          <div className="mt-4">
+            <HeroSearch placeholder={searchPlaceholder} large />
           </div>
         </div>
       </div>
-
-      {/* Sfumatura inferiore: dissolve la hero nel background sottostante,
-          evitando lo stacco netto verso la sezione "Dietro l'obiettivo". */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-40 bg-gradient-to-b from-transparent to-background"
-      />
-    </section>
+    </Hero3DShell>
   );
 }

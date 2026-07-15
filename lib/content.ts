@@ -210,6 +210,99 @@ export const TYPOGRAPHY_LABELS: Record<Level, string> = {
   5: "Enorme",
 };
 
+/* ────────────────── HERO 3D: chiavi immagine condivise ────────────────── */
+
+/**
+ * Set di immagini della hero 3D (sfondo + soggetto in overlay, per i 4
+ * dispositivi). Usato da Motorsport e, con etichette adattate, da
+ * Ristorazione e Business.
+ */
+export function heroImageDefs(subject: string): Record<string, ImageDef> {
+  return {
+    // ── DESKTOP ──
+    "hero.background": {
+      label: "Hero Desktop — sfondo",
+      default: "",
+      hint: "Foto orizzontale d'ambiente. ~2000px.",
+    },
+    "hero.foreground": {
+      label: `Hero Desktop — PNG ${subject} (overlay)`,
+      default: "",
+      hint: `PNG con sfondo trasparente: ${subject} in primo piano.`,
+    },
+    // ── TABLET VERTICALE ── (vuoti = usa lo sfondo desktop, senza overlay)
+    "hero.backgroundTablet": {
+      label: "Hero Tablet verticale — sfondo (opzionale)",
+      default: "",
+      hint: "iPad/tablet in verticale. Se vuoto usa lo sfondo desktop. ~1500px.",
+    },
+    "hero.foregroundTablet": {
+      label: `Hero Tablet verticale — PNG ${subject} (opzionale)`,
+      default: "",
+      hint: "L'overlay su tablet verticale compare SOLO se carichi questo PNG.",
+    },
+    // ── TABLET ORIZZONTALE ── (vuoti = usa la versione verticale, poi desktop)
+    "hero.backgroundTabletLandscape": {
+      label: "Hero Tablet orizzontale — sfondo (opzionale)",
+      default: "",
+      hint: "iPad/tablet in orizzontale. Se vuoto usa il tablet verticale, poi il desktop. ~2000px.",
+    },
+    "hero.foregroundTabletLandscape": {
+      label: `Hero Tablet orizzontale — PNG ${subject} (opzionale)`,
+      default: "",
+      hint: "Se vuoto usa l'overlay del tablet verticale (se caricato).",
+    },
+    // ── MOBILE ── (vuoti = usa lo sfondo desktop, senza overlay)
+    "hero.backgroundMobile": {
+      label: "Hero Mobile — sfondo (opzionale)",
+      default: "",
+      hint: "Immagine verticale per smartphone. Se vuota usa lo sfondo desktop.",
+    },
+    "hero.foregroundMobile": {
+      label: `Hero Mobile — PNG ${subject} (opzionale)`,
+      default: "",
+      hint: "L'overlay su mobile compare SOLO se carichi questo PNG.",
+    },
+  };
+}
+
+/** Un asset hero pronto per il rendering: URL + inquadratura dal CMS */
+export interface HeroAsset {
+  url: string;
+  position: string;
+  scale: number;
+}
+
+/** Tutti gli asset della hero 3D di una pagina (sfondo + overlay ×4 device) */
+export interface HeroAssets {
+  background: HeroAsset;
+  backgroundTablet: HeroAsset;
+  backgroundTabletLandscape: HeroAsset;
+  backgroundMobile: HeroAsset;
+  foreground: HeroAsset;
+  foregroundTablet: HeroAsset;
+  foregroundTabletLandscape: HeroAsset;
+  foregroundMobile: HeroAsset;
+}
+
+/** Legge dal CMS gli 8 asset hero di una pagina, con inquadrature */
+export function getHeroAssets(content: CmsData, slug: PageSlug): HeroAssets {
+  const asset = (key: string): HeroAsset => {
+    const s = getImageSettings(content, slug, key);
+    return { url: getImage(content, slug, key), position: s.position, scale: s.scale };
+  };
+  return {
+    background: asset("hero.background"),
+    backgroundTablet: asset("hero.backgroundTablet"),
+    backgroundTabletLandscape: asset("hero.backgroundTabletLandscape"),
+    backgroundMobile: asset("hero.backgroundMobile"),
+    foreground: asset("hero.foreground"),
+    foregroundTablet: asset("hero.foregroundTablet"),
+    foregroundTabletLandscape: asset("hero.foregroundTabletLandscape"),
+    foregroundMobile: asset("hero.foregroundMobile"),
+  };
+}
+
 /* ─────────────────────────── REGISTRY PAGINE ─────────────────────────── */
 
 export const PAGES: Record<PageSlug, PageDef> = {
@@ -599,6 +692,7 @@ export const PAGES: Record<PageSlug, PageDef> = {
       },
     },
     images: {
+      ...heroImageDefs("soggetto"),
       work1: {
         label: "Lavoro 1",
         default: "",
@@ -672,6 +766,7 @@ export const PAGES: Record<PageSlug, PageDef> = {
       },
     },
     images: {
+      ...heroImageDefs("soggetto"),
       work1: {
         label: "Lavoro 1",
         default: "",

@@ -14,8 +14,7 @@ import { EditableText } from "@/components/cms/editable-text";
 import type { EventDTO } from "@/lib/data/events";
 import type { PhotoDTO } from "@/lib/data/photos";
 import {
-  getImage,
-  getImageSettings,
+  getHeroAssets,
   getSpacingClass,
   getText,
   getTextStyle,
@@ -54,32 +53,9 @@ export function HomeView({
           eventLocation={t("hero.eventLocation")}
           subtitle={t("hero.subtitle")}
           searchPlaceholder={t("hero.searchPlaceholder")}
-          backgroundUrl={getImage(content, "home", "hero.background")}
-          backgroundTabletUrl={getImage(content, "home", "hero.backgroundTablet")}
-          backgroundTabletLandscapeUrl={getImage(content, "home", "hero.backgroundTabletLandscape")}
-          backgroundMobileUrl={getImage(content, "home", "hero.backgroundMobile")}
-          foregroundUrl={getImage(content, "home", "hero.foreground")}
-          foregroundTabletUrl={getImage(content, "home", "hero.foregroundTablet")}
-          foregroundTabletLandscapeUrl={getImage(content, "home", "hero.foregroundTabletLandscape")}
-          foregroundMobileUrl={getImage(content, "home", "hero.foregroundMobile")}
+          assets={getHeroAssets(content, "home")}
           eventNameClass={getTypographyClass(content, "home", "hero.eventName")}
           dateClass={getTypographyClass(content, "home", "hero.date")}
-          bgPosition={getImageSettings(content, "home", "hero.background").position}
-          bgScale={getImageSettings(content, "home", "hero.background").scale}
-          bgTabletPosition={getImageSettings(content, "home", "hero.backgroundTablet").position}
-          bgTabletScale={getImageSettings(content, "home", "hero.backgroundTablet").scale}
-          bgTabletLandscapePosition={getImageSettings(content, "home", "hero.backgroundTabletLandscape").position}
-          bgTabletLandscapeScale={getImageSettings(content, "home", "hero.backgroundTabletLandscape").scale}
-          bgMobilePosition={getImageSettings(content, "home", "hero.backgroundMobile").position}
-          bgMobileScale={getImageSettings(content, "home", "hero.backgroundMobile").scale}
-          fgPosition={getImageSettings(content, "home", "hero.foreground").position}
-          fgScale={getImageSettings(content, "home", "hero.foreground").scale}
-          fgTabletPosition={getImageSettings(content, "home", "hero.foregroundTablet").position}
-          fgTabletScale={getImageSettings(content, "home", "hero.foregroundTablet").scale}
-          fgTabletLandscapePosition={getImageSettings(content, "home", "hero.foregroundTabletLandscape").position}
-          fgTabletLandscapeScale={getImageSettings(content, "home", "hero.foregroundTabletLandscape").scale}
-          fgMobilePosition={getImageSettings(content, "home", "hero.foregroundMobile").position}
-          fgMobileScale={getImageSettings(content, "home", "hero.foregroundMobile").scale}
           textStyles={content.pages.home.textStyles}
         />
 
