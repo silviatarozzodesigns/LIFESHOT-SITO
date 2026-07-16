@@ -26,6 +26,7 @@ export function Hero3DShell({
   assets,
   overlayLabel = "Overlay 3D",
   interactive = true,
+  fullHeight = false,
   children,
 }: {
   /** Pagina CMS a cui appartengono gli asset (chip upload in edit mode) */
@@ -35,6 +36,12 @@ export function Hero3DShell({
   overlayLabel?: string;
   /** In preview disattiviamo il parallax legato al mouse */
   interactive?: boolean;
+  /**
+   * Schermo pieno anche su telefono e tablet. Serve a chi ha poco contenuto
+   * (le hero categoria) per distribuirlo in altezza invece di ammassarlo al
+   * centro; motorsport non ne ha bisogno, la sua colonna è già lunga.
+   */
+  fullHeight?: boolean;
   children: React.ReactNode;
 }) {
   const {
@@ -84,7 +91,10 @@ export function Hero3DShell({
       ref={ref}
       onMouseMove={onMove}
       onMouseLeave={() => setP({ x: 0, y: 0 })}
-      className="relative isolate flex flex-col overflow-hidden rounded-b-[2.5rem] lg:min-h-[100svh]"
+      className={cn(
+        "relative isolate flex flex-col overflow-hidden rounded-b-[2.5rem]",
+        fullHeight ? "min-h-[100svh]" : "lg:min-h-[100svh]"
+      )}
     >
       {/* Chip cambio immagini in-place (solo admin in edit mode).
           Sotto la navbar fluttuante e z alto così restano sempre visibili. */}

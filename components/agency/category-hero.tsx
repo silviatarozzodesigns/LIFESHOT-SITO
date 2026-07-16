@@ -36,38 +36,44 @@ export function CategoryHero({
       assets={getHeroAssets(content, slug)}
       overlayLabel="Soggetto"
       interactive={interactive}
+      fullHeight
     >
-      <div className="max-w-xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">
-          Categoria
-        </p>
-        <h1
-          className={cn(
-            "mt-4 font-semibold uppercase leading-[0.95] tracking-tight",
-            getTypographyClass(content, slug, "hero.title")
-          )}
-        >
-          <EditableText
-            page={slug}
-            k="hero.title"
-            value={t("hero.title")}
-            maxLength={60}
-            style={ts("hero.title")}
-          />
-        </h1>
-        <p className="mt-5 max-w-md text-balance text-muted-foreground sm:text-lg">
-          <EditableText
-            page={slug}
-            k="hero.subtitle"
-            value={t("hero.subtitle")}
-            as="span"
-            maxLength={220}
-            style={ts("hero.subtitle")}
-          />
-        </p>
+      {/* Ritmo verticale della hero motorsport: l'intestazione respira in
+          alto, le azioni scendono in fondo (dove lì sta la ricerca) invece
+          di ammassarsi tutte al centro. Vale su ogni schermo. */}
+      <div className="flex w-full max-w-xl flex-1 flex-col justify-between gap-12">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">
+            Categoria
+          </p>
+          <h1
+            className={cn(
+              "mt-4 font-semibold uppercase leading-[0.95] tracking-tight",
+              getTypographyClass(content, slug, "hero.title")
+            )}
+          >
+            <EditableText
+              page={slug}
+              k="hero.title"
+              value={t("hero.title")}
+              maxLength={60}
+              style={ts("hero.title")}
+            />
+          </h1>
+          <p className="mt-5 max-w-md text-balance text-muted-foreground sm:text-lg">
+            <EditableText
+              page={slug}
+              k="hero.subtitle"
+              value={t("hero.subtitle")}
+              as="span"
+              maxLength={220}
+              style={ts("hero.subtitle")}
+            />
+          </p>
+        </div>
 
         {/* CTA — verso i lavori in pagina + canale DM */}
-        <div className="mt-9 flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
+        <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
           <a
             href="#lavori"
             className="group inline-flex items-center justify-center gap-2.5 whitespace-nowrap rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:scale-[1.03] hover:shadow-primary/40 active:scale-95"
