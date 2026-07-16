@@ -8,7 +8,7 @@ import { ServiceCursors } from "@/components/agency/service-cursors";
 import { ContactCta } from "@/components/agency/contact-cta";
 import { EditableText } from "@/components/cms/editable-text";
 import { EditableImage } from "@/components/cms/editable-image";
-import type { TextStyle } from "@/lib/content";
+import type { ServiceCopy, TextStyle } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
 export interface HeroSlide {
@@ -34,6 +34,7 @@ export function AgencyHero({
   ctaLabel,
   sloganClass,
   slides,
+  serviceCopy,
   textStyles = {},
 }: {
   sloganLine1: string;
@@ -41,6 +42,8 @@ export function AgencyHero({
   ctaLabel: string;
   sloganClass: string;
   slides: HeroSlide[];
+  /** Testi dei servizi (overlay dei cursori), dal CMS */
+  serviceCopy: Record<string, ServiceCopy>;
   textStyles?: Record<string, TextStyle>;
 }) {
   const [idx, setIdx] = useState(0);
@@ -96,8 +99,9 @@ export function AgencyHero({
         )}
       </div>
 
-      {/* Cursori dei servizi: entrano dai bordi e si fermano attorno allo slogan */}
-      <ServiceCursors dim={hasSlides} />
+      {/* Cursori dei servizi: entrano dai bordi, si fermano attorno allo
+          slogan e al click spiegano il servizio in un overlay */}
+      <ServiceCursors copy={serviceCopy} />
 
       {/* SLOGAN + CTA — la zona che la linea non tocca mai */}
       <div className="relative z-10 max-w-4xl">

@@ -1,6 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { ServiceOverlay } from "@/components/agency/service-overlay";
+import type { ServiceCopy } from "@/lib/content";
+import { SERVICES, type ServiceId } from "@/lib/services";
 import { cn } from "@/lib/utils";
 
 /**
@@ -15,14 +19,18 @@ import { cn } from "@/lib/utils";
  * della hero e RUOTATO in modo da puntare il centro (come i cursori
  * collaborativi dei mockup di design).
  *
+ * Sono CLICCABILI: aprono l'overlay che spiega il servizio (le pillole hanno
+ * forma di pulsante, la gente prova a toccarle → tanto vale rispondere).
+ *
  * Le posizioni finali sono in percentuale della hero, scelte per non
  * toccare mai slogan e CTA; le pillole sono HTML → mai deformate. Set
- * separati desktop (6 servizi) e touch/tablet+mobile (4 settori).
+ * separati desktop (6 servizi) e touch/tablet+mobile (4 settori: gli altri
+ * si raggiungono da "Vedi anche" dentro l'overlay).
  * Rispetta prefers-reduced-motion.
  */
 
 interface Chip {
-  label: string;
+  id: ServiceId;
   /** Posizione finale (% della hero, riferita al centro della pillola) */
   x: number;
   y: number;
@@ -32,20 +40,20 @@ interface Chip {
 }
 
 const DESKTOP: Chip[] = [
-  { label: "Siti web", x: 13, y: 24, from: "left", delay: 0.3 },
-  { label: "Grafiche", x: 82, y: 20, from: "top", delay: 0.65 },
-  { label: "Branding", x: 86, y: 55, from: "right", delay: 1.0 },
-  { label: "Video", x: 10, y: 52, from: "left", delay: 1.35 },
-  { label: "Social", x: 17, y: 78, from: "bottom", delay: 1.7 },
-  { label: "Foto", x: 79, y: 81, from: "right", delay: 2.05 },
+  { id: "sitiweb", x: 13, y: 24, from: "left", delay: 0.3 },
+  { id: "grafiche", x: 82, y: 20, from: "top", delay: 0.65 },
+  { id: "branding", x: 86, y: 55, from: "right", delay: 1.0 },
+  { id: "video", x: 10, y: 52, from: "left", delay: 1.35 },
+  { id: "social", x: 17, y: 78, from: "bottom", delay: 1.7 },
+  { id: "foto", x: 79, y: 81, from: "right", delay: 2.05 },
 ];
 
 /** Tablet e mobile: i 4 settori dell'agenzia */
 const TOUCH: Chip[] = [
-  { label: "Grafiche", x: 24, y: 18, from: "left", delay: 0.3 },
-  { label: "Social", x: 72, y: 24, from: "right", delay: 0.65 },
-  { label: "Foto", x: 26, y: 80, from: "left", delay: 1.0 },
-  { label: "Video", x: 70, y: 89, from: "bottom", delay: 1.35 },
+  { id: "grafiche", x: 24, y: 18, from: "left", delay: 0.3 },
+  { id: "social", x: 72, y: 24, from: "right", delay: 0.65 },
+  { id: "foto", x: 26, y: 80, from: "left", delay: 1.0 },
+  { id: "video", x: 70, y: 89, from: "bottom", delay: 1.35 },
 ];
 
 /** Punto di partenza fuori campo per ogni lato d'ingresso */
@@ -62,14 +70,13 @@ const OFFSET: Record<Chip["from"], { x: number; y: number }> = {
  * puntarlo davvero. Il glifo del path punta nativamente a ~30° (giù-destra).
  */
 function Pointer({ chip }: { chip: Chip }) {
-  const angle =
-    (Math.atan2(50 - chip.y, 50 - chip.x) * 180) / Math.PI;
+  const angle = (Math.atan2(50 - chip.y, 50 - chip.x) * 180) / Math.PI;
   return (
     <svg
       viewBox="0 0 24 24"
       aria-hidden
       className={cn(
-        "absolute h-[18px] w-[18px] drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]",
+        "pointer-events-none absolute h-[18px] w-[18px] drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]",
         chip.x < 50 ? "-right-2.5" : "-left-2.5",
         chip.y < 50 ? "-bottom-3" : "-top-3"
       )}
@@ -85,7 +92,15 @@ function Pointer({ chip }: { chip: Chip }) {
   );
 }
 
-function CursorChip({ chip, index }: { chip: Chip; index: number }) {
+function CursorChip({
+  chip,
+  index,
+  onOpen,
+}: {
+  chip: Chip;
+  index: number;
+  onOpen: (id: ServiceId) => void;
+}) {
   const reduced = useReducedMotion();
   const off = OFFSET[chip.from];
 
@@ -117,33 +132,52 @@ function CursorChip({ chip, index }: { chip: Chip; index: number }) {
           className="relative"
         >
           <Pointer chip={chip} />
-          <span className="inline-block whitespace-nowrap rounded-full border border-border/70 bg-background/60 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/90 shadow-[0_10px_35px_-12px_rgba(0,0,0,0.65)] backdrop-blur-md sm:text-xs">
-            {chip.label}
-          </span>
+          <button
+            type="button"
+            onClick={() => onOpen(chip.id)}
+            className="pointer-events-auto inline-block whitespace-nowrap rounded-full border border-border/70 bg-background/60 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/90 shadow-[0_10px_35px_-12px_rgba(0,0,0,0.65)] backdrop-blur-md transition-all hover:border-primary/60 hover:bg-background/80 hover:text-primary active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-xs"
+          >
+            {SERVICES[chip.id].label}
+          </button>
         </motion.div>
       </motion.div>
     </div>
   );
 }
 
-export function ServiceCursors({ dim = false }: { dim?: boolean }) {
+export function ServiceCursors({
+  copy,
+}: {
+  /** Testi dei servizi dal CMS, per id */
+  copy: Record<string, ServiceCopy>;
+}) {
+  const [openId, setOpenId] = useState<ServiceId | null>(null);
+
   return (
-    <div
-      aria-hidden
-      className={cn(
-        "pointer-events-none absolute inset-0 z-[5] transition-opacity duration-700 opacity-100"
-      )}
-    >
-      <div className="hidden lg:block">
-        {DESKTOP.map((chip, i) => (
-          <CursorChip key={chip.label} chip={chip} index={i} />
-        ))}
+    <>
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-0 z-[5] transition-opacity duration-700 opacity-100"
+        )}
+      >
+        <div className="hidden lg:block">
+          {DESKTOP.map((chip, i) => (
+            <CursorChip key={chip.id} chip={chip} index={i} onOpen={setOpenId} />
+          ))}
+        </div>
+        <div className="lg:hidden">
+          {TOUCH.map((chip, i) => (
+            <CursorChip key={chip.id} chip={chip} index={i} onOpen={setOpenId} />
+          ))}
+        </div>
       </div>
-      <div className="lg:hidden">
-        {TOUCH.map((chip, i) => (
-          <CursorChip key={chip.label} chip={chip} index={i} />
-        ))}
-      </div>
-    </div>
+
+      <ServiceOverlay
+        openId={openId}
+        copy={copy}
+        onSelect={setOpenId}
+        onClose={() => setOpenId(null)}
+      />
+    </>
   );
 }

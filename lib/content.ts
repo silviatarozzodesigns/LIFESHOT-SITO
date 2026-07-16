@@ -14,6 +14,8 @@
  * col registry (default, lunghezze massime, livelli 1–5).
  */
 
+import { SERVICE_IDS, SERVICES } from "@/lib/services";
+
 export type Level = 1 | 2 | 3 | 4 | 5;
 /** Alias storico per le spaziature */
 export type SpacingLevel = Level;
@@ -210,6 +212,51 @@ export const TYPOGRAPHY_LABELS: Record<Level, string> = {
   5: "Enorme",
 };
 
+/* ───────────────── SERVIZI: campi testo dell'overlay hero ───────────────── */
+
+/**
+ * Titolo + descrizione di ogni servizio, generati dalla fonte unica
+ * `SERVICES`: si modificano dall'EDITOR come ogni altro testo.
+ */
+function serviceFieldDefs(): Record<string, FieldDef> {
+  const fields: Record<string, FieldDef> = {};
+  for (const id of SERVICE_IDS) {
+    const def = SERVICES[id];
+    fields[`svc.${id}.title`] = {
+      label: `Servizio ${def.label} — titolo`,
+      default: def.title,
+      max: 60,
+    };
+    fields[`svc.${id}.body`] = {
+      label: `Servizio ${def.label} — descrizione`,
+      default: def.body,
+      max: 400,
+      multiline: true,
+    };
+  }
+  return fields;
+}
+
+/** Testi di un servizio pronti per la hero (default CMS inclusi) */
+export interface ServiceCopy {
+  id: string;
+  title: string;
+  body: string;
+}
+
+/** Legge dal CMS i testi di tutti i servizi, nell'ordine della fonte unica */
+export function getServiceCopy(content: CmsData): Record<string, ServiceCopy> {
+  const out: Record<string, ServiceCopy> = {};
+  for (const id of SERVICE_IDS) {
+    out[id] = {
+      id,
+      title: getText(content, "agenzia", `svc.${id}.title`),
+      body: getText(content, "agenzia", `svc.${id}.body`),
+    };
+  }
+  return out;
+}
+
 /* ────────────────── HERO 3D: chiavi immagine condivise ────────────────── */
 
 /**
@@ -339,6 +386,8 @@ export const PAGES: Record<PageSlug, PageDef> = {
           "Siti web · Grafiche · Loghi · Tipografia · Branding · Social media · Video · Foto",
         max: 300,
       },
+      // Testi dell'overlay che si apre cliccando i cursori della hero
+      ...serviceFieldDefs(),
       "categories.title": {
         label: "Categorie — titolo sezione",
         default: "Un solo team, tanti mondi",

@@ -14,6 +14,7 @@ import type { PhotoDTO } from "@/lib/data/photos";
 import {
   getImage,
   getImageSettings,
+  getServiceCopy,
   getSpacingClass,
   getText,
   getTextStyle,
@@ -116,6 +117,7 @@ export function AgencyView({
           ctaLabel={t("hero.ctaLabel")}
           sloganClass={getTypographyClass(content, "agenzia", "hero.slogan")}
           slides={slides}
+          serviceCopy={getServiceCopy(content)}
           textStyles={content.pages.agenzia.textStyles}
         />
 
