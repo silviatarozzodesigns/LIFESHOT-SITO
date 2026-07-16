@@ -37,12 +37,25 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-/** Le 3 macrocartelle HERO → pagina CMS corrispondente */
+/** Le macrocartelle HERO → pagina CMS corrispondente */
 const FOLDERS = [
+  { label: "Homepage", slug: "agenzia" },
   { label: "Motorsport", slug: "home" },
   { label: "Ristorazione", slug: "ristorazione" },
   { label: "Business", slug: "business" },
 ] as const satisfies ReadonlyArray<{ label: string; slug: PageSlug }>;
+
+/**
+ * Le slide della homepage: si alternano in dissolvenza dietro lo slogan e
+ * valgono per tutti i dispositivi (a differenza delle hero categoria, che
+ * hanno sfondo e overlay dedicati per ogni schermo).
+ */
+const SLIDE_KEYS = [
+  "hero.slide1",
+  "hero.slide2",
+  "hero.slide3",
+  "hero.slide4",
+] as const;
 
 /** I 4 dispositivi → chiavi immagine + dimensioni dell'anteprima */
 const DEVICES = [
@@ -221,6 +234,8 @@ export function HeroStudio({ initial }: { initial: CmsData }) {
   const page = content.pages[folder];
   const pageDef = PAGES[folder];
   const dev = DEVICES.find((d) => d.id === device)!;
+  // La homepage non ha sfondo+overlay per dispositivo: ha le slide
+  const isHomepage = folder === "agenzia";
 
   function setImage(key: string, value: string) {
     setFeedback(null);
@@ -256,6 +271,52 @@ export function HeroStudio({ initial }: { initial: CmsData }) {
     });
   }
 
+  /** Un'immagine della hero: upload + inquadratura e zoom */
+  function assetField(key: string) {
+    const def = pageDef.images[key];
+    if (!def) return null;
+    const s = page.imageSettings[key] ?? DEFAULT_IMAGE_SETTINGS;
+    return (
+      <div key={key} className="space-y-2 rounded-xl border bg-background/40 p-2.5">
+        <ImageField
+          def={def}
+          value={page.images[key] ?? ""}
+          onChange={(url) => setImage(key, url)}
+          onError={setError}
+        />
+        {page.images[key] && (
+          <div className="space-y-1.5 pt-1">
+            <RangeRow
+              label="Orizzontale"
+              value={s.posX}
+              min={0}
+              max={100}
+              suffix="%"
+              onChange={(v) => setSettings(key, { posX: v })}
+            />
+            <RangeRow
+              label="Verticale"
+              value={s.posY}
+              min={0}
+              max={100}
+              suffix="%"
+              onChange={(v) => setSettings(key, { posY: v })}
+            />
+            <RangeRow
+              label="Zoom"
+              value={s.scale}
+              min={100}
+              max={280}
+              step={5}
+              suffix="%"
+              onChange={(v) => setSettings(key, { scale: v })}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+
   function run(
     action: () => Promise<
       { ok: true; content: CmsData } | { ok: false; error: string }
@@ -276,10 +337,14 @@ export function HeroStudio({ initial }: { initial: CmsData }) {
     });
   }
 
+  // Homepage e Motorsport hanno le loro anteprime bozza dedicate (sono in
+  // ISR: non leggerebbero ?preview); le categorie usano l'anteprima reale.
   const previewSrc =
-    folder === "home"
-      ? `/anteprima/motorsport?n=${nonce}`
-      : `${pageDef.path}?preview=1&n=${nonce}`;
+    folder === "agenzia"
+      ? `/anteprima?n=${nonce}`
+      : folder === "home"
+        ? `/anteprima/motorsport?n=${nonce}`
+        : `${pageDef.path}?preview=1&n=${nonce}`;
 
   return (
     <div className="space-y-5">
@@ -400,73 +465,40 @@ export function HeroStudio({ initial }: { initial: CmsData }) {
             <h2 className="text-sm font-semibold tracking-tight">
               {FOLDERS.find((f) => f.slug === folder)?.label} — {dev.label}
             </h2>
-            {device !== "desktop" && (
+            {isHomepage ? (
               <p className="text-xs text-muted-foreground">
-                Se lo sfondo resta vuoto, il dispositivo usa quello del
-                computer; l&apos;overlay compare SOLO se carichi il PNG
-                dedicato.
+                Le slide si alternano in dissolvenza dietro lo slogan, una
+                ogni 5 secondi, e valgono per tutti i dispositivi. Se carichi
+                un video, copre le slide (che restano come riserva). Senza
+                slide né video la hero resta tipografica.
               </p>
+            ) : (
+              device !== "desktop" && (
+                <p className="text-xs text-muted-foreground">
+                  Se lo sfondo resta vuoto, il dispositivo usa quello del
+                  computer; l&apos;overlay compare SOLO se carichi il PNG
+                  dedicato.
+                </p>
+              )
             )}
 
-            {/* Video di sfondo: sostituisce la foto su questo dispositivo */}
+            {/* Video di sfondo: copre lo sfondo su questo dispositivo */}
             <VideoField
               label={
                 VIDEO_KEY[device] === "hero.videoPortrait"
                   ? "Video di sfondo verticale (telefono e tablet verticale)"
                   : "Video di sfondo orizzontale (computer e tablet orizzontale)"
               }
-              hint="Facoltativo: .mp4 o .webm, senza audio, breve e a ciclo continuo. Se c'è, copre la foto di sfondo — che resta come prima immagine e come riserva. L'overlay 3D continua a funzionarci sopra."
+              hint={pageDef.images[VIDEO_KEY[device]]?.hint ?? ""}
               value={page.images[VIDEO_KEY[device]] ?? ""}
               onChange={(url) => setImage(VIDEO_KEY[device], url)}
               onError={setError}
             />
-            {[dev.bgKey, dev.fgKey].map((key) => {
-              const def = pageDef.images[key];
-              if (!def) return null;
-              const s = page.imageSettings[key] ?? DEFAULT_IMAGE_SETTINGS;
-              return (
-                <div
-                  key={key}
-                  className="space-y-2 rounded-xl border bg-background/40 p-2.5"
-                >
-                  <ImageField
-                    def={def}
-                    value={page.images[key] ?? ""}
-                    onChange={(url) => setImage(key, url)}
-                    onError={setError}
-                  />
-                  {page.images[key] && (
-                    <div className="space-y-1.5 pt-1">
-                      <RangeRow
-                        label="Orizzontale"
-                        value={s.posX}
-                        min={0}
-                        max={100}
-                        suffix="%"
-                        onChange={(v) => setSettings(key, { posX: v })}
-                      />
-                      <RangeRow
-                        label="Verticale"
-                        value={s.posY}
-                        min={0}
-                        max={100}
-                        suffix="%"
-                        onChange={(v) => setSettings(key, { posY: v })}
-                      />
-                      <RangeRow
-                        label="Zoom"
-                        value={s.scale}
-                        min={100}
-                        max={280}
-                        step={5}
-                        suffix="%"
-                        onChange={(v) => setSettings(key, { scale: v })}
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+
+            {/* Homepage → le 4 slide; categorie → sfondo e overlay del device */}
+            {(isHomepage ? [...SLIDE_KEYS] : [dev.bgKey, dev.fgKey]).map(
+              (key) => assetField(key)
+            )}
           </section>
 
           <section className="space-y-2 rounded-2xl border bg-card p-5 text-xs text-muted-foreground">

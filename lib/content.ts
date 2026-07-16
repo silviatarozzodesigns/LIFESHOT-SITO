@@ -286,20 +286,35 @@ export function getServiceCopy(content: CmsData): Record<string, ServiceCopy> {
  * dispositivi). Usato da Motorsport e, con etichette adattate, da
  * Ristorazione e Business.
  */
-export function heroImageDefs(subject: string): Record<string, ImageDef> {
+/**
+ * Regole del video di sfondo, scritte una volta sola: compaiono identiche
+ * in tutte le hero del CMS. La durata è un consiglio pratico — il video va
+ * a ciclo continuo, quindi oltre i ~15s si nota lo stacco e pesa e basta.
+ */
+export const HERO_VIDEO_RULES =
+  "Durata consigliata 8–15 secondi (va a ciclo continuo). Senza audio, .mp4 o .webm, possibilmente sotto i 10 MB per non pesare su chi naviga da telefono.";
+
+/** Le due caselle video di una hero, uguali per tutte le pagine */
+export function heroVideoDefs(): Record<string, ImageDef> {
   return {
-    // ── VIDEO DI SFONDO ── (facoltativi: se c'è, sostituisce la foto di
-    // sfondo del dispositivo corrispondente; la foto resta come poster)
     "hero.videoLandscape": {
       label: "Video di sfondo — orizzontale (computer e tablet orizzontale)",
       default: "",
-      hint: "File .mp4 o .webm senza audio, 10–20s a ciclo continuo. Sostituisce la foto di sfondo su computer e tablet orizzontale.",
+      hint: `Gira in orizzontale (16:9). ${HERO_VIDEO_RULES}`,
     },
     "hero.videoPortrait": {
       label: "Video di sfondo — verticale (telefono e tablet verticale)",
       default: "",
-      hint: "File .mp4 o .webm verticale. Sostituisce la foto di sfondo su telefono e tablet verticale.",
+      hint: `Gira in verticale (9:16). ${HERO_VIDEO_RULES}`,
     },
+  };
+}
+
+export function heroImageDefs(subject: string): Record<string, ImageDef> {
+  return {
+    // ── VIDEO DI SFONDO ── (facoltativi: se c'è, copre la foto di sfondo
+    // del dispositivo corrispondente; la foto resta come prima immagine)
+    ...heroVideoDefs(),
     // ── DESKTOP ──
     "hero.background": {
       label: "Hero Desktop — sfondo",
@@ -550,10 +565,12 @@ export const PAGES: Record<PageSlug, PageDef> = {
       },
     },
     images: {
+      // Video di sfondo: se c'è, copre le slide (che restano come riserva)
+      ...heroVideoDefs(),
       "hero.slide1": {
         label: "Hero — slide 1 (opzionale)",
         default: "",
-        hint: "Le slide si alternano in dissolvenza dietro lo slogan. Senza slide la hero resta tipografica con la costellazione dei servizi.",
+        hint: "Le slide si alternano in dissolvenza dietro lo slogan, una ogni 5 secondi. Senza slide né video la hero resta tipografica, con la costellazione dei servizi.",
       },
       "hero.slide2": { label: "Hero — slide 2 (opzionale)", default: "" },
       "hero.slide3": { label: "Hero — slide 3 (opzionale)", default: "" },

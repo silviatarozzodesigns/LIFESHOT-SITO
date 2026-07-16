@@ -534,16 +534,17 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
 /* ───────────────────────────── helper UI ───────────────────────────── */
 
 /**
- * Immagini gestibili dall'EDITOR: tutte tranne gli asset delle hero 3D
- * (sfondi, overlay e video di sfondo vivono nella sezione HERO dell'admin,
- * con anteprima dedicata per dispositivo).
+ * Immagini gestibili dall'EDITOR: tutte tranne gli asset delle hero
+ * (sfondi, overlay, slide della homepage e video di sfondo), che vivono
+ * nella sezione HERO dell'admin con l'anteprima per dispositivo.
  */
 function editorImageEntries(pageDef: PageDef): Array<[string, ImageDef]> {
   return Object.entries(pageDef.images).filter(
     ([key]) =>
       !key.startsWith("hero.background") &&
       !key.startsWith("hero.foreground") &&
-      !key.startsWith("hero.video")
+      !key.startsWith("hero.video") &&
+      !key.startsWith("hero.slide")
   );
 }
 

@@ -117,6 +117,8 @@ export function AgencyView({
           ctaLabel={t("hero.ctaLabel")}
           sloganClass={getTypographyClass(content, "agenzia", "hero.slogan")}
           slides={slides}
+          videoLandscape={getImage(content, "agenzia", "hero.videoLandscape")}
+          videoPortrait={getImage(content, "agenzia", "hero.videoPortrait")}
           serviceCopy={getServiceCopy(content)}
           textStyles={content.pages.agenzia.textStyles}
         />

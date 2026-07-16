@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { ServiceCursors } from "@/components/agency/service-cursors";
+import { HeroBackgroundVideo } from "@/components/hero/hero-background-video";
 import { ContactCta } from "@/components/agency/contact-cta";
 import { EditableText } from "@/components/cms/editable-text";
 import { EditableImage } from "@/components/cms/editable-image";
@@ -34,6 +35,8 @@ export function AgencyHero({
   ctaLabel,
   sloganClass,
   slides,
+  videoLandscape = "",
+  videoPortrait = "",
   serviceCopy,
   textStyles = {},
 }: {
@@ -42,12 +45,18 @@ export function AgencyHero({
   ctaLabel: string;
   sloganClass: string;
   slides: HeroSlide[];
+  /** Video di sfondo (facoltativi): se ci sono, coprono le slide */
+  videoLandscape?: string;
+  videoPortrait?: string;
   /** Testi dei servizi (overlay dei cursori), dal CMS */
   serviceCopy: Record<string, ServiceCopy>;
   textStyles?: Record<string, TextStyle>;
 }) {
   const [idx, setIdx] = useState(0);
   const hasSlides = slides.length > 0;
+  const hasVideo = Boolean(videoLandscape || videoPortrait);
+  // Con lo sfondo pieno (slide o video) la costellazione si attenua
+  const hasBackdrop = hasSlides || hasVideo;
 
   // Rotazione lenta delle slide (solo se ce n'è più di una)
   useEffect(() => {
@@ -67,34 +76,45 @@ export function AgencyHero({
         )}
       </div>
 
-      {/* SFONDO — slide in dissolvenza oppure fondale tipografico */}
+      {/* SFONDO — video, slide in dissolvenza oppure fondale tipografico */}
       <div className="absolute inset-0 -z-10">
         {hasSlides ? (
-          <>
-            {slides.map((s, i) => (
-              <img
-                key={s.key}
-                src={s.url}
-                alt=""
-                style={{
-                  objectPosition: s.position,
-                  transform: `scale(${Math.max(1, s.scale / 100)})`,
-                  transitionDuration: "1600ms",
-                }}
-                className={cn(
-                  "absolute inset-0 h-full w-full object-cover transition-opacity ease-out",
-                  i === idx ? "opacity-100" : "opacity-0"
-                )}
-              />
-            ))}
-            {/* Veli per la leggibilità dello slogan */}
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
-            <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-transparent" />
-          </>
+          slides.map((s, i) => (
+            <img
+              key={s.key}
+              src={s.url}
+              alt=""
+              style={{
+                objectPosition: s.position,
+                transform: `scale(${Math.max(1, s.scale / 100)})`,
+                transitionDuration: "1600ms",
+              }}
+              className={cn(
+                "absolute inset-0 h-full w-full object-cover transition-opacity ease-out",
+                i === idx ? "opacity-100" : "opacity-0"
+              )}
+            />
+          ))
         ) : (
           <>
             <div className="absolute inset-0 bg-gradient-to-b from-secondary/50 via-background to-background" />
-            <div className="glow-primary absolute left-1/2 top-1/3 h-[30rem] w-[54rem] -translate-x-1/2 -translate-y-1/2" />
+            {/* Il bagliore è il fondale tipografico: con un video dietro
+                sporcherebbe l'immagine */}
+            {!hasVideo && (
+              <div className="glow-primary absolute left-1/2 top-1/3 h-[30rem] w-[54rem] -translate-x-1/2 -translate-y-1/2" />
+            )}
+          </>
+        )}
+
+        {/* Video: copre le slide (o il fondale) quando è caricato */}
+        <HeroBackgroundVideo landscape={videoLandscape} portrait={videoPortrait} />
+
+        {/* Veli per la leggibilità dello slogan: servono solo quando dietro
+            c'è qualcosa (slide o video), non sul fondale tipografico */}
+        {hasBackdrop && (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-transparent" />
           </>
         )}
       </div>
