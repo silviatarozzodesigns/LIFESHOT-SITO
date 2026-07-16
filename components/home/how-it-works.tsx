@@ -1,6 +1,13 @@
-import { Search, Images, CreditCard, Download } from "lucide-react";
+import { Search, Images, Instagram, Download } from "lucide-react";
 import { FadeIn } from "@/components/motion/fade-in";
 
+/**
+ * Il flusso VERO: dal sito non si compra. Si cerca lo scatto, si manda il
+ * suo codice in DM, si concorda insieme, e a pagamento fatto arriva il link
+ * per scaricare. Prometteva carrello e download immediato: entrambi
+ * inesistenti, e una promessa mancata al primo contatto costa più di una
+ * spiegazione onesta.
+ */
 const STEPS = [
   {
     icon: Search,
@@ -10,17 +17,17 @@ const STEPS = [
   {
     icon: Images,
     title: "Trova i tuoi scatti",
-    body: "Sfoglia tutte le foto in cui compari, evento per evento.",
+    body: "Sfoglia le foto in cui compari e apri quella che vuoi: sotto trovi il suo codice scatto.",
   },
   {
-    icon: CreditCard,
-    title: "Acquista in sicurezza",
-    body: "Scegli gli scatti che preferisci e completa l'ordine in pochi clic.",
+    icon: Instagram,
+    title: "Scrivici il codice in DM",
+    body: "Niente carrello: mandaci il codice, ci accordiamo insieme sul da farsi e paghi come concordato.",
   },
   {
     icon: Download,
-    title: "Scarica in HD",
-    body: "Ricevi subito i file in alta risoluzione, senza watermark.",
+    title: "Ricevi il link e scarica",
+    body: "A pagamento fatto ti arriva un link via DM o mail: file in alta risoluzione, senza filigrana.",
   },
 ];
 
@@ -36,7 +43,8 @@ export function HowItWorks() {
           Dai tuoi scatti a casa in 4 passi
         </h2>
         <p className="mt-3 text-muted-foreground">
-          Trovare e portarti a casa le foto della tua gara è semplice e veloce.
+          Niente carrello e niente account: gli scatti li trovi qui e ce li
+          chiedi in DM, come si fa fra persone.
         </p>
       </FadeIn>
 
