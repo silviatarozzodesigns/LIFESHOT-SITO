@@ -393,102 +393,14 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
             </div>
           </SidebarCard>
 
-          {/* Hero — sfondi + rider per dispositivo (sempre visibile, non serve
-              cliccare l'anteprima). Tablet/Mobile vuoti = usa lo sfondo desktop
-              senza rider. */}
-          {activePage === "home" && (
-            <SidebarCard title="Hero — Sfondi & Rider per dispositivo">
-              <div className="space-y-5">
-                {(
-                  [
-                    {
-                      label: "Desktop",
-                      keys: ["hero.background", "hero.foreground"],
-                    },
-                    {
-                      label: "Tablet verticale",
-                      keys: [
-                        "hero.backgroundTablet",
-                        "hero.foregroundTablet",
-                      ],
-                    },
-                    {
-                      label: "Tablet orizzontale",
-                      keys: [
-                        "hero.backgroundTabletLandscape",
-                        "hero.foregroundTabletLandscape",
-                      ],
-                    },
-                    {
-                      label: "Mobile",
-                      keys: [
-                        "hero.backgroundMobile",
-                        "hero.foregroundMobile",
-                      ],
-                    },
-                  ] as const
-                ).map((group) => (
-                  <div key={group.label} className="space-y-3">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-                      {group.label}
-                    </p>
-                    {group.keys.map((key) => {
-                      const def = pageDef.images[key];
-                      if (!def) return null;
-                      const s = page.imageSettings[key] ?? DEFAULT_IMAGE_SETTINGS;
-                      return (
-                        <div key={key} className="space-y-2 rounded-xl border bg-background/40 p-2.5">
-                          <ImageField
-                            def={def}
-                            value={page.images[key] ?? ""}
-                            onChange={(url) => setImage(key, url)}
-                            onError={setError}
-                          />
-                          {page.images[key] && (
-                            <div className="space-y-1.5 pt-1">
-                              <RangeRow
-                                label="Orizzontale"
-                                value={s.posX}
-                                min={0}
-                                max={100}
-                                suffix="%"
-                                onChange={(v) => setImageSettings(key, { posX: v })}
-                              />
-                              <RangeRow
-                                label="Verticale"
-                                value={s.posY}
-                                min={0}
-                                max={100}
-                                suffix="%"
-                                onChange={(v) => setImageSettings(key, { posY: v })}
-                              />
-                              <RangeRow
-                                label="Zoom"
-                                value={s.scale}
-                                min={100}
-                                max={280}
-                                step={5}
-                                suffix="%"
-                                onChange={(v) => setImageSettings(key, { scale: v })}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-            </SidebarCard>
-          )}
-
           {/* Immagini della pagina (hero slide, gallerie categorie…):
-              pannello generico per ogni pagina che ha slot immagine
-              (la home motorsport ha già il suo pannello dedicato sopra). */}
-          {activePage !== "home" && Object.keys(pageDef.images).length > 0 && (
+              pannello generico per ogni pagina che ha slot immagine.
+              Gli sfondi e gli overlay delle hero 3D NON stanno qui: si
+              gestiscono dalla sezione HERO dell'admin. */}
+          {editorImageEntries(pageDef).length > 0 && (
             <SidebarCard title={`Immagini — ${pageDef.label}`}>
               <div className="space-y-3">
-                {Object.entries(pageDef.images).map(([key, def]) => {
+                {editorImageEntries(pageDef).map(([key, def]) => {
                   const s = page.imageSettings[key] ?? DEFAULT_IMAGE_SETTINGS;
                   return (
                     <div
@@ -620,6 +532,17 @@ export function VisualStudio({ initial }: { initial: CmsData }) {
 }
 
 /* ───────────────────────────── helper UI ───────────────────────────── */
+
+/**
+ * Immagini gestibili dall'EDITOR: tutte tranne sfondi/overlay delle hero 3D
+ * (quelli vivono nella sezione HERO dell'admin, con anteprima dedicata).
+ */
+function editorImageEntries(pageDef: PageDef): Array<[string, ImageDef]> {
+  return Object.entries(pageDef.images).filter(
+    ([key]) =>
+      !key.startsWith("hero.background") && !key.startsWith("hero.foreground")
+  );
+}
 
 /**
  * PANNELLO CONTESTUALE (click-to-edit).
@@ -818,7 +741,7 @@ function ContextPanel({
  * (object URL) e aggiorna lo stato → la preview reagisce all'istante; in
  * parallelo carica su R2/storage e poi sostituisce con l'URL definitivo.
  */
-function ImageField({
+export function ImageField({
   def,
   value,
   onChange,
@@ -921,7 +844,7 @@ function ImageField({
 }
 
 /** Slider etichettato compatto per inquadratura/zoom immagini */
-function RangeRow({
+export function RangeRow({
   label,
   value,
   min,

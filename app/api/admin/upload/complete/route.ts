@@ -119,10 +119,15 @@ export async function POST(request: Request) {
     // kind === "photo": su R2 resta SOLO l'originale pulito. La preview con
     // filigrana è generata al volo da /api/images/<id> (nessun duplicato su cloud).
     const dimensions = await getPreviewDimensions(original);
-    const raceNumber = extractRaceNumber(filename);
+    // I progetti vetrina (ristorazione/business) non hanno numeri di gara
+    // né filigrana: sono portfolio, non foto in vendita.
+    const isShowcase =
+      event.category === "ristorazione" || event.category === "business";
+    const raceNumber = isShowcase ? null : extractRaceNumber(filename);
     // Filigrana: valore esplicito dal client, altrimenti default globale dal CMS
-    const watermark =
-      typeof body.watermark === "boolean"
+    const watermark = isShowcase
+      ? false
+      : typeof body.watermark === "boolean"
         ? body.watermark
         : (await getPublishedContent()).settings.watermarkEnabled;
     const watermarkDark = body.watermarkDark !== false;
@@ -153,6 +158,8 @@ export async function POST(request: Request) {
     revalidatePath("/");
     revalidatePath("/motorsport");
     revalidatePath("/galleria");
+    revalidatePath("/ristorazione");
+    revalidatePath("/business");
 
     return NextResponse.json({
       ok: true,

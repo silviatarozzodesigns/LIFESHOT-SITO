@@ -2,7 +2,7 @@ import { getDraftContent } from "@/lib/data/content";
 import { VisualStudio } from "@/components/admin/studio/visual-studio";
 import { FadeIn } from "@/components/motion/fade-in";
 
-export const metadata = { title: "Visual Studio — Contenuti" };
+export const metadata = { title: "Editor — Testi, spaziature e SEO" };
 
 export default async function AdminContentPage() {
   const draft = await getDraftContent();
@@ -11,12 +11,13 @@ export default async function AdminContentPage() {
     <div>
       <FadeIn>
         <h1 className="text-3xl font-semibold tracking-tight">
-          Visual Studio
+          Editor
         </h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
           Clicca i testi direttamente nell&apos;anteprima per modificarli,
-          regola spaziature e SEO dalla sidebar. Tutto resta in bozza finché
-          non premi{" "}
+          regola spaziature e SEO dalla sidebar. Gli sfondi e gli overlay
+          delle hero si gestiscono dalla sezione Hero. Tutto resta in bozza
+          finché non premi{" "}
           <strong className="font-medium text-foreground">
             Pubblica modifiche
           </strong>

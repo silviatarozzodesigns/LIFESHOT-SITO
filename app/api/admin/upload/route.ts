@@ -185,11 +185,16 @@ export async function POST(request: Request) {
     await storage.upload(buffer, originalKey, file.type);
 
     const dimensions = await getPreviewDimensions(buffer);
-    const raceNumber = extractRaceNumber(file.name);
+    // I progetti vetrina (ristorazione/business) non hanno numeri di gara
+    // né filigrana: sono portfolio, non foto in vendita.
+    const isShowcase =
+      event.category === "ristorazione" || event.category === "business";
+    const raceNumber = isShowcase ? null : extractRaceNumber(file.name);
     // Filigrana: valore esplicito dal form, altrimenti default globale dal CMS
     const wmField = form.get("watermark");
-    const watermark =
-      wmField === "true" || wmField === "false"
+    const watermark = isShowcase
+      ? false
+      : wmField === "true" || wmField === "false"
         ? wmField === "true"
         : (await getPublishedContent()).settings.watermarkEnabled;
     const featured = form.get("featured") === "true";
@@ -220,6 +225,8 @@ export async function POST(request: Request) {
     revalidatePath("/");
     revalidatePath("/motorsport");
     revalidatePath("/galleria");
+    revalidatePath("/ristorazione");
+    revalidatePath("/business");
 
     return NextResponse.json({
       ok: true,

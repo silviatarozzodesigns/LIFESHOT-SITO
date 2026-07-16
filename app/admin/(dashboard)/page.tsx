@@ -2,15 +2,48 @@ import Image from "next/image";
 import Link from "next/link";
 import { Calendar, Camera, ImageIcon, MapPin, Plus } from "lucide-react";
 import { getAllEventsAdmin } from "@/lib/data/admin";
+import type { EventCategory } from "@/models/Event";
 import { formatDate } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { EventDeleteButton } from "@/components/admin/event-delete-button";
 import { FadeIn } from "@/components/motion/fade-in";
+import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Gestione eventi" };
+export const dynamic = "force-dynamic";
 
-export default async function AdminEventsPage() {
-  const events = await getAllEventsAdmin();
+/** Le 3 macrocartelle EVENTI */
+const FOLDERS: Array<{ id: EventCategory; label: string; hint: string }> = [
+  {
+    id: "motorsport",
+    label: "Motorsport",
+    hint: "Gli eventi in pista, con ricerca per numero di gara.",
+  },
+  {
+    id: "ristorazione",
+    label: "Ristorazione",
+    hint: "I progetti mostrati in “Progetti recenti” su /ristorazione.",
+  },
+  {
+    id: "business",
+    label: "Business",
+    hint: "I progetti mostrati in “Progetti recenti” su /business.",
+  },
+];
+
+function isCategory(v: string | undefined): v is EventCategory {
+  return v === "motorsport" || v === "ristorazione" || v === "business";
+}
+
+export default async function AdminEventsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ categoria?: string }>;
+}) {
+  const { categoria } = await searchParams;
+  const active: EventCategory = isCategory(categoria) ? categoria : "motorsport";
+  const events = await getAllEventsAdmin(active);
+  const folder = FOLDERS.find((f) => f.id === active)!;
 
   return (
     <div>
@@ -18,13 +51,38 @@ export default async function AdminEventsPage() {
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Eventi</h1>
           <p className="mt-2 text-muted-foreground">
-            Crea un evento, poi aprilo per caricare le foto in blocco.
+            Crea un evento o un progetto, poi aprilo per caricare le foto in
+            blocco.
           </p>
         </div>
-        <Link href="/admin/eventi/nuovo" className={buttonVariants()}>
+        <Link
+          href={`/admin/eventi/nuovo?categoria=${active}`}
+          className={buttonVariants()}
+        >
           <Plus />
-          Nuovo evento
+          {active === "motorsport" ? "Nuovo evento" : "Nuovo progetto"}
         </Link>
+      </FadeIn>
+
+      {/* Macrocartelle per categoria */}
+      <FadeIn delay={0.05} className="mt-6">
+        <div className="flex w-fit items-center gap-1 rounded-full border bg-card p-1">
+          {FOLDERS.map((f) => (
+            <Link
+              key={f.id}
+              href={`/admin?categoria=${f.id}`}
+              className={cn(
+                "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+                active === f.id
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {f.label}
+            </Link>
+          ))}
+        </div>
+        <p className="mt-2 text-sm text-muted-foreground">{folder.hint}</p>
       </FadeIn>
 
       {events.length > 0 ? (
@@ -89,9 +147,13 @@ export default async function AdminEventsPage() {
           className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-dashed py-20 text-center"
         >
           <Camera className="h-8 w-8 text-muted-foreground" />
-          <p className="font-medium">Nessun evento</p>
+          <p className="font-medium">
+            {active === "motorsport" ? "Nessun evento" : "Nessun progetto"}
+          </p>
           <p className="text-sm text-muted-foreground">
-            Crea il primo evento per iniziare a caricare le foto.
+            {active === "motorsport"
+              ? "Crea il primo evento per iniziare a caricare le foto."
+              : "Crea il primo progetto: apparirà tra i Progetti recenti della pagina."}
           </p>
         </FadeIn>
       )}

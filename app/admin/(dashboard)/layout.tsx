@@ -27,16 +27,22 @@ export default async function AdminLayout({
           </Link>
           <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-sm text-muted-foreground sm:gap-x-5">
             <Link
+              href="/admin/hero"
+              className="transition-colors hover:text-primary"
+            >
+              Hero
+            </Link>
+            <Link
               href="/admin"
               className="transition-colors hover:text-primary"
             >
               Eventi
             </Link>
             <Link
-              href="/admin/dietro-lobiettivo"
+              href="/admin/gallery"
               className="transition-colors hover:text-primary"
             >
-              Dietro l&apos;obiettivo
+              Gallery
             </Link>
             <Link
               href="/admin/video"
@@ -48,7 +54,7 @@ export default async function AdminLayout({
               href="/admin/contenuti"
               className="transition-colors hover:text-primary"
             >
-              Contenuti
+              Editor
             </Link>
             <Link
               href="/"
