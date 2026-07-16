@@ -7,7 +7,7 @@ import {
   CategoryShowcase,
   type ShowcaseCategory,
 } from "@/components/agency/category-showcase";
-import { AgencyTestimonials } from "@/components/agency/agency-testimonials";
+import { CmsTestimonials } from "@/components/agency/cms-testimonials";
 import { ContactSection } from "@/components/agency/contact-section";
 import { EditableText } from "@/components/cms/editable-text";
 import type { PhotoDTO } from "@/lib/data/photos";
@@ -165,7 +165,7 @@ export function AgencyView({
 
         {/* TESTIMONIANZE — voci miste dalle varie categorie */}
         <div className={getSpacingClass(content, "agenzia", "reviews")}>
-          <AgencyTestimonials content={content} />
+          <CmsTestimonials content={content} page="agenzia" />
         </div>
 
         {/* CONTATTI — DM Instagram e mail, i canali veri dell'agenzia */}

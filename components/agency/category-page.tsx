@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
 import { ContactSection } from "@/components/agency/contact-section";
 import { CategoryHero } from "@/components/agency/category-hero";
+import { CmsTestimonials } from "@/components/agency/cms-testimonials";
 import { VideoSection } from "@/components/agency/video-section";
 import { PhotoSlider } from "@/components/home/photo-slider";
 import { EditableText } from "@/components/cms/editable-text";
@@ -192,6 +193,12 @@ export function CategoryPageView({
 
         {/* VIDEO — i video caricati nella macrocartella di questa categoria */}
         <VideoSection content={content} page={slug} videos={videos} />
+
+        {/* TESTIMONIANZE — le voci di questa categoria, non quelle miste
+            della homepage: chi cerca un ristorante vuole sentire i ristoranti */}
+        <div className="pt-16 sm:pt-24">
+          <CmsTestimonials content={content} page={slug} />
+        </div>
 
         {/* CONTATTI — stessi canali della home agenzia */}
         <section className="container py-14 sm:py-20">

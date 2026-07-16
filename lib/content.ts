@@ -212,6 +212,54 @@ export const TYPOGRAPHY_LABELS: Record<Level, string> = {
   5: "Enorme",
 };
 
+/* ────────── TESTIMONIANZE: campi condivisi fra le pagine categoria ────────── */
+
+/** Le tre voci mostrate dal componente testimonianze */
+export const REVIEW_IDS = ["r1", "r2", "r3"] as const;
+
+/**
+ * Titolo, sottotitolo e le tre testimonianze di una pagina. Stessi nomi di
+ * chiave della homepage (`reviews.*`), così il componente è uno solo e
+ * legge dalla pagina che lo ospita.
+ */
+function reviewFields(
+  subtitle: string,
+  voci: ReadonlyArray<{ quote: string; name: string; meta: string }>
+): Record<string, FieldDef> {
+  const fields: Record<string, FieldDef> = {
+    "reviews.title": {
+      label: "Testimonianze — titolo",
+      default: "Dicono di noi",
+      max: 80,
+    },
+    "reviews.subtitle": {
+      label: "Testimonianze — sottotitolo",
+      default: subtitle,
+      max: 160,
+    },
+  };
+  voci.forEach((voce, i) => {
+    const id = REVIEW_IDS[i];
+    fields[`reviews.${id}.quote`] = {
+      label: `Testimonianza ${i + 1} — testo`,
+      default: voce.quote,
+      max: 240,
+      multiline: true,
+    };
+    fields[`reviews.${id}.name`] = {
+      label: `Testimonianza ${i + 1} — nome`,
+      default: voce.name,
+      max: 60,
+    };
+    fields[`reviews.${id}.meta`] = {
+      label: `Testimonianza ${i + 1} — dettaglio`,
+      default: voce.meta,
+      max: 60,
+    };
+  });
+  return fields;
+}
+
 /* ───────────── SEZIONE VIDEO: campi condivisi fra le categorie ───────────── */
 
 /**
@@ -808,6 +856,26 @@ export const PAGES: Record<PageSlug, PageDef> = {
         multiline: true,
       },
       ...videoSectionFields("Il gusto del tuo locale, in movimento."),
+      ...reviewFields("Chi ci ha aperto la cucina, e come è andata.", [
+        {
+          quote:
+            "Le foto dei piatti e il nuovo menù hanno dato un'altra faccia al locale: ora i clienti ordinano con gli occhi.",
+          name: "Osteria del Corso",
+          meta: "Ristorante · Menù e shooting",
+        },
+        {
+          quote:
+            "Hanno lavorato durante il servizio senza farsi sentire, e il risultato sembra girato in un altro locale. Il nostro, però.",
+          name: "Trattoria da Ivo",
+          meta: "Trattoria · Foto e social",
+        },
+        {
+          quote:
+            "Il reel del weekend ci ha riempito le serate. Prima pubblicavo foto col telefono e non succedeva niente.",
+          name: "Bistrot 47",
+          meta: "Bistrot · Reel e social",
+        },
+      ]),
     },
     images: {
       ...heroImageDefs("soggetto"),
@@ -894,6 +962,26 @@ export const PAGES: Record<PageSlug, PageDef> = {
         multiline: true,
       },
       ...videoSectionFields("Spot, presentazioni e contenuti video per il tuo brand."),
+      ...reviewFields("Aziende e professionisti che ci hanno affidato la loro immagine.", [
+        {
+          quote:
+            "Dal logo al sito, finalmente tutta la nostra immagine parla la stessa lingua. Un unico interlocutore, zero caos.",
+          name: "Elisa R.",
+          meta: "Studio professionale · Branding",
+        },
+        {
+          quote:
+            "Il sito nuovo si apre in un lampo e lo aggiorno da solo. Prima dovevo scrivere a qualcuno per cambiare una riga.",
+          name: "Nordwind srl",
+          meta: "Azienda · Sito web",
+        },
+        {
+          quote:
+            "Le foto del team e dei prodotti hanno cambiato le nostre presentazioni: sembriamo quello che siamo davvero.",
+          name: "Marco T.",
+          meta: "Manifattura · Foto e grafiche",
+        },
+      ]),
     },
     images: {
       ...heroImageDefs("soggetto"),

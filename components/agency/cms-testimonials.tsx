@@ -1,18 +1,28 @@
 import { Quote, Star } from "lucide-react";
 import { FadeIn } from "@/components/motion/fade-in";
 import { EditableText } from "@/components/cms/editable-text";
-import { getText, getTextStyle, type CmsData } from "@/lib/content";
+import { getText, getTextStyle, type CmsData, type PageSlug } from "@/lib/content";
 
 const REVIEW_IDS = ["r1", "r2", "r3"] as const;
 
 /**
- * TESTIMONIANZE MISTE della home agenzia: una voce per categoria
- * (motorsport, ristorazione, business…), tutte modificabili dal CMS.
- * Stesso linguaggio visivo delle testimonianze rider su /motorsport.
+ * TESTIMONIANZE dal CMS — tre voci con stelle, virgolette e firma.
+ *
+ * Le usa la home agenzia (voci miste da tutte le categorie) e ogni pagina
+ * categoria con le proprie: stesso disegno, testi presi dalla pagina che
+ * la ospita. Stesso linguaggio visivo delle testimonianze rider su
+ * /motorsport.
  */
-export function AgencyTestimonials({ content }: { content: CmsData }) {
-  const t = (key: string) => getText(content, "agenzia", key);
-  const ts = (key: string) => getTextStyle(content, "agenzia", key);
+export function CmsTestimonials({
+  content,
+  page,
+}: {
+  content: CmsData;
+  /** Pagina CMS da cui leggere i testi (agenzia, ristorazione, business…) */
+  page: PageSlug;
+}) {
+  const t = (key: string) => getText(content, page, key);
+  const ts = (key: string) => getTextStyle(content, page, key);
 
   return (
     <section className="container">
@@ -22,7 +32,7 @@ export function AgencyTestimonials({ content }: { content: CmsData }) {
         </p>
         <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
           <EditableText
-            page="agenzia"
+            page={page}
             k="reviews.title"
             value={t("reviews.title")}
             maxLength={80}
@@ -31,7 +41,7 @@ export function AgencyTestimonials({ content }: { content: CmsData }) {
         </h2>
         <p className="mt-2 text-muted-foreground">
           <EditableText
-            page="agenzia"
+            page={page}
             k="reviews.subtitle"
             value={t("reviews.subtitle")}
             as="span"
@@ -57,7 +67,7 @@ export function AgencyTestimonials({ content }: { content: CmsData }) {
               <blockquote className="mt-4 flex-1 text-balance text-sm leading-relaxed text-foreground/90">
                 “
                 <EditableText
-                  page="agenzia"
+                  page={page}
                   k={`reviews.${id}.quote`}
                   value={t(`reviews.${id}.quote`)}
                   as="span"
@@ -69,7 +79,7 @@ export function AgencyTestimonials({ content }: { content: CmsData }) {
               <figcaption className="mt-6 border-t pt-4">
                 <p className="font-semibold tracking-tight">
                   <EditableText
-                    page="agenzia"
+                    page={page}
                     k={`reviews.${id}.name`}
                     value={t(`reviews.${id}.name`)}
                     as="span"
@@ -79,7 +89,7 @@ export function AgencyTestimonials({ content }: { content: CmsData }) {
                 </p>
                 <p className="text-xs text-muted-foreground">
                   <EditableText
-                    page="agenzia"
+                    page={page}
                     k={`reviews.${id}.meta`}
                     value={t(`reviews.${id}.meta`)}
                     as="span"
