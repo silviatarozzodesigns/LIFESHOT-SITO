@@ -4,7 +4,13 @@ import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ServiceOverlay } from "@/components/agency/service-overlay";
 import type { ServiceCopy } from "@/lib/content";
-import { SERVICES, type ServiceId } from "@/lib/services";
+import {
+  HERO_CHIPS_DESKTOP,
+  HERO_CHIPS_TOUCH,
+  SERVICES,
+  type HeroChip,
+  type ServiceId,
+} from "@/lib/services";
 import { cn } from "@/lib/utils";
 
 /**
@@ -29,35 +35,8 @@ import { cn } from "@/lib/utils";
  * Rispetta prefers-reduced-motion.
  */
 
-interface Chip {
-  id: ServiceId;
-  /** Posizione finale (% della hero, riferita al centro della pillola) */
-  x: number;
-  y: number;
-  /** Lato dello schermo da cui entra */
-  from: "left" | "right" | "top" | "bottom";
-  delay: number;
-}
-
-const DESKTOP: Chip[] = [
-  { id: "sitiweb", x: 13, y: 24, from: "left", delay: 0.3 },
-  { id: "grafiche", x: 82, y: 20, from: "top", delay: 0.65 },
-  { id: "branding", x: 86, y: 55, from: "right", delay: 1.0 },
-  { id: "video", x: 10, y: 52, from: "left", delay: 1.35 },
-  { id: "social", x: 17, y: 78, from: "bottom", delay: 1.7 },
-  { id: "foto", x: 79, y: 81, from: "right", delay: 2.05 },
-];
-
-/** Tablet e mobile: i 4 settori dell'agenzia */
-const TOUCH: Chip[] = [
-  { id: "grafiche", x: 24, y: 18, from: "left", delay: 0.3 },
-  { id: "social", x: 72, y: 24, from: "right", delay: 0.65 },
-  { id: "foto", x: 26, y: 80, from: "left", delay: 1.0 },
-  { id: "video", x: 70, y: 89, from: "bottom", delay: 1.35 },
-];
-
 /** Punto di partenza fuori campo per ogni lato d'ingresso */
-const OFFSET: Record<Chip["from"], { x: number; y: number }> = {
+const OFFSET: Record<HeroChip["from"], { x: number; y: number }> = {
   left: { x: -480, y: 60 },
   right: { x: 480, y: -60 },
   top: { x: 80, y: -380 },
@@ -69,7 +48,7 @@ const OFFSET: Record<Chip["from"], { x: number; y: number }> = {
  * della pillola rivolto verso il centro della hero e viene ruotato per
  * puntarlo davvero. Il glifo del path punta nativamente a ~30° (giù-destra).
  */
-function Pointer({ chip }: { chip: Chip }) {
+function Pointer({ chip }: { chip: HeroChip }) {
   const angle = (Math.atan2(50 - chip.y, 50 - chip.x) * 180) / Math.PI;
   return (
     <svg
@@ -97,7 +76,7 @@ function CursorChip({
   index,
   onOpen,
 }: {
-  chip: Chip;
+  chip: HeroChip;
   index: number;
   onOpen: (id: ServiceId) => void;
 }) {
@@ -161,12 +140,12 @@ export function ServiceCursors({
         )}
       >
         <div className="hidden lg:block">
-          {DESKTOP.map((chip, i) => (
+          {HERO_CHIPS_DESKTOP.map((chip, i) => (
             <CursorChip key={chip.id} chip={chip} index={i} onOpen={setOpenId} />
           ))}
         </div>
         <div className="lg:hidden">
-          {TOUCH.map((chip, i) => (
+          {HERO_CHIPS_TOUCH.map((chip, i) => (
             <CursorChip key={chip.id} chip={chip} index={i} onOpen={setOpenId} />
           ))}
         </div>

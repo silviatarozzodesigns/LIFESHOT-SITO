@@ -45,6 +45,12 @@ export default async function AdminLayout({
               Gallery
             </Link>
             <Link
+              href="/admin/cursori"
+              className="transition-colors hover:text-primary"
+            >
+              Cursori
+            </Link>
+            <Link
               href="/admin/video"
               className="transition-colors hover:text-primary"
             >

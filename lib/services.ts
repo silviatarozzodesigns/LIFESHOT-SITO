@@ -69,3 +69,36 @@ export const SERVICES: Record<ServiceId, ServiceDef> = {
     related: ["grafiche", "branding"],
   },
 };
+
+/* ───────────────── disposizione dei cursori nella hero ───────────────── */
+
+export interface HeroChip {
+  id: ServiceId;
+  /** Posizione finale (% della hero, riferita al centro della pillola) */
+  x: number;
+  y: number;
+  /** Lato dello schermo da cui entra */
+  from: "left" | "right" | "top" | "bottom";
+  delay: number;
+}
+
+/** Desktop: tutti e sei i servizi attorno allo slogan */
+export const HERO_CHIPS_DESKTOP: HeroChip[] = [
+  { id: "sitiweb", x: 13, y: 24, from: "left", delay: 0.3 },
+  { id: "grafiche", x: 82, y: 20, from: "top", delay: 0.65 },
+  { id: "branding", x: 86, y: 55, from: "right", delay: 1.0 },
+  { id: "video", x: 10, y: 52, from: "left", delay: 1.35 },
+  { id: "social", x: 17, y: 78, from: "bottom", delay: 1.7 },
+  { id: "foto", x: 79, y: 81, from: "right", delay: 2.05 },
+];
+
+/** Tablet e mobile: 4 settori (gli altri si aprono da "Vedi anche") */
+export const HERO_CHIPS_TOUCH: HeroChip[] = [
+  { id: "grafiche", x: 24, y: 18, from: "left", delay: 0.3 },
+  { id: "social", x: 72, y: 24, from: "right", delay: 0.65 },
+  { id: "foto", x: 26, y: 80, from: "left", delay: 1.0 },
+  { id: "video", x: 70, y: 89, from: "bottom", delay: 1.35 },
+];
+
+/** Servizi con un cursore proprio anche su telefono/tablet */
+export const TOUCH_SERVICE_IDS: ServiceId[] = HERO_CHIPS_TOUCH.map((c) => c.id);

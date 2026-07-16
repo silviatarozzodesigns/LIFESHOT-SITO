@@ -72,8 +72,12 @@ export function ServiceOverlay({
              riconoscibile dietro (sfocatura media, non totale) */
           className="fixed inset-0 z-[95] flex items-center justify-center bg-background/70 p-6 backdrop-blur-md"
         >
-          {/* Il pannello non chiude al click: solo il velo attorno */}
+          {/* Il pannello non chiude al click: solo il velo attorno.
+              `key` sul servizio: EditableText copia il testo in uno stato
+              locale al montaggio, quindi senza remount "Vedi anche"
+              cambierebbe pannello ma non titolo e descrizione. */}
           <motion.div
+            key={openId}
             initial={{ opacity: 0, y: 24, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
