@@ -1,25 +1,31 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import {
   CheckCircle2,
   CloudUpload,
+  Film,
   History,
   Loader2,
   Monitor,
   Save,
   Smartphone,
   Tablet,
+  Trash2,
+  UploadCloud,
 } from "lucide-react";
 import {
   saveDraft,
   publishContent,
   discardDraft,
+  deleteAsset,
 } from "@/app/actions/content";
 import {
   ImageField,
   RangeRow,
 } from "@/components/admin/studio/visual-studio";
+import { uploadVideoFile } from "@/lib/upload-client";
+import { Label } from "@/components/ui/label";
 import {
   DEFAULT_IMAGE_SETTINGS,
   PAGES,
@@ -79,6 +85,121 @@ const DEVICES = [
 ] as const;
 
 type DeviceId = (typeof DEVICES)[number]["id"];
+
+/** Quale video di sfondo governa il dispositivo attivo */
+const VIDEO_KEY: Record<DeviceId, "hero.videoLandscape" | "hero.videoPortrait"> = {
+  desktop: "hero.videoLandscape",
+  tabletLandscape: "hero.videoLandscape",
+  tablet: "hero.videoPortrait",
+  mobile: "hero.videoPortrait",
+};
+
+/**
+ * Campo video di sfondo: carica un .mp4/.webm su R2 e ne mostra
+ * l'anteprima riprodotta in piccolo, com'è nella hero.
+ */
+function VideoField({
+  label,
+  hint,
+  value,
+  onChange,
+  onError,
+}: {
+  label: string;
+  hint: string;
+  value: string;
+  onChange: (url: string) => void;
+  onError: (msg: string | null) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(file: File) {
+    onError(null);
+    const previous = value;
+    setUploading(true);
+    try {
+      const url = await uploadVideoFile(file);
+      onChange(url);
+      if (previous) void deleteAsset(previous);
+    } catch (e) {
+      onError(e instanceof Error ? e.message : "Caricamento del video fallito.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2 rounded-xl border bg-background/40 p-2.5">
+      <Label className="text-xs">{label}</Label>
+      <div className="flex items-center gap-3">
+        <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg border bg-muted">
+          {value ? (
+            <video
+              key={value}
+              src={value}
+              muted
+              loop
+              autoPlay
+              playsInline
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <span className="flex h-full items-center justify-center text-muted-foreground/40">
+              <Film className="h-5 w-5" />
+            </span>
+          )}
+          {uploading && (
+            <span className="absolute inset-0 flex items-center justify-center bg-black/50">
+              <Loader2 className="h-4 w-4 animate-spin text-white" />
+            </span>
+          )}
+        </div>
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={uploading}
+            onClick={() => inputRef.current?.click()}
+          >
+            <UploadCloud />
+            {value ? "Sostituisci" : "Carica video"}
+          </Button>
+          {value && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={uploading}
+              className="text-muted-foreground hover:text-destructive"
+              onClick={() => {
+                const previous = value;
+                onChange("");
+                if (previous) void deleteAsset(previous);
+              }}
+            >
+              <Trash2 />
+              Rimuovi
+            </Button>
+          )}
+        </div>
+      </div>
+      <p className="text-[11px] text-muted-foreground">{hint}</p>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="video/mp4,video/webm"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+}
 
 /**
  * HERO STUDIO — gestione degli sfondi e degli overlay 3D delle hero.
@@ -286,6 +407,19 @@ export function HeroStudio({ initial }: { initial: CmsData }) {
                 dedicato.
               </p>
             )}
+
+            {/* Video di sfondo: sostituisce la foto su questo dispositivo */}
+            <VideoField
+              label={
+                VIDEO_KEY[device] === "hero.videoPortrait"
+                  ? "Video di sfondo verticale (telefono e tablet verticale)"
+                  : "Video di sfondo orizzontale (computer e tablet orizzontale)"
+              }
+              hint="Facoltativo: .mp4 o .webm, senza audio, breve e a ciclo continuo. Se c'è, copre la foto di sfondo — che resta come prima immagine e come riserva. L'overlay 3D continua a funzionarci sopra."
+              value={page.images[VIDEO_KEY[device]] ?? ""}
+              onChange={(url) => setImage(VIDEO_KEY[device], url)}
+              onError={setError}
+            />
             {[dev.bgKey, dev.fgKey].map((key) => {
               const def = pageDef.images[key];
               if (!def) return null;

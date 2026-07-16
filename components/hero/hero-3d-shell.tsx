@@ -67,6 +67,37 @@ export function Hero3DShell({
     return () => mq.removeEventListener("change", update);
   }, []);
 
+  /**
+   * VIDEO DI SFONDO — un solo file, scelto dopo il mount in base
+   * all'orientamento: verticale su telefono e tablet verticale, orizzontale
+   * su tablet orizzontale e computer. Sceglierlo lato client (invece di
+   * mettere entrambi nel DOM) evita che il telefono si scarichi anche il
+   * video orizzontale. Se ne è caricato uno solo, vale per tutti.
+   * Con prefers-reduced-motion resta la foto.
+   */
+  const [videoSrc, setVideoSrc] = useState<string | null>(null);
+  useEffect(() => {
+    if (!assets.videoLandscape && !assets.videoPortrait) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const portraitMq = window.matchMedia("(orientation: portrait)");
+    const desktopMq = window.matchMedia("(min-width: 1024px) and (pointer: fine)");
+    const pick = () => {
+      const wantsPortrait = portraitMq.matches && !desktopMq.matches;
+      const src = wantsPortrait
+        ? assets.videoPortrait || assets.videoLandscape
+        : assets.videoLandscape || assets.videoPortrait;
+      setVideoSrc(src || null);
+    };
+    pick();
+    portraitMq.addEventListener("change", pick);
+    desktopMq.addEventListener("change", pick);
+    return () => {
+      portraitMq.removeEventListener("change", pick);
+      desktopMq.removeEventListener("change", pick);
+    };
+  }, [assets.videoLandscape, assets.videoPortrait]);
+
   function onMove(e: React.MouseEvent<HTMLDivElement>) {
     if (!interactive || coarse) return;
     const rect = ref.current?.getBoundingClientRect();
@@ -146,6 +177,24 @@ export function Hero3DShell({
         ) : (
           <div className="h-full w-full bg-gradient-to-b from-secondary to-background" />
         )}
+
+        {/* Video di sfondo: copre la foto quando c'è. La foto sotto resta
+            visibile finché il video non parte (e se non parte affatto). */}
+        {videoSrc && (
+          <video
+            key={videoSrc}
+            src={videoSrc}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            aria-hidden
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{ transform: "scale(1.1)" }}
+          />
+        )}
+
         {/* Velo per leggibilità + tinta cinematografica */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />

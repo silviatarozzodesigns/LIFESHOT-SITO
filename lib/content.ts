@@ -288,6 +288,18 @@ export function getServiceCopy(content: CmsData): Record<string, ServiceCopy> {
  */
 export function heroImageDefs(subject: string): Record<string, ImageDef> {
   return {
+    // ── VIDEO DI SFONDO ── (facoltativi: se c'è, sostituisce la foto di
+    // sfondo del dispositivo corrispondente; la foto resta come poster)
+    "hero.videoLandscape": {
+      label: "Video di sfondo — orizzontale (computer e tablet orizzontale)",
+      default: "",
+      hint: "File .mp4 o .webm senza audio, 10–20s a ciclo continuo. Sostituisce la foto di sfondo su computer e tablet orizzontale.",
+    },
+    "hero.videoPortrait": {
+      label: "Video di sfondo — verticale (telefono e tablet verticale)",
+      default: "",
+      hint: "File .mp4 o .webm verticale. Sostituisce la foto di sfondo su telefono e tablet verticale.",
+    },
     // ── DESKTOP ──
     "hero.background": {
       label: "Hero Desktop — sfondo",
@@ -352,6 +364,9 @@ export interface HeroAssets {
   foregroundTablet: HeroAsset;
   foregroundTabletLandscape: HeroAsset;
   foregroundMobile: HeroAsset;
+  /** Video di sfondo (URL): se presenti sostituiscono la foto di sfondo */
+  videoLandscape: string;
+  videoPortrait: string;
 }
 
 /** Legge dal CMS gli 8 asset hero di una pagina, con inquadrature */
@@ -369,6 +384,8 @@ export function getHeroAssets(content: CmsData, slug: PageSlug): HeroAssets {
     foregroundTablet: asset("hero.foregroundTablet"),
     foregroundTabletLandscape: asset("hero.foregroundTabletLandscape"),
     foregroundMobile: asset("hero.foregroundMobile"),
+    videoLandscape: getImage(content, slug, "hero.videoLandscape"),
+    videoPortrait: getImage(content, slug, "hero.videoPortrait"),
   };
 }
 
