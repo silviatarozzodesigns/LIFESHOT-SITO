@@ -31,11 +31,19 @@ const UNAUTHORIZED = {
 };
 
 /**
+ * Prefissi che il CMS ha il diritto di cancellare: le immagini caricate
+ * dall'editor (`cms/`) e i video di sfondo delle hero (`videos/`, caricati
+ * con lo stesso canale delle clip). Le foto degli eventi (`events/`) NON
+ * sono qui: le governa la dashboard foto, non il CMS.
+ */
+const CMS_DELETABLE_PREFIXES = ["cms/", "videos/"];
+
+/**
  * Elimina un asset dallo storage Cloudflare R2 (o locale) a partire dal suo
  * URL pubblico — usato dalla sidebar quando si sostituisce o si rimuove
- * un'immagine, così non restano file orfani sul bucket.
+ * un'immagine o un video, così non restano file orfani sul bucket.
  *
- * Sicuro per design: cancella SOLO i file caricati dal CMS (prefisso `cms/`).
+ * Sicuro per design: cancella SOLO i file caricati dal CMS (vedi prefissi).
  * Default vettoriali (/hero/…), object-URL (blob:) e URL esterni → no-op.
  */
 export async function deleteAsset(url: string): Promise<{ ok: boolean }> {
@@ -46,7 +54,9 @@ export async function deleteAsset(url: string): Promise<{ ok: boolean }> {
   try {
     const storage = getStorage();
     const key = storage.keyFromPublicUrl(url);
-    if (!key || !key.startsWith("cms/")) return { ok: true };
+    if (!key || !CMS_DELETABLE_PREFIXES.some((p) => key.startsWith(p))) {
+      return { ok: true };
+    }
     await storage.delete(key);
     return { ok: true };
   } catch (error) {

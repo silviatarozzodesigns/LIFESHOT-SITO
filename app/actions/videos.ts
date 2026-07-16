@@ -6,6 +6,7 @@ import { connectDB } from "@/lib/db";
 import { Video } from "@/models/Video";
 import { EVENT_CATEGORIES, type EventCategory } from "@/models/Event";
 import { parseVideoUrl } from "@/lib/video";
+import { deleteByPublicUrl } from "@/lib/storage";
 import { isAdmin } from "@/lib/auth";
 
 export type VideoActionResult =
@@ -74,6 +75,10 @@ export async function deleteVideo(id: string): Promise<VideoActionResult> {
     await connectDB();
     const deleted = await Video.findByIdAndDelete(id);
     if (!deleted) return { ok: false, error: "Video non trovato." };
+    // Clip caricata da noi (provider "file") → togli anche il file dal cloud,
+    // altrimenti resterebbe su R2 a occupare spazio per sempre. I link
+    // esterni (YouTube/Vimeo/Instagram) non hanno nulla da cancellare.
+    if (deleted.provider === "file") await deleteByPublicUrl(deleted.url);
     revalidateVideoPages();
     return { ok: true, id };
   } catch (error) {
