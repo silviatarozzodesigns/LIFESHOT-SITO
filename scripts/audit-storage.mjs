@@ -152,19 +152,22 @@ console.log(
   )} MB · citati dal database: ${usate.size}\n`
 );
 
+// Tutte le chiavi stanno sotto "events/", quindi il primo segmento da solo
+// non direbbe nulla: raggruppa per i primi due (events/cms, events/<gara>…)
 const perCartella = {};
 for (const o of oggetti) {
-  const c = o.key.split("/")[0];
+  const c = o.key.split("/").slice(0, 2).join("/");
   (perCartella[c] ??= []).push(o);
 }
 console.log("PER CARTELLA");
 for (const [c, lista] of Object.entries(perCartella).sort(
   (a, b) => b[1].length - a[1].length
 )) {
+  const orfaniQui = lista.filter((o) => !usate.has(o.key)).length;
   console.log(
-    `  ${c.padEnd(10)} ${String(lista.length).padStart(5)} file  ${mb(
+    `  ${c.padEnd(28)} ${String(lista.length).padStart(5)} file  ${mb(
       lista.reduce((s, o) => s + o.size, 0)
-    ).padStart(9)} MB`
+    ).padStart(9)} MB${orfaniQui ? `  · ${orfaniQui} orfani` : ""}`
   );
 }
 

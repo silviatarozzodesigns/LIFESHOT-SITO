@@ -31,6 +31,14 @@ export function extractRaceNumber(filename: string): string | null {
   return null;
 }
 
+/**
+ * Cartelle "di sistema" dentro `events/`, non veri eventi: qui finiscono le
+ * immagini caricate dal CMS (HERO/EDITOR) e i video. Sono le uniche che il
+ * CMS ha il diritto di cancellare.
+ */
+export const CMS_FOLDER = "cms";
+export const VIDEOS_FOLDER = "videos";
+
 /** Genera una chiave storage sicura e univoca per la foto */
 export function buildStorageKey(eventSlug: string, filename: string): string {
   const ext = filename.includes(".") ? filename.split(".").pop() : "jpg";
@@ -43,6 +51,17 @@ export function buildStorageKey(eventSlug: string, filename: string): string {
   const unique = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   return `events/${eventSlug}/${safeName}-${unique}.${ext}`;
 }
+
+/**
+ * Prefissi delle chiavi degli asset del CMS, ricavati dalla STESSA funzione
+ * che le genera: se cambia lo schema delle chiavi, la guardia di
+ * `deleteAsset` lo segue da sola invece di restare indietro in silenzio.
+ * (È già successo: cercava "cms/" mentre le chiavi sono "events/cms/", così
+ * ogni immagine sostituita o rimossa restava su Cloudflare per sempre.)
+ */
+export const CMS_ASSET_PREFIXES: string[] = [CMS_FOLDER, VIDEOS_FOLDER].map(
+  (folder) => buildStorageKey(folder, "x.jpg").replace(/[^/]+$/, "")
+);
 
 /** Slug URL-friendly dal nome evento */
 export function slugify(text: string): string {
