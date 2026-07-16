@@ -107,7 +107,8 @@ interface PopulatedEvent {
   _id: unknown;
   name: string;
   slug: string;
-  date: Date;
+  /** Facoltativa: un evento può non avere una data */
+  date?: Date | null;
   location?: string;
 }
 
@@ -130,7 +131,7 @@ function toDTO(doc: {
           id: String(doc.event._id),
           name: doc.event.name,
           slug: doc.event.slug,
-          date: doc.event.date.toISOString(),
+          date: doc.event.date ? doc.event.date.toISOString() : "",
           location: doc.event.location ?? "",
         }
       : null;

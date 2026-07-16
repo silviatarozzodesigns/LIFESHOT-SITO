@@ -30,6 +30,7 @@ export interface EventDTO {
   name: string;
   slug: string;
   category: EventCategory;
+  /** Data ISO, oppure "" se l'evento non ne ha una (è facoltativa) */
   date: string;
   location: string;
   description: string;
@@ -43,7 +44,7 @@ function toDTO(doc: {
   name: string;
   slug: string;
   category?: EventCategory;
-  date: Date;
+  date?: Date | null;
   location?: string;
   description?: string;
   coverImage?: string;
@@ -55,7 +56,7 @@ function toDTO(doc: {
     name: doc.name,
     slug: doc.slug,
     category: doc.category ?? "motorsport",
-    date: doc.date.toISOString(),
+    date: doc.date ? doc.date.toISOString() : "",
     location: doc.location ?? "",
     description: doc.description ?? "",
     coverImage: doc.coverImage ?? "",
@@ -90,7 +91,7 @@ export const getRecentEvents = unstable_cache(
         published: true,
         ...categoryFilter(category),
       })
-        .sort({ date: -1 })
+        .sort({ date: -1, createdAt: -1 })
         .limit(limit)
         .lean();
       return docs.map(toDTO);
@@ -107,7 +108,7 @@ export const getEventsForFilter = unstable_cache(
         published: true,
         ...categoryFilter("motorsport"),
       })
-        .sort({ date: -1 })
+        .sort({ date: -1, createdAt: -1 })
         .lean();
       return docs.map(toDTO);
     }),

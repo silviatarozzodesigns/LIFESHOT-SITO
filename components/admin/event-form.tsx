@@ -110,14 +110,16 @@ export function EventForm({ event, defaultCategory }: EventFormProps) {
 
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="date">Data *</Label>
+          <Label htmlFor="date">Data</Label>
           <Input
             id="date"
             name="date"
             type="date"
-            required
-            defaultValue={event?.date.slice(0, 10)}
+            defaultValue={event?.date ? event.date.slice(0, 10) : ""}
           />
+          <p className="text-xs text-muted-foreground">
+            Facoltativa: senza data non viene mostrata da nessuna parte.
+          </p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="location">Luogo</Label>

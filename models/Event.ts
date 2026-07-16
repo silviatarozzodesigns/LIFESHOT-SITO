@@ -37,9 +37,11 @@ const EventSchema = new Schema(
       trim: true,
       index: true,
     },
+    // Facoltativa: i progetti vetrina spesso non hanno una data sensata,
+    // e anche una gara può essere caricata prima di saperla.
     date: {
       type: Date,
-      required: [true, "La data dell'evento è obbligatoria"],
+      default: null,
     },
     location: {
       type: String,

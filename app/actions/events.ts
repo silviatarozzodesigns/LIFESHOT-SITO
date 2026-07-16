@@ -27,8 +27,8 @@ const UNAUTHORIZED = {
 
 export interface EventInput {
   name: string;
-  /** Data in formato ISO o yyyy-mm-dd (input type="date") */
-  date: string;
+  /** Data in formato ISO o yyyy-mm-dd (input type="date"). Facoltativa: "" = nessuna */
+  date?: string;
   /** Macrocategoria (default motorsport per retro-compatibilità) */
   category?: EventCategory;
   location?: string;
@@ -44,8 +44,9 @@ export type ActionResult =
 function validate(input: EventInput): string | null {
   if (!input.name?.trim()) return "Il nome dell'evento è obbligatorio.";
   if (input.name.trim().length > 200) return "Nome troppo lungo (max 200 caratteri).";
-  if (!input.date || Number.isNaN(Date.parse(input.date)))
-    return "Data dell'evento mancante o non valida.";
+  // La data è facoltativa, ma se c'è dev'essere una data vera
+  if (input.date && Number.isNaN(Date.parse(input.date)))
+    return "Data dell'evento non valida.";
   if (input.category && !EVENT_CATEGORIES.includes(input.category))
     return "Categoria non valida.";
   return null;
@@ -89,7 +90,7 @@ export async function createEvent(input: EventInput): Promise<ActionResult> {
       name: input.name.trim(),
       slug: await uniqueSlug(input.name),
       category: input.category ?? "motorsport",
-      date: new Date(input.date),
+      date: input.date ? new Date(input.date) : null,
       location: input.location?.trim() ?? "",
       description: input.description?.trim() ?? "",
       coverImage: input.coverImage ?? "",
@@ -123,7 +124,8 @@ export async function updateEvent(
     }
     event.name = input.name.trim();
     if (input.category) event.category = input.category;
-    event.date = new Date(input.date);
+    // Svuotare il campo nel form significa "nessuna data", non "non toccarla"
+    event.date = input.date ? new Date(input.date) : null;
     event.location = input.location?.trim() ?? "";
     event.description = input.description?.trim() ?? "";
     // Cover sostituita/rimossa: elimina subito la vecchia da Cloudflare

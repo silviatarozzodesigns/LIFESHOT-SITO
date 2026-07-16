@@ -122,7 +122,7 @@ export default async function PhotoPage({
                       <dd>{photo.pilotNames.join(", ")}</dd>
                     </div>
                   )}
-                  {photo.event && (
+                  {photo.event?.date && (
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 shrink-0" />
                       <dd>{formatDate(photo.event.date)}</dd>

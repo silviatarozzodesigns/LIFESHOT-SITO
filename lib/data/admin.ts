@@ -17,7 +17,7 @@ function eventToDTO(doc: {
   name: string;
   slug: string;
   category?: EventCategory;
-  date: Date;
+  date?: Date | null;
   location?: string;
   description?: string;
   coverImage?: string;
@@ -29,7 +29,7 @@ function eventToDTO(doc: {
     name: doc.name,
     slug: doc.slug,
     category: doc.category ?? "motorsport",
-    date: doc.date.toISOString(),
+    date: doc.date ? doc.date.toISOString() : "",
     location: doc.location ?? "",
     description: doc.description ?? "",
     coverImage: doc.coverImage ?? "",
@@ -48,7 +48,7 @@ export async function getAllEventsAdmin(
       slug: { $ne: BEHIND_LENS_SLUG },
       ...(category ? categoryFilter(category) : {}),
     })
-      .sort({ date: -1 })
+      .sort({ date: -1, createdAt: -1 })
       .lean();
     return docs.map(eventToDTO);
   } catch (error) {
