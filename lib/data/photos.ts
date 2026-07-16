@@ -355,8 +355,10 @@ export const getFeaturedPhotos = unstable_cache(
           .lean();
         filter.event = { $in: events.map((e) => e._id) };
       }
+      // L'ordine lo decide l'admin da Gallery (featuredOrder); a pari merito
+      // (mai ordinate = 0) valgono le più recenti.
       const docs = await Photo.find(filter)
-        .sort({ createdAt: -1 })
+        .sort({ featuredOrder: 1, createdAt: -1 })
         .limit(limit)
         .populate<{ event: PopulatedEvent }>("event", "name slug date location")
         .lean();

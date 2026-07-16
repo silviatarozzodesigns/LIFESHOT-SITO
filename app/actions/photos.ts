@@ -84,6 +84,38 @@ export async function togglePhotoFeatured(
   }
 }
 
+/**
+ * Salva l'ordine scelto a mano nella gallery "In evidenza": la posizione di
+ * ogni foto è il suo posto nella lista ricevuta.
+ *
+ * Si parte da 1 perché lo 0 significa "mai ordinata" (e va in cima): una
+ * foto appena messa in vetrina compare per prima, senza dover riordinare.
+ */
+export async function reorderFeaturedPhotos(
+  ids: string[]
+): Promise<PhotoActionResult> {
+  if (!(await isAdmin())) return UNAUTHORIZED;
+  if (!Array.isArray(ids) || ids.length === 0) return { ok: true };
+  if (ids.some((id) => !Types.ObjectId.isValid(id)))
+    return { ok: false, error: "Elenco foto non valido." };
+
+  try {
+    await connectDB();
+    await Photo.bulkWrite(
+      ids.map((id, i) => ({
+        updateOne: { filter: { _id: id }, update: { $set: { featuredOrder: i + 1 } } },
+      }))
+    );
+    revalidatePublicPages();
+    revalidatePath("/ristorazione");
+    revalidatePath("/business");
+    return { ok: true };
+  } catch (error) {
+    console.error("[lifeshot] reorderFeaturedPhotos fallita:", error);
+    return { ok: false, error: "Errore durante il salvataggio dell'ordine." };
+  }
+}
+
 /** Massimi per evitare abusi/payload enormi dai campi multi-tag. */
 const MAX_TAGS = 20;
 const MAX_TAG_LEN = 100;

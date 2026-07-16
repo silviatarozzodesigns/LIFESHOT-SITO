@@ -83,6 +83,10 @@ const PhotoSchema = new Schema(
     watermarkDark: { type: Boolean, default: true },
     // Marca le foto curate per la sezione homepage "Dietro l'obiettivo"
     featured: { type: Boolean, default: false, index: true },
+    // Posizione scelta a mano nella gallery "In evidenza" (admin → Gallery).
+    // 0 = mai ordinata: quelle a pari merito restano in ordine di
+    // caricamento, e una foto appena messa in vetrina compare per prima.
+    featuredOrder: { type: Number, default: 0, index: true },
     // Prezzo in centesimi per il futuro flusso d'acquisto (placeholder)
     priceCents: {
       type: Number,

@@ -92,8 +92,11 @@ export async function getAllFeaturedPhotosAdmin(
         .lean();
       filter.event = { $in: events.map((e) => e._id) };
     }
+    // Stesso ordine del sito: prima la posizione scelta a mano, poi le
+    // mai-ordinate (0) in ordine di caricamento. Così l'admin è lo specchio
+    // di ciò che vede il visitatore.
     const docs = await Photo.find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ featuredOrder: 1, createdAt: -1 })
       .lean();
     return docs.map(photoToAdminDTO);
   } catch (error) {
@@ -121,6 +124,8 @@ export interface AdminPhotoDTO {
   pilotNames: string[];
   originalFilename: string;
   featured: boolean;
+  /** Posizione scelta a mano nella gallery "In evidenza" (0 = mai ordinata) */
+  featuredOrder: number;
   createdAt: string;
 }
 
@@ -133,6 +138,7 @@ function photoToAdminDTO(doc: {
   pilotName?: string | null;
   originalFilename: string;
   featured?: boolean;
+  featuredOrder?: number;
   createdAt?: Date;
 }): AdminPhotoDTO {
   const { raceNumbers, pilotNames } = normalizeTags(doc);
@@ -143,6 +149,7 @@ function photoToAdminDTO(doc: {
     pilotNames,
     originalFilename: doc.originalFilename,
     featured: Boolean(doc.featured),
+    featuredOrder: doc.featuredOrder ?? 0,
     createdAt: doc.createdAt?.toISOString() ?? new Date().toISOString(),
   };
 }

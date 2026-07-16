@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Check, Loader2, Search, Star, Trash2, X } from "lucide-react";
+import { Check, GripVertical, Loader2, Search, Star, Trash2, X } from "lucide-react";
 import {
   deletePhoto,
+  reorderFeaturedPhotos,
   togglePhotoFeatured,
   updatePhotoMeta,
 } from "@/app/actions/photos";
@@ -27,14 +28,49 @@ function sameTags(a: string[], b: string[]): boolean {
  * Griglia foto della dashboard: filtro rapido (numero / "senza numero" /
  * pilota / nome file) + tag modificabili inline con autosave, cancellazione
  * singola. Le anteprime passano dalla rotta watermark (/api/images).
+ *
+ * Con `sortable` (sezione Gallery) le foto si trascinano per decidere in
+ * che ordine appaiono sul sito. Il trascinamento è disattivato mentre il
+ * filtro è attivo: si vedrebbe solo un pezzo della lista e si sposterebbe
+ * una foto in un punto che non corrisponde a quello vero.
  */
-export function PhotoAdminGrid({ photos }: { photos: AdminPhotoDTO[] }) {
+export function PhotoAdminGrid({
+  photos,
+  sortable = false,
+}: {
+  photos: AdminPhotoDTO[];
+  sortable?: boolean;
+}) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
+  const [ordine, setOrdine] = useState(photos);
+  const [isSaving, startSaving] = useTransition();
+  const trascinata = useRef<number | null>(null);
+  const [sopra, setSopra] = useState<number | null>(null);
 
+  // La lista arriva dal server: se cambia (stella tolta, foto eliminata,
+  // ordine salvato) l'ordine locale la segue.
+  useEffect(() => setOrdine(photos), [photos]);
+
+  const lista = sortable ? ordine : photos;
   const filtered = useMemo(
-    () => photos.filter((p) => photoMatchesQuery(p, query)),
-    [photos, query]
+    () => lista.filter((p) => photoMatchesQuery(p, query)),
+    [lista, query]
   );
+  const puoTrascinare = sortable && !query;
+
+  function sposta(da: number, a: number) {
+    if (da === a) return;
+    const next = [...ordine];
+    const [presa] = next.splice(da, 1);
+    next.splice(a, 0, presa);
+    setOrdine(next); // ottimistico: la griglia si riordina subito
+    startSaving(async () => {
+      const result = await reorderFeaturedPhotos(next.map((p) => p.id));
+      if (!result.ok) setOrdine(photos); // rimetti com'era
+      router.refresh();
+    });
+  }
 
   if (!photos.length) {
     return (
@@ -75,14 +111,62 @@ export function PhotoAdminGrid({ photos }: { photos: AdminPhotoDTO[] }) {
         </span>
       </div>
 
+      {sortable && (
+        <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <GripVertical className="h-3.5 w-3.5 shrink-0" />
+          {query
+            ? "Azzera il filtro per poter riordinare le foto."
+            : "Trascina le foto per decidere l'ordine con cui appaiono sul sito."}
+          {isSaving && <span className="text-primary">· salvo…</span>}
+        </p>
+      )}
+
       {filtered.length === 0 ? (
         <p className="mt-6 text-sm text-muted-foreground">
           Nessuna foto corrisponde a “{query}”.
         </p>
       ) : (
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {filtered.map((photo) => (
-            <PhotoAdminCard key={photo.id} photo={photo} />
+          {filtered.map((photo, i) => (
+            <div
+              key={photo.id}
+              draggable={puoTrascinare}
+              onDragStart={() => {
+                trascinata.current = i;
+              }}
+              onDragOver={(e) => {
+                if (!puoTrascinare) return;
+                e.preventDefault(); // senza, il drop non avviene
+                setSopra(i);
+              }}
+              onDragLeave={() => setSopra((s) => (s === i ? null : s))}
+              onDrop={(e) => {
+                if (!puoTrascinare) return;
+                e.preventDefault();
+                setSopra(null);
+                if (trascinata.current != null) sposta(trascinata.current, i);
+                trascinata.current = null;
+              }}
+              onDragEnd={() => {
+                setSopra(null);
+                trascinata.current = null;
+              }}
+              className={cn(
+                "group/card relative rounded-xl transition-all",
+                puoTrascinare && "cursor-grab active:cursor-grabbing",
+                sopra === i && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+              )}
+            >
+              {puoTrascinare && (
+                <span
+                  aria-hidden
+                  className="absolute left-1/2 top-1.5 z-10 flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-md bg-black/55 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover/card:opacity-100"
+                >
+                  <GripVertical className="h-3.5 w-3.5" />
+                </span>
+              )}
+              <PhotoAdminCard photo={photo} />
+            </div>
           ))}
         </div>
       )}

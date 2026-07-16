@@ -120,10 +120,11 @@ export default async function AdminGalleryPage({
             </span>
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Togli la stella per rimuovere uno scatto dalla galleria.
+            Togli la stella per rimuovere uno scatto dalla galleria. L&apos;ordine
+            qui è lo stesso che vedono i visitatori.
           </p>
           {photos.length > 0 ? (
-            <PhotoAdminGrid photos={photos} />
+            <PhotoAdminGrid photos={photos} sortable />
           ) : (
             <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-dashed py-16 text-center">
               <Star className="h-8 w-8 text-muted-foreground" />
