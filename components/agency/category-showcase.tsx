@@ -38,6 +38,13 @@ export interface ShowcaseCategory {
 }
 
 /**
+ * Il "fuoco" del viewport su desktop: è aperta la categoria la cui
+ * intestazione gli è più vicina. Lo usano sia l'espansione da scroll sia il
+ * click, così parlano la stessa lingua invece di contendersi la card.
+ */
+const FUOCO = 0.4;
+
+/**
  * Bordo inferiore della navbar fissa (viewport), per non finirci sotto.
  * Se risulta fuori schermo il `fixed` è momentaneamente neutralizzato
  * (l'animazione d'ingresso pagina applica un filter → containing block):
@@ -51,9 +58,11 @@ function navBottom(): number {
 /**
  * CATEGORIE A ESPANSIONE.
  *
- * DESKTOP (puntatore fine): guidata dalla posizione. Scorrendo, la categoria
- * la cui intestazione è più vicina al "fuoco" del viewport si espande e le
- * altre si richiudono.
+ * DESKTOP (puntatore fine): guidata dalla posizione E dal click. Scorrendo,
+ * la categoria la cui intestazione è più vicina al "fuoco" del viewport si
+ * espande e le altre si richiudono; cliccandone una, si apre subito e la
+ * pagina la porta sul fuoco (per chi non ha voglia di cercare lo scroll
+ * giusto).
  *
  * TOUCH (mobile/tablet): comanda il TOCCO. L'espansione da scroll qui è
  * inservibile — mentre scorri l'apertura sposta il contenuto, lo scroll
@@ -75,6 +84,8 @@ export function CategoryShowcase({
   const [active, setActive] = useState(0);
   const [touch, setTouch] = useState(false);
   const raf = useRef<number | null>(null);
+  /** Finché non scade, lo scroll non sovrascrive una scelta fatta col click */
+  const ignoraScrollFino = useRef(0);
 
   // Su touch/schermi piccoli l'espansione la comanda il tap, non lo scroll
   useEffect(() => {
@@ -89,7 +100,9 @@ export function CategoryShowcase({
     if (touch) return; // niente scroll-driven su touch
     const compute = () => {
       raf.current = null;
-      const target = window.innerHeight * 0.4;
+      // Appena aperta col click: lo scroll che ne consegue non deve cambiarla
+      if (Date.now() < ignoraScrollFino.current) return;
+      const target = window.innerHeight * FUOCO;
       const dists = heads.current.map((el) => {
         if (!el) return Infinity;
         const r = el.getBoundingClientRect();
@@ -124,20 +137,29 @@ export function CategoryShowcase({
   }, [touch]);
 
   /**
-   * Apre la categoria i e la porta al centro dello spazio libero.
+   * Apre la categoria i (click o tap) e la porta dove serve.
    *
    * L'altezza finale del pannello si conosce PRIMA di animare (il contenuto
    * è già montato, solo ritagliato da overflow-hidden → scrollHeight), così
    * lo scroll parte subito insieme all'apertura invece di inseguirla.
+   *
+   * Su DESKTOP l'intestazione va portata sul FUOCO (40% del viewport), lo
+   * stesso punto che usa l'espansione da scroll: click e scroll finiscono
+   * d'accordo invece di contendersi la card. Nel frattempo lo scroll-driven
+   * resta zitto (`ignoraScrollFino`), altrimenti il movimento della pagina
+   * riaprirebbe la categoria che passa davanti al fuoco.
    */
   function open(i: number) {
     const prev = active;
     setActive(i);
     if (i === prev) return;
+    // La scelta dell'utente vince finché la pagina non si è fermata
+    ignoraScrollFino.current = Date.now() + 900;
 
     requestAnimationFrame(() => {
       const article = articles.current[i];
-      if (!article) return;
+      const head = heads.current[i];
+      if (!article || !head) return;
       const rect = article.getBoundingClientRect();
       const panelH = panels.current[i]?.scrollHeight ?? 0;
       // Se la card aperta sta SOPRA, chiudendosi accorcia la pagina: la card
@@ -145,14 +167,22 @@ export function CategoryShowcase({
       const shift =
         prev < i ? (panels.current[prev]?.scrollHeight ?? 0) : 0;
 
-      const top = navBottom();
-      const free = window.innerHeight - top - 16;
-      const cardH = rect.height + panelH; // rect: card ancora chiusa
-      // Ci sta tutta → centrata; troppo alta → intestazione subito sotto la nav
-      const targetTop = top + (cardH < free ? (free - cardH) / 2 : 12);
+      let delta: number;
+      if (touch) {
+        const top = navBottom();
+        const free = window.innerHeight - top - 16;
+        const cardH = rect.height + panelH; // rect: card ancora chiusa
+        // Ci sta tutta → centrata; troppo alta → intestazione sotto la nav
+        const targetTop = top + (cardH < free ? (free - cardH) / 2 : 12);
+        delta = rect.top - targetTop;
+      } else {
+        const headRect = head.getBoundingClientRect();
+        delta =
+          headRect.top + headRect.height / 2 - window.innerHeight * FUOCO;
+      }
 
       window.scrollTo({
-        top: window.scrollY + (rect.top - targetTop) - shift,
+        top: window.scrollY + delta - shift,
         behavior: "smooth",
       });
     });
