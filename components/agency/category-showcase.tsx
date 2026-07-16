@@ -38,13 +38,31 @@ export interface ShowcaseCategory {
 }
 
 /**
- * CATEGORIE A ESPANSIONE GUIDATA DALLA POSIZIONE.
+ * Bordo inferiore della navbar fissa (viewport), per non finirci sotto.
+ * Se risulta fuori schermo il `fixed` è momentaneamente neutralizzato
+ * (l'animazione d'ingresso pagina applica un filter → containing block):
+ * in quel caso vale l'altezza nominale della capsula.
+ */
+function navBottom(): number {
+  const rect = document.querySelector("header")?.getBoundingClientRect();
+  return rect && rect.bottom > 0 ? rect.bottom : 88;
+}
+
+/**
+ * CATEGORIE A ESPANSIONE.
  *
- * Lo scroll resta libero: mentre si scende, la categoria la cui
- * intestazione è più vicina al "fuoco" del viewport (≈40% dall'alto)
- * si espande con un'animazione fluida e le altre si richiudono; salendo
- * succede il contrario. Le intestazioni restano cliccabili (accessibilità
- * e chi scrolla veloce). Dentro: galleria sfogliabile + descrizione.
+ * DESKTOP (puntatore fine): guidata dalla posizione. Scorrendo, la categoria
+ * la cui intestazione è più vicina al "fuoco" del viewport si espande e le
+ * altre si richiudono.
+ *
+ * TOUCH (mobile/tablet): comanda il TOCCO. L'espansione da scroll qui è
+ * inservibile — mentre scorri l'apertura sposta il contenuto, lo scroll
+ * ricalcola e l'animazione singhiozza; per giunta la card finiva in un punto
+ * qualsiasi, spesso sotto la navbar fissa. Al tap la card si apre e si
+ * CENTRA nello spazio libero sotto la navbar, con lo scroll animato in
+ * parallelo all'espansione (un solo movimento, niente rincorse).
+ *
+ * Dentro: galleria sfogliabile + descrizione.
  */
 export function CategoryShowcase({
   categories,
@@ -52,10 +70,23 @@ export function CategoryShowcase({
   categories: ShowcaseCategory[];
 }) {
   const heads = useRef<Array<HTMLDivElement | null>>([]);
+  const articles = useRef<Array<HTMLElement | null>>([]);
+  const panels = useRef<Array<HTMLDivElement | null>>([]);
   const [active, setActive] = useState(0);
+  const [touch, setTouch] = useState(false);
   const raf = useRef<number | null>(null);
 
+  // Su touch/schermi piccoli l'espansione la comanda il tap, non lo scroll
   useEffect(() => {
+    const mq = window.matchMedia("(pointer: coarse), (max-width: 1023px)");
+    const update = () => setTouch(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    if (touch) return; // niente scroll-driven su touch
     const compute = () => {
       raf.current = null;
       const target = window.innerHeight * 0.4;
@@ -90,7 +121,42 @@ export function CategoryShowcase({
       window.removeEventListener("resize", onScroll);
       if (raf.current != null) cancelAnimationFrame(raf.current);
     };
-  }, []);
+  }, [touch]);
+
+  /**
+   * Apre la categoria i e la porta al centro dello spazio libero.
+   *
+   * L'altezza finale del pannello si conosce PRIMA di animare (il contenuto
+   * è già montato, solo ritagliato da overflow-hidden → scrollHeight), così
+   * lo scroll parte subito insieme all'apertura invece di inseguirla.
+   */
+  function open(i: number) {
+    const prev = active;
+    setActive(i);
+    if (i === prev) return;
+
+    requestAnimationFrame(() => {
+      const article = articles.current[i];
+      if (!article) return;
+      const rect = article.getBoundingClientRect();
+      const panelH = panels.current[i]?.scrollHeight ?? 0;
+      // Se la card aperta sta SOPRA, chiudendosi accorcia la pagina: la card
+      // toccata salirà di tanto quanto il pannello che si chiude.
+      const shift =
+        prev < i ? (panels.current[prev]?.scrollHeight ?? 0) : 0;
+
+      const top = navBottom();
+      const free = window.innerHeight - top - 16;
+      const cardH = rect.height + panelH; // rect: card ancora chiusa
+      // Ci sta tutta → centrata; troppo alta → intestazione subito sotto la nav
+      const targetTop = top + (cardH < free ? (free - cardH) / 2 : 12);
+
+      window.scrollTo({
+        top: window.scrollY + (rect.top - targetTop) - shift,
+        behavior: "smooth",
+      });
+    });
+  }
 
   return (
     // overflow-anchor: none → lo scroll anchoring non compensa le
@@ -103,12 +169,16 @@ export function CategoryShowcase({
         return (
           <article
             key={cat.id}
+            ref={(el) => {
+              articles.current[i] = el;
+            }}
             className={cn(
               "overflow-hidden rounded-3xl border bg-card transition-colors duration-500",
               isActive && "border-primary/40"
             )}
           >
-            {/* Intestazione: guida lo stato ma resta cliccabile */}
+            {/* Intestazione: su touch è il comando d'apertura, su desktop
+                guida lo stato ma resta comunque cliccabile */}
             <div
               ref={(el) => {
                 heads.current[i] = el;
@@ -116,17 +186,11 @@ export function CategoryShowcase({
               role="button"
               tabIndex={0}
               aria-expanded={isActive}
-              onClick={() => {
-                setActive(i);
-                heads.current[i]?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "center",
-                });
-              }}
+              onClick={() => open(i)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  setActive(i);
+                  open(i);
                 }
               }}
               className="flex cursor-pointer items-center justify-between gap-4 p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-8"
@@ -171,10 +235,15 @@ export function CategoryShowcase({
                 height: isActive ? "auto" : 0,
                 opacity: isActive ? 1 : 0,
               }}
-              transition={{ duration: 0.6, ease: [0.22, 0.61, 0.36, 1] }}
+              transition={{ duration: 0.45, ease: [0.22, 0.61, 0.36, 1] }}
               className="overflow-hidden"
             >
-              <div className="grid gap-6 p-6 pt-0 sm:p-8 sm:pt-0 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:items-center">
+              <div
+                ref={(el) => {
+                  panels.current[i] = el;
+                }}
+                className="grid gap-6 p-6 pt-0 sm:p-8 sm:pt-0 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:items-center"
+              >
                 <Gallery cat={cat} />
                 <div>
                   <p className="text-muted-foreground">
