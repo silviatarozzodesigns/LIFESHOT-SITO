@@ -33,7 +33,9 @@ export function Services() {
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">
             Cosa facciamo
           </p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+          {/* text-balance: distribuisce le parole fra le righe, così
+              l'ultima non resta orfana da sola in fondo */}
+          <h2 className="mt-2 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
             Foto, video e grafica con un&apos;anima sola
           </h2>
           <p className="mt-3 text-muted-foreground">
