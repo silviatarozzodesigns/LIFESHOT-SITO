@@ -42,7 +42,10 @@ export function CategoryHero({
           alto, le azioni scendono in fondo (dove lì sta la ricerca) invece
           di ammassarsi tutte al centro. Vale su ogni schermo. */}
       <div className="flex w-full max-w-xl flex-1 flex-col justify-between gap-12">
-        <div>
+        {/* Su telefono il blocco scende di 22px: quanto basta perché il
+            titolo cada esattamente all'altezza del nome evento di
+            motorsport (lì il badge è più alto dell'occhiello). */}
+        <div className="mt-[22px] sm:mt-0">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">
             Categoria
           </p>
