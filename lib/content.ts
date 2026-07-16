@@ -479,7 +479,7 @@ export const PAGES: Record<PageSlug, PageDef> = {
       },
       "hero.ctaLabel": {
         label: "Hero — testo bottone",
-        default: "Contattaci ora",
+        default: "Lavora con noi",
         max: 40,
       },
       "ribbon.items": {

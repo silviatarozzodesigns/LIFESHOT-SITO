@@ -1,4 +1,5 @@
-import { ArrowDown, ArrowUpRight, Instagram } from "lucide-react";
+import Link from "next/link";
+import { ArrowDown, ArrowRight } from "lucide-react";
 import { Hero3DShell } from "@/components/hero/hero-3d-shell";
 import { AnchorLink } from "@/components/ui/anchor-link";
 import { EditableText } from "@/components/cms/editable-text";
@@ -9,7 +10,6 @@ import {
   getTypographyClass,
   type CmsData,
 } from "@/lib/content";
-import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import type { CategorySlug } from "@/components/agency/category-page";
 
@@ -91,16 +91,15 @@ export function CategoryHero({
             />
             <ArrowDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
           </AnchorLink>
-          <a
-            href={site.instagramDmUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border bg-background/50 px-6 py-3.5 text-sm font-medium backdrop-blur transition-colors hover:border-primary/50 hover:text-primary"
+          {/* Porta al modulo contatti, non ai DM: un ristorante o un'azienda
+              senza Instagram deve poter scrivere lo stesso */}
+          <Link
+            href="/contatti"
+            className="group inline-flex items-center gap-2 rounded-full border bg-background/50 px-6 py-3.5 text-sm font-medium backdrop-blur transition-colors hover:border-primary/50 hover:text-primary"
           >
-            <Instagram className="h-4 w-4" />
-            Scrivici in DM
-            <ArrowUpRight className="h-4 w-4" />
-          </a>
+            Lavora con noi
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
         </div>
       </div>
     </Hero3DShell>

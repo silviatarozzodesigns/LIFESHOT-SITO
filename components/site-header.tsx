@@ -87,14 +87,14 @@ export function SiteHeader({ floating = false }: { floating?: boolean }) {
 
           {/* CTA capsula (desktop) + hamburger (mobile) */}
           <div className="flex items-center gap-2">
+            {/* Chiamata diretta: un tocco e parte il telefono */}
             <a
-              href={site.instagramDmUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={site.phoneHref}
+              title={`Chiama ${site.phone}`}
               className="hidden items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.03] hover:shadow-primary/40 md:inline-flex"
             >
               <Phone className="h-4 w-4" />
-              Contattaci
+              Chiama ora
             </a>
 
             <button
@@ -200,6 +200,15 @@ export function SiteHeader({ floating = false }: { floating?: boolean }) {
                   className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/15 text-primary transition-transform hover:scale-105"
                 >
                   <Mail className="h-5 w-5" />
+                </a>
+                {/* Chiamata: su telefono è il canale più diretto di tutti */}
+                <a
+                  href={site.phoneHref}
+                  aria-label={`Chiama ${site.phone}`}
+                  onClick={() => setMenuOpen(false)}
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/15 text-primary transition-transform hover:scale-105"
+                >
+                  <Phone className="h-5 w-5" />
                 </a>
               </div>
               <LogoMark className="h-5 w-auto text-muted-foreground/50" />

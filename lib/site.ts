@@ -11,6 +11,10 @@ export const site = {
   youtubeUrl: "https://www.youtube.com/@lifeshot-media",
   /** Email ufficiale unica */
   email: "lifeshotmedia@gmail.com",
+  /** Telefono come si legge */
+  phone: "338 969 5958",
+  /** Telefono in formato internazionale, per il link che avvia la chiamata */
+  phoneHref: "tel:+393389695958",
 } as const;
 
 /**

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { site } from "@/lib/site";
 import { photoSrc } from "@/lib/utils";
+import { CopyCodeButton } from "@/components/gallery/copy-code-button";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
@@ -139,11 +140,17 @@ export default async function PhotoPage({
                 {/* Codice di riferimento: nome file mostrato al cliente,
                     da citare in DM per richiedere lo scatto giusto */}
                 <div className="mt-5 rounded-xl border border-dashed bg-background/50 p-3">
-                  <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    <FileImage className="h-3.5 w-3.5" />
-                    Codice scatto
-                  </p>
-                  <p className="mt-1 break-all font-mono text-sm text-foreground">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      <FileImage className="h-3.5 w-3.5" />
+                      Codice scatto
+                    </p>
+                    <CopyCodeButton code={photo.originalFilename} />
+                  </div>
+                  <p
+                    id="codice-scatto"
+                    className="mt-1 break-all font-mono text-sm text-foreground"
+                  >
                     {photo.originalFilename}
                   </p>
                 </div>
