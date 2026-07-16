@@ -10,9 +10,11 @@ import { HowItWorks } from "@/components/home/how-it-works";
 import { Services } from "@/components/home/services";
 import { Testimonials } from "@/components/home/testimonials";
 import { EventScout } from "@/components/home/event-scout";
+import { VideoSection } from "@/components/agency/video-section";
 import { EditableText } from "@/components/cms/editable-text";
 import type { EventDTO } from "@/lib/data/events";
 import type { PhotoDTO } from "@/lib/data/photos";
+import type { VideoDTO } from "@/lib/data/videos";
 import {
   getHeroAssets,
   getSpacingClass,
@@ -32,10 +34,13 @@ export function HomeView({
   content,
   events,
   marquee,
+  videos = [],
 }: {
   content: CmsData;
   events: EventDTO[];
   marquee: PhotoDTO[];
+  /** Video motorsport (vuoto → la sezione non compare) */
+  videos?: VideoDTO[];
 }) {
   const t = (key: string) => getText(content, "home", key);
 
@@ -167,6 +172,9 @@ export function HomeView({
             </FadeIn>
           )}
         </section>
+
+        {/* VIDEO — i video della macrocartella Motorsport */}
+        <VideoSection content={content} page="home" videos={videos} />
 
         {/* Servizi — cosa offre Lifeshot oltre alle foto evento */}
         <div className="pt-8 sm:pt-12">

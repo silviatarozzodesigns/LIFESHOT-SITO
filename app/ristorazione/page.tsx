@@ -3,6 +3,7 @@ import { CategoryPageView } from "@/components/agency/category-page";
 import { getPublishedContent, getViewContent } from "@/lib/data/content";
 import { getRecentEvents } from "@/lib/data/events";
 import { getFeaturedPhotos } from "@/lib/data/photos";
+import { getPublishedVideos } from "@/lib/data/videos";
 
 export const dynamic = "force-dynamic";
 
@@ -25,10 +26,11 @@ export default async function RistorazionePage({
   searchParams: Promise<{ preview?: string }>;
 }) {
   const { preview } = await searchParams;
-  const [content, featured, projects] = await Promise.all([
+  const [content, featured, projects, videos] = await Promise.all([
     getViewContent(preview === "1"),
     getFeaturedPhotos(12, "ristorazione"),
     getRecentEvents(12, "ristorazione"),
+    getPublishedVideos("ristorazione", 4),
   ]);
   return (
     <CategoryPageView
@@ -36,6 +38,7 @@ export default async function RistorazionePage({
       slug="ristorazione"
       featured={featured}
       projects={projects}
+      videos={videos}
     />
   );
 }

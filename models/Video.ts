@@ -1,4 +1,5 @@
 import mongoose, { Schema, type InferSchemaType, type Model } from "mongoose";
+import { EVENT_CATEGORIES } from "@/models/Event";
 
 /**
  * Video del portfolio — solo metadati e link esterni (YouTube, Vimeo,
@@ -6,6 +7,14 @@ import mongoose, { Schema, type InferSchemaType, type Model } from "mongoose";
  */
 const VideoSchema = new Schema(
   {
+    // Macrocategoria, come per gli eventi: decide in quale pagina compare.
+    // I video storici (senza campo) restano motorsport.
+    category: {
+      type: String,
+      enum: EVENT_CATEGORIES,
+      default: "motorsport",
+      index: true,
+    },
     title: {
       type: String,
       required: [true, "Il titolo del video è obbligatorio"],

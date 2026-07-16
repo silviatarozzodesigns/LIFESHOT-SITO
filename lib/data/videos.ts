@@ -1,11 +1,14 @@
 import { connectDB } from "@/lib/db";
 import { Video } from "@/models/Video";
+import { categoryFilter } from "@/lib/data/events";
+import type { EventCategory } from "@/models/Event";
 import type { VideoProvider } from "@/lib/video";
 
 export interface VideoDTO {
   id: string;
   title: string;
   url: string;
+  category: EventCategory;
   provider: VideoProvider;
   embedId: string;
   description: string;
@@ -17,6 +20,7 @@ function toDTO(doc: {
   _id: unknown;
   title: string;
   url: string;
+  category?: EventCategory;
   provider: string;
   embedId: string;
   description?: string;
@@ -27,6 +31,7 @@ function toDTO(doc: {
     id: String(doc._id),
     title: doc.title,
     url: doc.url,
+    category: doc.category ?? "motorsport",
     provider: doc.provider as VideoProvider,
     embedId: doc.embedId,
     description: doc.description ?? "",
@@ -35,13 +40,22 @@ function toDTO(doc: {
   };
 }
 
-/** Video pubblicati, per la pagina pubblica /video */
-export async function getPublishedVideos(): Promise<VideoDTO[]> {
+/**
+ * Video pubblicati: tutti per la pagina /video, oppure quelli di una
+ * categoria per la sezione video della sua pagina.
+ */
+export async function getPublishedVideos(
+  category?: EventCategory,
+  limit?: number
+): Promise<VideoDTO[]> {
   try {
     await connectDB();
-    const docs = await Video.find({ published: true })
-      .sort({ createdAt: -1 })
-      .lean();
+    const query = Video.find({
+      published: true,
+      ...(category ? categoryFilter(category) : {}),
+    }).sort({ createdAt: -1 });
+    if (limit) query.limit(limit);
+    const docs = await query.lean();
     return docs.map(toDTO);
   } catch (error) {
     console.error("[lifeshot] query video fallita:", error);
@@ -49,11 +63,15 @@ export async function getPublishedVideos(): Promise<VideoDTO[]> {
   }
 }
 
-/** Tutti i video, per la dashboard admin */
-export async function getAllVideosAdmin(): Promise<VideoDTO[]> {
+/** Tutti i video (anche non pubblicati) di una categoria, per la dashboard */
+export async function getAllVideosAdmin(
+  category?: EventCategory
+): Promise<VideoDTO[]> {
   try {
     await connectDB();
-    const docs = await Video.find().sort({ createdAt: -1 }).lean();
+    const docs = await Video.find(category ? categoryFilter(category) : {})
+      .sort({ createdAt: -1 })
+      .lean();
     return docs.map(toDTO);
   } catch (error) {
     console.error("[lifeshot] getAllVideosAdmin fallita:", error);

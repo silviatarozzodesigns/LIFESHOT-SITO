@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { getRecentEvents } from "@/lib/data/events";
 import { getFeaturedPhotos } from "@/lib/data/photos";
 import { getDraftContent } from "@/lib/data/content";
+import { getPublishedVideos } from "@/lib/data/videos";
 
 // Anteprima riservata: contenuti BOZZA, sempre freschi, mai indicizzata.
 export const dynamic = "force-dynamic";
@@ -15,11 +16,19 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  */
 export default async function AnteprimaMotorsportPage() {
   await requireAdmin();
-  const [events, marquee, content] = await Promise.all([
+  const [events, marquee, content, videos] = await Promise.all([
     getRecentEvents(6),
     getFeaturedPhotos(12, "motorsport"),
     getDraftContent(),
+    getPublishedVideos("motorsport", 4),
   ]);
 
-  return <HomeView content={content} events={events} marquee={marquee} />;
+  return (
+    <HomeView
+      content={content}
+      events={events}
+      marquee={marquee}
+      videos={videos}
+    />
+  );
 }

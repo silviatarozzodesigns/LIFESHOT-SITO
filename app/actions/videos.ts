@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { Types } from "mongoose";
 import { connectDB } from "@/lib/db";
 import { Video } from "@/models/Video";
+import { EVENT_CATEGORIES, type EventCategory } from "@/models/Event";
 import { parseVideoUrl } from "@/lib/video";
 import { isAdmin } from "@/lib/auth";
 
@@ -16,15 +17,26 @@ const UNAUTHORIZED = {
   error: "Non autorizzato: effettua il login admin.",
 };
 
+/** I video compaiono su /video e nella sezione video di ogni categoria */
+function revalidateVideoPages() {
+  revalidatePath("/video");
+  revalidatePath("/motorsport");
+  revalidatePath("/ristorazione");
+  revalidatePath("/business");
+}
+
 export async function createVideo(input: {
   title: string;
   url: string;
+  category?: EventCategory;
   description?: string;
 }): Promise<VideoActionResult> {
   if (!(await isAdmin())) return UNAUTHORIZED;
 
   const title = input.title?.trim();
   if (!title) return { ok: false, error: "Il titolo è obbligatorio." };
+  if (input.category && !EVENT_CATEGORIES.includes(input.category))
+    return { ok: false, error: "Categoria non valida." };
 
   const parsed = parseVideoUrl(input.url ?? "");
   if (!parsed) {
@@ -40,12 +52,13 @@ export async function createVideo(input: {
     const video = await Video.create({
       title,
       url: input.url.trim(),
+      category: input.category ?? "motorsport",
       provider: parsed.provider,
       embedId: parsed.embedId,
       description: input.description?.trim() ?? "",
       published: true,
     });
-    revalidatePath("/video");
+    revalidateVideoPages();
     return { ok: true, id: String(video._id) };
   } catch (error) {
     console.error("[lifeshot] createVideo fallita:", error);
@@ -61,7 +74,7 @@ export async function deleteVideo(id: string): Promise<VideoActionResult> {
     await connectDB();
     const deleted = await Video.findByIdAndDelete(id);
     if (!deleted) return { ok: false, error: "Video non trovato." };
-    revalidatePath("/video");
+    revalidateVideoPages();
     return { ok: true, id };
   } catch (error) {
     console.error("[lifeshot] deleteVideo fallita:", error);

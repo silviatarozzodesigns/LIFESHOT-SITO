@@ -6,10 +6,12 @@ import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
 import { ContactSection } from "@/components/agency/contact-section";
 import { CategoryHero } from "@/components/agency/category-hero";
+import { VideoSection } from "@/components/agency/video-section";
 import { PhotoSlider } from "@/components/home/photo-slider";
 import { EditableText } from "@/components/cms/editable-text";
 import type { EventDTO } from "@/lib/data/events";
 import type { PhotoDTO } from "@/lib/data/photos";
+import type { VideoDTO } from "@/lib/data/videos";
 import {
   getSpacingClass,
   getText,
@@ -27,6 +29,7 @@ export type CategorySlug = "ristorazione" | "business";
  *   HERO 3D (sfondo + soggetto overlay) →
  *   IN EVIDENZA (slider degli scatti con la stella, dal CMS Gallery) →
  *   PROGETTI RECENTI (card dei progetti, ognuno con la sua pagina) →
+ *   VIDEO (se la categoria ne ha) →
  *   CONTATTI.
  */
 export function CategoryPageView({
@@ -34,6 +37,7 @@ export function CategoryPageView({
   slug,
   featured,
   projects,
+  videos,
 }: {
   content: CmsData;
   slug: CategorySlug;
@@ -41,6 +45,8 @@ export function CategoryPageView({
   featured: PhotoDTO[];
   /** Progetti (eventi) pubblicati della categoria, più recenti prima */
   projects: EventDTO[];
+  /** Video della categoria (vuoto → la sezione non compare) */
+  videos: VideoDTO[];
 }) {
   const t = (key: string) => getText(content, slug, key);
   const ts = (key: string) => getTextStyle(content, slug, key);
@@ -181,6 +187,9 @@ export function CategoryPageView({
             </FadeIn>
           )}
         </section>
+
+        {/* VIDEO — i video caricati nella macrocartella di questa categoria */}
+        <VideoSection content={content} page={slug} videos={videos} />
 
         {/* CONTATTI — stessi canali della home agenzia */}
         <section className="container py-14 sm:py-20">

@@ -14,6 +14,7 @@ import {
 import { createVideo, deleteVideo } from "@/app/actions/videos";
 import { uploadVideoFile } from "@/lib/upload-client";
 import type { VideoDTO } from "@/lib/data/videos";
+import type { EventCategory } from "@/models/Event";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,7 +38,14 @@ function ProviderIcon({ provider }: { provider: string }) {
  * Reel Instagram o .webm) e il provider viene riconosciuto dal server.
  * Zero spazio occupato su R2.
  */
-export function VideoManager({ videos }: { videos: VideoDTO[] }) {
+export function VideoManager({
+  videos,
+  category,
+}: {
+  videos: VideoDTO[];
+  /** Macrocartella attiva: i nuovi video nascono già in questa categoria */
+  category: EventCategory;
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
@@ -64,7 +72,7 @@ export function VideoManager({ videos }: { videos: VideoDTO[] }) {
           return;
         }
       }
-      const result = await createVideo({ title, url: videoUrl });
+      const result = await createVideo({ title, url: videoUrl, category });
       if (!result.ok) {
         setError(result.error);
         return;
@@ -186,7 +194,7 @@ export function VideoManager({ videos }: { videos: VideoDTO[] }) {
         </ul>
       ) : (
         <p className="text-sm text-muted-foreground">
-          Nessun video nel portfolio: incolla il primo link qui sopra.
+          Nessun video in questa categoria: incolla il primo link qui sopra.
         </p>
       )}
     </div>

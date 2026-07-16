@@ -3,6 +3,7 @@ import { HomeView } from "@/components/home/home-view";
 import { getRecentEvents } from "@/lib/data/events";
 import { getFeaturedPhotos } from "@/lib/data/photos";
 import { getPublishedContent } from "@/lib/data/content";
+import { getPublishedVideos } from "@/lib/data/videos";
 
 // ISR: come l'ex homepage — servita da cache e rigenerata on-demand
 // (ogni upload/pubblicazione chiama revalidatePath("/motorsport")).
@@ -28,11 +29,19 @@ export async function generateMetadata(): Promise<Metadata> {
  * → nessuna migrazione dei dati già pubblicati.
  */
 export default async function MotorsportPage() {
-  const [events, marquee, content] = await Promise.all([
+  const [events, marquee, content, videos] = await Promise.all([
     getRecentEvents(6),
     getFeaturedPhotos(12, "motorsport"),
     getPublishedContent(),
+    getPublishedVideos("motorsport", 4),
   ]);
 
-  return <HomeView content={content} events={events} marquee={marquee} />;
+  return (
+    <HomeView
+      content={content}
+      events={events}
+      marquee={marquee}
+      videos={videos}
+    />
+  );
 }

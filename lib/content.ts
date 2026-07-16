@@ -212,6 +212,28 @@ export const TYPOGRAPHY_LABELS: Record<Level, string> = {
   5: "Enorme",
 };
 
+/* ───────────── SEZIONE VIDEO: campi condivisi fra le categorie ───────────── */
+
+/**
+ * Titolo e sottotitolo della sezione video di una pagina categoria.
+ * I video stessi si caricano dalla sezione VIDEO dell'admin.
+ */
+function videoSectionFields(subtitle: string): Record<string, FieldDef> {
+  return {
+    "videos.title": {
+      label: "Video — titolo sezione",
+      default: "Video",
+      max: 80,
+    },
+    "videos.subtitle": {
+      label: "Video — sottotitolo",
+      default: subtitle,
+      max: 200,
+      multiline: true,
+    },
+  };
+}
+
 /* ───────────────── SERVIZI: campi testo dell'overlay hero ───────────────── */
 
 /**
@@ -628,6 +650,7 @@ export const PAGES: Record<PageSlug, PageDef> = {
         default: "Segnala l'evento",
         max: 40,
       },
+      ...videoSectionFields("Montaggi delle gare, reel e clip dal bordo pista."),
     },
     images: {
       // ── DESKTOP ──
@@ -750,6 +773,7 @@ export const PAGES: Record<PageSlug, PageDef> = {
         max: 200,
         multiline: true,
       },
+      ...videoSectionFields("Il gusto del tuo locale, in movimento."),
     },
     images: {
       ...heroImageDefs("soggetto"),
@@ -835,6 +859,7 @@ export const PAGES: Record<PageSlug, PageDef> = {
         max: 200,
         multiline: true,
       },
+      ...videoSectionFields("Spot, presentazioni e contenuti video per il tuo brand."),
     },
     images: {
       ...heroImageDefs("soggetto"),
