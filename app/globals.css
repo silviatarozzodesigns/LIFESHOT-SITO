@@ -108,49 +108,6 @@ html {
     );
   }
 
-  /* Asset hero per DISPOSITIVO (non solo larghezza):
-     - mobile            → schermi < 768px
-     - tablet verticale  → ≥768px con orientamento verticale
-     - tablet orizzont.  → ≥768px con orientamento orizzontale (iPad
-                           landscape: pointer coarse, quindi il ramo
-                           desktop qui sotto non scatta)
-     - desktop           → ≥1024px con puntatore fine (mouse/trackpad)
-     Così l'iPad usa gli asset tablet in ENTRAMBI gli orientamenti,
-     mentre computer e laptop restano sulle immagini desktop. */
-  .hero-asset-mobile {
-    display: block;
-  }
-  .hero-asset-tablet-portrait,
-  .hero-asset-tablet-landscape,
-  .hero-asset-desktop {
-    display: none;
-  }
-  @media (min-width: 768px) and (orientation: portrait) {
-    .hero-asset-mobile {
-      display: none;
-    }
-    .hero-asset-tablet-portrait {
-      display: block;
-    }
-  }
-  @media (min-width: 768px) and (orientation: landscape) {
-    .hero-asset-mobile {
-      display: none;
-    }
-    .hero-asset-tablet-landscape {
-      display: block;
-    }
-  }
-  @media (min-width: 1024px) and (pointer: fine) {
-    .hero-asset-tablet-portrait,
-    .hero-asset-tablet-landscape {
-      display: none;
-    }
-    .hero-asset-desktop {
-      display: block;
-    }
-  }
-
   /* Rispetta chi preferisce meno animazioni: ferma il marquee */
   @media (prefers-reduced-motion: reduce) {
     .animate-marquee {

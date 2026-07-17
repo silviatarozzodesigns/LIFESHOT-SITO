@@ -9,6 +9,25 @@ import type { HeroAssets, PageSlug } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
 /**
+ * I quattro dispositivi, con le STESSE condizioni delle classi
+ * `.hero-asset-*` in globals.css. Servono sia ai <source> di <picture> sia
+ * alle regole di inquadratura: un solo posto da toccare se cambiano.
+ */
+const MQ = {
+  desktop: "(min-width: 1024px) and (pointer: fine)",
+  tabletLandscape: "(min-width: 768px) and (orientation: landscape)",
+  tabletPortrait: "(min-width: 768px) and (orientation: portrait)",
+} as const;
+
+/**
+ * GIF trasparente 1×1 come sorgente "vuota": il browser NON fa una
+ * richiesta di rete per una data URI. Serve dove un dispositivo non ha il
+ * suo overlay: con `src=""` il browser richiederebbe la pagina stessa.
+ */
+const PIXEL_VUOTO =
+  "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+
+/**
  * GUSCIO HERO 3D — la scenografia condivisa delle hero cinematografiche
  * (Motorsport, Ristorazione, Business).
  *
@@ -63,6 +82,35 @@ export function Hero3DShell({
   // Overlay tablet orizzontale: dedicato, altrimenti quello verticale
   const tabletLandFg = fgTL.url ? fgTL : fgT;
 
+  /**
+   * Inquadratura e zoom per dispositivo: prima erano stili inline su quattro
+   * <img> diversi, ora l'immagine è una sola e i valori li sceglie il CSS
+   * agli stessi breakpoint. L'ordine è la cascata: mobile come base, poi
+   * tablet, desktop per ultimo così vince sui tablet (come in globals.css).
+   * Lo zoom dell'overlay passa da una variabile perché il transform del suo
+   * contenitore contiene anche il parallax, che è dinamico.
+   */
+  const inquadratura = `
+    .ls-hero-bg{object-position:${mobileBg.position};transform:scale(${Math.max(1.1, mobileBg.scale / 100)})}
+    .ls-hero-fg{--ls-fg-scale:${fgM.scale / 100}}
+    .ls-hero-fg-img{object-position:${fgM.position}}
+    @media ${MQ.tabletPortrait}{
+      .ls-hero-bg{object-position:${tabletBg.position};transform:scale(${Math.max(1.1, tabletBg.scale / 100)})}
+      .ls-hero-fg{--ls-fg-scale:${fgT.scale / 100}}
+      .ls-hero-fg-img{object-position:${fgT.position}}
+    }
+    @media ${MQ.tabletLandscape}{
+      .ls-hero-bg{object-position:${tabletLandBg.position};transform:scale(${Math.max(1.1, tabletLandBg.scale / 100)})}
+      .ls-hero-fg{--ls-fg-scale:${tabletLandFg.scale / 100}}
+      .ls-hero-fg-img{object-position:${tabletLandFg.position}}
+    }
+    @media ${MQ.desktop}{
+      .ls-hero-bg{object-position:${bg.position};transform:scale(${Math.max(1.1, bg.scale / 100)})}
+      .ls-hero-fg{--ls-fg-scale:${fg.scale / 100}}
+      .ls-hero-fg-img{object-position:${fg.position}}
+    }
+  `;
+
   const ref = useRef<HTMLDivElement>(null);
   const [p, setP] = useState({ x: 0, y: 0 });
   // Niente parallax 3D su touch o schermi piccoli: solo puntatore fine + desktop
@@ -96,6 +144,10 @@ export function Hero3DShell({
         fullHeight ? "min-h-[100svh]" : "lg:min-h-[100svh]"
       )}
     >
+      {/* Inquadratura e zoom per dispositivo (vedi `inquadratura`): non sono
+          stili inline perché l'immagine ora è una sola per tutti gli schermi */}
+      <style dangerouslySetInnerHTML={{ __html: inquadratura }} />
+
       {/* Chip cambio immagini in-place (solo admin in edit mode).
           Sotto la navbar fluttuante e z alto così restano sempre visibili. */}
       <div className="pointer-events-none absolute right-4 top-24 z-[60] flex flex-wrap justify-end gap-2 sm:top-28">
@@ -113,48 +165,22 @@ export function Hero3DShell({
         }}
       >
         {bg.url || bgT.url || bgTL.url || bgM.url ? (
-          <>
-            {/* Desktop (≥1024px con mouse/trackpad) */}
-            <img
-              src={bg.url || tabletBg.url}
-              alt=""
-              style={{
-                objectPosition: bg.position,
-                transform: `scale(${Math.max(1.1, bg.scale / 100)})`,
-              }}
-              className="hero-asset-desktop h-full w-full object-cover"
-            />
-            {/* Tablet VERTICALE (≥768px, orientamento portrait) */}
-            <img
-              src={tabletBg.url}
-              alt=""
-              style={{
-                objectPosition: tabletBg.position,
-                transform: `scale(${Math.max(1.1, tabletBg.scale / 100)})`,
-              }}
-              className="hero-asset-tablet-portrait h-full w-full object-cover"
-            />
-            {/* Tablet ORIZZONTALE (≥768px landscape touch — iPad landscape) */}
-            <img
-              src={tabletLandBg.url}
-              alt=""
-              style={{
-                objectPosition: tabletLandBg.position,
-                transform: `scale(${Math.max(1.1, tabletLandBg.scale / 100)})`,
-              }}
-              className="hero-asset-tablet-landscape h-full w-full object-cover"
-            />
-            {/* Mobile (<768px) */}
+          /* UNA sola immagine scaricata: <picture> sceglie la variante del
+             dispositivo PRIMA di chiedere il file. Prima erano quattro <img>
+             nascosti via CSS, e il browser li scaricava tutti e quattro —
+             misurato: un telefono si portava a casa anche lo sfondo del
+             computer. L'ordine dei <source> conta: vince il primo che
+             corrisponde, quindi desktop → tablet → (fallback) mobile. */
+          <picture className="block h-full w-full">
+            <source media={MQ.desktop} srcSet={bg.url || tabletBg.url} />
+            <source media={MQ.tabletLandscape} srcSet={tabletLandBg.url} />
+            <source media={MQ.tabletPortrait} srcSet={tabletBg.url} />
             <img
               src={mobileBg.url}
               alt=""
-              style={{
-                objectPosition: mobileBg.position,
-                transform: `scale(${Math.max(1.1, mobileBg.scale / 100)})`,
-              }}
-              className="hero-asset-mobile h-full w-full object-cover"
+              className="ls-hero-bg h-full w-full object-cover"
             />
-          </>
+          </picture>
         ) : (
           <div className="h-full w-full bg-gradient-to-b from-secondary to-background" />
         )}
@@ -224,36 +250,34 @@ export function Hero3DShell({
         </svg>
       </div>
 
-      {/* LIVELLO 3 — soggetto scontornato, per viewport. Su tablet/mobile
-          compare SOLO se è stato caricato un PNG dedicato per quel dispositivo
-          (altrimenti niente overlay → sfondo pulito). Posizione/zoom dal CMS. */}
-      {[
-        { asset: fg, vis: "hero-asset-desktop" },
-        { asset: fgT, vis: "hero-asset-tablet-portrait" },
-        { asset: tabletLandFg, vis: "hero-asset-tablet-landscape" },
-        { asset: fgM, vis: "hero-asset-mobile" },
-      ].map(({ asset, vis }, i) =>
-        asset.url ? (
-          <div
-            key={i}
-            aria-hidden
-            className={cn(
-              "pointer-events-none absolute inset-y-0 right-0 z-20 w-[58%] transition-transform duration-300 ease-out",
-              vis
-            )}
-            style={{
-              transform: `translate3d(${p.x * 38}px, ${p.y * 24}px, 0) scale(${asset.scale / 100})`,
-              transformOrigin: "bottom right",
-            }}
-          >
-            <img
-              src={asset.url}
-              alt=""
-              style={{ objectPosition: asset.position }}
-              className="relative z-20 h-full w-full object-contain drop-shadow-[0_35px_65px_rgba(0,0,0,0.7)]"
+      {/* LIVELLO 3 — soggetto scontornato. Come lo sfondo: un solo file
+          scaricato, scelto da <picture>. Su tablet/mobile compare SOLO se è
+          stato caricato un PNG dedicato per quel dispositivo; dove manca, la
+          sorgente è un pixel trasparente (nessuna richiesta, niente da
+          vedere) invece di ricadere sull'immagine di un altro schermo. */}
+      {(fg.url || fgT.url || tabletLandFg.url || fgM.url) && (
+        <div
+          aria-hidden
+          className="ls-hero-fg pointer-events-none absolute inset-y-0 right-0 z-20 w-[58%] transition-transform duration-300 ease-out"
+          style={{
+            transform: `translate3d(${p.x * 38}px, ${p.y * 24}px, 0) scale(var(--ls-fg-scale, 1))`,
+            transformOrigin: "bottom right",
+          }}
+        >
+          <picture className="block h-full w-full">
+            <source media={MQ.desktop} srcSet={fg.url || PIXEL_VUOTO} />
+            <source
+              media={MQ.tabletLandscape}
+              srcSet={tabletLandFg.url || PIXEL_VUOTO}
             />
-          </div>
-        ) : null
+            <source media={MQ.tabletPortrait} srcSet={fgT.url || PIXEL_VUOTO} />
+            <img
+              src={fgM.url || PIXEL_VUOTO}
+              alt=""
+              className="ls-hero-fg-img relative z-20 h-full w-full object-contain drop-shadow-[0_35px_65px_rgba(0,0,0,0.7)]"
+            />
+          </picture>
+        </div>
       )}
 
       {/* LIVELLO 2 — contenuto in colonna SINISTRA. Centro/destra liberi per

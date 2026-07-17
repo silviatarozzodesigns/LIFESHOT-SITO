@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { CinematicBackdrop } from "@/components/cinematic-backdrop";
 import { EditModeProvider } from "@/components/cms/edit-mode";
 import { ConsentProvider } from "@/components/legal/consent";
@@ -47,6 +48,11 @@ export default function RootLayout({
           <CinematicBackdrop />
           <EditModeProvider>{children}</EditModeProvider>
           <CookieBanner />
+          {/* Analytics Vercel: SENZA cookie e senza dati personali, quindi
+              non richiede consenso e resta fuori dal banner. Serve a sapere
+              quante persone cercano il numero, aprono uno scatto e cliccano
+              per scriverci: senza quei numeri ogni scelta è a occhio. */}
+          <Analytics />
         </ConsentProvider>
       </body>
     </html>
