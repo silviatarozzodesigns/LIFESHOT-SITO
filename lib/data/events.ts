@@ -124,6 +124,25 @@ export async function getEventBySlug(slug: string): Promise<EventDTO | null> {
 }
 
 /**
+ * Trova un evento anche da uno slug IN PENSIONE (dopo una rinomina). Serve
+ * al rimando: `/galleria/<slug-vecchio>` → il nuovo indirizzo dell'evento.
+ * Se lo slug è quello attuale, `redirect` è null (nessun rimando da fare).
+ */
+export async function getEventByAnySlug(
+  slug: string
+): Promise<{ event: EventDTO; redirect: string | null } | null> {
+  return safe(null, async () => {
+    const doc = await Event.findOne({
+      $or: [{ slug }, { slugHistory: slug }],
+      published: true,
+    }).lean();
+    if (!doc) return null;
+    const event = toDTO(doc);
+    return { event, redirect: event.slug === slug ? null : event.slug };
+  });
+}
+
+/**
  * Progetto pubblicato di una categoria per slug — pagina progetto
  * (/ristorazione/[slug] e /business/[slug]).
  */

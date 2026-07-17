@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Calendar, MapPin } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { GalleryView } from "@/components/gallery/gallery-view";
-import { getEventBySlug } from "@/lib/data/events";
+import { getEventByAnySlug } from "@/lib/data/events";
+import { galleryHref } from "@/lib/gallery-url";
 import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -22,15 +23,16 @@ interface Props {
  * Solo motorsport: i progetti di ristorazione e business hanno le loro.
  */
 async function eventoPubblicato(slug: string) {
-  const event = await getEventBySlug(slug);
-  if (!event || event.category !== "motorsport") return null;
-  return event;
+  const found = await getEventByAnySlug(slug);
+  if (!found || found.event.category !== "motorsport") return null;
+  return found; // { event, redirect: null | slug-nuovo }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { evento } = await params;
-  const event = await eventoPubblicato(evento);
-  if (!event) return {};
+  const found = await eventoPubblicato(evento);
+  if (!found) return {};
+  const { event } = found;
 
   const dove = event.location ? ` a ${event.location}` : "";
   const quando = event.date ? ` del ${formatDate(event.date)}` : "";
@@ -50,8 +52,18 @@ export default async function EventoGalleryPage({ params, searchParams }: Props)
   const { numero = "", pilota = "", pagina } = await searchParams;
   const page = Math.max(1, Number(pagina) || 1);
 
-  const event = await eventoPubblicato(evento);
-  if (!event) notFound();
+  const found = await eventoPubblicato(evento);
+  if (!found) notFound();
+  const { event, redirect } = found;
+
+  // Slug in pensione (evento rinominato) → rimando permanente al nuovo
+  // indirizzo, tenendo i filtri: i vecchi link e i risultati Google non
+  // muoiono e Google sposta il valore sulla pagina nuova.
+  if (redirect) {
+    permanentRedirect(
+      galleryHref({ evento: redirect, numero, pilota, pagina: page })
+    );
+  }
 
   return (
     <div className="flex min-h-dvh flex-col">

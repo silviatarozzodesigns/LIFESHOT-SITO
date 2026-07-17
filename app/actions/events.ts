@@ -52,14 +52,19 @@ function validate(input: EventInput): string | null {
   return null;
 }
 
-/** Genera uno slug univoco; in caso di collisione aggiunge un suffisso. */
+/**
+ * Genera uno slug univoco; in caso di collisione aggiunge un suffisso.
+ * Controlla sia gli slug IN USO sia quelli IN PENSIONE (`slugHistory`): uno
+ * slug già appartenuto a un evento non è più libero, così un vecchio link
+ * non finirà mai per portare a una gara diversa da quella originale.
+ */
 async function uniqueSlug(name: string, excludeId?: string): Promise<string> {
   const base = slugify(name) || "evento";
   let slug = base;
   let attempt = 1;
   while (
     await Event.exists({
-      slug,
+      $or: [{ slug }, { slugHistory: slug }],
       ...(excludeId ? { _id: { $ne: excludeId } } : {}),
     })
   ) {
@@ -118,9 +123,19 @@ export async function updateEvent(
     const event = await Event.findById(id);
     if (!event) return { ok: false, error: "Evento non trovato." };
 
-    // Lo slug viene rigenerato solo se il nome cambia, per non rompere i link
+    // Rinomina → nuovo slug. Il vecchio va in pensione (slugHistory), così
+    // i link e i risultati Google col vecchio indirizzo rimandano al nuovo
+    // invece di rompersi. Niente doppioni e mai lo slug corrente in storia.
     if (event.name !== input.name.trim()) {
-      event.slug = await uniqueSlug(input.name, id);
+      const oldSlug = event.slug;
+      const newSlug = await uniqueSlug(input.name, id);
+      if (newSlug !== oldSlug) {
+        const history = new Set(event.slugHistory ?? []);
+        history.add(oldSlug);
+        history.delete(newSlug);
+        event.slugHistory = [...history];
+        event.slug = newSlug;
+      }
     }
     event.name = input.name.trim();
     if (input.category) event.category = input.category;

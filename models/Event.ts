@@ -37,6 +37,15 @@ const EventSchema = new Schema(
       trim: true,
       index: true,
     },
+    // Slug che questo evento ha avuto in passato (dopo una rinomina): i
+    // link e i risultati Google col vecchio indirizzo ci rimandano al nuovo,
+    // così non muoiono. Sono anche "in pensione": nessun altro evento può
+    // riprenderli, per non far portare un vecchio link alla gara sbagliata.
+    slugHistory: {
+      type: [String],
+      default: undefined,
+      index: true,
+    },
     // Facoltativa: i progetti vetrina spesso non hanno una data sensata,
     // e anche una gara può essere caricata prima di saperla.
     date: {
