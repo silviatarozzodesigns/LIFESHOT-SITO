@@ -3,14 +3,13 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useState } from "react";
-import { ChevronDown, Instagram } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { ServiceCursors } from "@/components/agency/service-cursors";
 import { HeroBackgroundVideo } from "@/components/hero/hero-background-video";
 import { ContactCta } from "@/components/agency/contact-cta";
 import { EditableText } from "@/components/cms/editable-text";
 import { EditableImage } from "@/components/cms/editable-image";
 import type { ServiceCopy, TextStyle } from "@/lib/content";
-import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 export interface HeroSlide {
@@ -151,7 +150,10 @@ export function AgencyHero({
           </span>
         </h1>
 
-        <div className="mt-9 flex flex-col items-center justify-center gap-4">
+        {/* Una sola azione: la scelta del canale (DM, telefono, mail) sta
+            nella pagina contatti, dove uno ha già deciso di scrivere. Qui
+            un secondo link rubava respiro allo slogan su telefono. */}
+        <div className="mt-9 flex justify-center">
           <ContactCta>
             <EditableText
               page="agenzia"
@@ -161,19 +163,6 @@ export function AgencyHero({
               style={textStyles["hero.ctaLabel"]}
             />
           </ContactCta>
-
-          {/* Seconda strada, in sordina: i piloti scrivono in DM, e togliere
-              del tutto Instagram li avrebbe lasciati a piedi. Testo semplice,
-              non un secondo bottone: l'azione principale resta una sola. */}
-          <a
-            href={site.instagramDmUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-primary"
-          >
-            <Instagram className="h-4 w-4 transition-transform group-hover:rotate-[8deg]" />
-            oppure scrivici in DM
-          </a>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ArrowUpRight, Instagram, Mail, Youtube } from "lucide-react";
+import { ArrowUpRight, Instagram, Mail, Phone, Youtube } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
@@ -76,14 +76,58 @@ export default async function ContattiPage({
           </p>
         </FadeIn>
 
-        <div className="mx-auto mt-14 grid max-w-5xl gap-6 lg:grid-cols-[1fr_320px]">
+        {/* DM PRIMA DEL MODULO — è il canale dove si risponde davvero, e chi
+            arriva qui ha già deciso di scriverci: la scelta del come sta
+            bene qui, non nelle hero (lì l'azione dev'essere una sola). */}
+        <FadeIn delay={0.06} className="mx-auto mt-12 max-w-md text-center">
+          <a
+            href={site.instagramDmUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-primary px-7 py-4 text-base font-semibold text-primary-foreground shadow-xl shadow-primary/30 transition-all hover:scale-[1.02] hover:shadow-primary/50 active:scale-95"
+          >
+            <Instagram className="h-5 w-5 transition-transform group-hover:rotate-[8deg]" />
+            Scrivici in DM
+          </a>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {site.instagramHandle} · di solito rispondiamo in giornata
+          </p>
+
+          {/* Separatore "oppure": divide il canale veloce dalle alternative */}
+          <div className="mt-8 flex items-center gap-4">
+            <span className="h-px flex-1 bg-border" />
+            <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+              oppure
+            </span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+        </FadeIn>
+
+        <div className="mx-auto mt-10 grid max-w-5xl gap-6 lg:grid-cols-[1fr_320px]">
           {/* Form di contatto */}
           <FadeIn delay={0.1}>
             <ContactForm />
           </FadeIn>
 
-          {/* Email ufficiale unica + social */}
+          {/* Telefono, email ufficiale e social */}
           <FadeIn delay={0.18} className="space-y-4">
+            <a
+              href={site.phoneHref}
+              className="group flex items-center gap-4 rounded-3xl border bg-card p-5 transition-all duration-500 hover:-translate-y-0.5 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                <Phone className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-semibold tracking-tight">
+                  Chiama ora
+                </span>
+                <span className="block truncate text-sm text-primary">
+                  {site.phone}
+                </span>
+              </span>
+            </a>
+
             <a
               href={`mailto:${site.email}`}
               className="group block rounded-3xl border bg-card p-6 transition-all duration-500 hover:-translate-y-0.5 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

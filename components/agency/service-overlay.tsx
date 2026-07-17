@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight, Instagram, X } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, X } from "lucide-react";
 import { EditableText } from "@/components/cms/editable-text";
 import type { ServiceCopy } from "@/lib/content";
 import { SERVICES, type ServiceId } from "@/lib/services";
-import { site } from "@/lib/site";
 
 /**
  * OVERLAY DEI SERVIZI — si apre cliccando un cursore della hero.
@@ -115,16 +115,16 @@ export function ServiceOverlay({
               />
             </p>
 
-            <a
-              href={site.instagramDmUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            {/* Una sola azione, verso la pagina contatti: lì si sceglie il
+                canale (DM, telefono, mail). */}
+            <Link
+              href="/contatti"
+              onClick={onClose}
               className="group mt-7 inline-flex items-center gap-2.5 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:scale-[1.03] hover:shadow-primary/40 active:scale-95"
             >
-              <Instagram className="h-4 w-4" />
               Richiedi questo servizio
-              <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </a>
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
 
             {/* VEDI ANCHE — su touch è la strada verso i servizi senza cursore */}
             {service.related.length > 0 && (
