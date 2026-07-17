@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Hash, Loader2, Search, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { galleryHref } from "@/lib/gallery-url";
 import { cn } from "@/lib/utils";
 
 interface EventOption {
@@ -27,9 +28,10 @@ const inputClasses = cn(
 
 /**
  * Barra filtri della galleria: combobox "Evento" + numero di gara +
- * nome pilota, combinabili tra loro. I filtri vivono nell'URL
- * (?evento=...&numero=...&pilota=...) così le ricerche sono condivisibili
- * e renderizzate lato server.
+ * nome pilota, combinabili tra loro. I filtri vivono nell'indirizzo, così
+ * le ricerche sono condivisibili e renderizzate lato server: l'evento come
+ * percorso (`/galleria/<evento>`, pagina indicizzabile), numero e pilota
+ * come parametri.
  */
 export function GalleryFilters({
   events,
@@ -46,12 +48,10 @@ export function GalleryFilters({
   const hasActiveFilters = Boolean(selectedEvent || raceNumber || pilotName);
 
   function apply(nextEvent: string, nextNumber: string, nextPilot: string) {
-    const params = new URLSearchParams();
-    if (nextEvent) params.set("evento", nextEvent);
-    if (nextNumber.trim()) params.set("numero", nextNumber.trim());
-    if (nextPilot.trim()) params.set("pilota", nextPilot.trim());
     startTransition(() => {
-      router.push(`/galleria${params.size ? `?${params}` : ""}`);
+      router.push(
+        galleryHref({ evento: nextEvent, numero: nextNumber, pilota: nextPilot })
+      );
     });
   }
 

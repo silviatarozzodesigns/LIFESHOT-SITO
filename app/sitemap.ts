@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getEventsForFilter, getRecentEvents } from "@/lib/data/events";
 import { getPhotoSitemapEntries } from "@/lib/data/photos";
+import { galleryHref } from "@/lib/gallery-url";
 
 /** URL pubblico del sito (in dev NEXT_PUBLIC_SITE_URL è localhost: usa il dominio reale). */
 const BASE =
@@ -25,10 +26,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/cookie-policy`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
   ];
 
-  // Galleria filtrata per ogni evento pubblicato
+  // La pagina di ogni evento pubblicato: è quella che intercetta chi cerca
+  // "foto <nome gara>" su Google, quindi ha priorità alta
   const events = await getEventsForFilter();
   const eventPages: MetadataRoute.Sitemap = events.map((e) => ({
-    url: `${BASE}/galleria?evento=${encodeURIComponent(e.slug)}`,
+    url: `${BASE}${galleryHref({ evento: e.slug })}`,
     lastModified: e.date ? new Date(e.date) : now,
     changeFrequency: "weekly",
     priority: 0.8,

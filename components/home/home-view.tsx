@@ -15,6 +15,7 @@ import { EditableText } from "@/components/cms/editable-text";
 import type { EventDTO } from "@/lib/data/events";
 import type { PhotoDTO } from "@/lib/data/photos";
 import type { VideoDTO } from "@/lib/data/videos";
+import { galleryHref } from "@/lib/gallery-url";
 import {
   getHeroAssets,
   getSpacingClass,
@@ -122,7 +123,7 @@ export function HomeView({
               {events.map((event, index) => (
                 <FadeIn key={event.id} delay={index * 0.06}>
                   <Link
-                    href={`/galleria?evento=${event.slug}`}
+                    href={galleryHref({ evento: event.slug })}
                     className="group block overflow-hidden rounded-2xl border bg-card transition-all duration-500 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_20px_60px_-24px_rgba(0,0,0,0.8)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <div className="relative aspect-[16/10] overflow-hidden bg-muted">

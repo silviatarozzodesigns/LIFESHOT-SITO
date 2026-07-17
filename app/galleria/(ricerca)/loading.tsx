@@ -4,6 +4,12 @@ import { SiteHeader } from "@/components/site-header";
  * Schermata "scheletro" mostrata ISTANTANEAMENTE durante la navigazione verso
  * la galleria, mentre il server prepara i dati. Stessa struttura della pagina
  * reale (titolo, filtri, griglia 3:2) così il passaggio è senza scatti.
+ *
+ * Sta dentro il gruppo `(ricerca)`, quindi vale SOLO per /galleria e non per
+ * /galleria/<evento>. Non è un dettaglio: uno scheletro fa partire la
+ * risposta in streaming con stato 200, e la pagina evento deve poter
+ * rispondere 404 quando la gara non esiste — altrimenti Google si ritrova
+ * pagine "non trovate" che dicono 200 e le indicizza lo stesso.
  */
 export default function GalleryLoading() {
   return (

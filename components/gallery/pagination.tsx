@@ -1,32 +1,20 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { galleryHref } from "@/lib/gallery-url";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
 interface GalleryPaginationProps {
   page: number;
   totalPages: number;
-  /** Parametri filtro correnti da preservare nei link di pagina */
-  searchParams: { evento?: string; numero?: string; pilota?: string };
-}
-
-function pageHref(
-  page: number,
-  { evento, numero, pilota }: GalleryPaginationProps["searchParams"]
-) {
-  const params = new URLSearchParams();
-  if (evento) params.set("evento", evento);
-  if (numero) params.set("numero", numero);
-  if (pilota) params.set("pilota", pilota);
-  if (page > 1) params.set("pagina", String(page));
-  const query = params.toString();
-  return `/galleria${query ? `?${query}` : ""}`;
+  /** Filtri correnti da preservare nei link di pagina */
+  filtri: { evento?: string; numero?: string; pilota?: string };
 }
 
 export function GalleryPagination({
   page,
   totalPages,
-  searchParams,
+  filtri,
 }: GalleryPaginationProps) {
   if (totalPages <= 1) return null;
 
@@ -39,7 +27,7 @@ export function GalleryPagination({
       className="flex items-center justify-center gap-4 pt-4"
     >
       <Link
-        href={pageHref(page - 1, searchParams)}
+        href={galleryHref({ ...filtri, pagina: page - 1 })}
         aria-disabled={prevDisabled}
         tabIndex={prevDisabled ? -1 : undefined}
         className={cn(
@@ -56,7 +44,7 @@ export function GalleryPagination({
       </span>
 
       <Link
-        href={pageHref(page + 1, searchParams)}
+        href={galleryHref({ ...filtri, pagina: page + 1 })}
         aria-disabled={nextDisabled}
         tabIndex={nextDisabled ? -1 : undefined}
         className={cn(
