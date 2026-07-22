@@ -65,18 +65,21 @@ export function MenuBook({
   const baseW = 480;
   const baseH = Math.round((baseW * h) / w);
 
-  // Pelle di default (usata quando non c'è un'immagine di materiale): tono
-  // caldo, riflesso in alto a sinistra, vignettatura scura e grana sottile.
+  // Pelle di default (usata quando non c'è un'immagine di materiale): un
+  // cognac caldo e ben visibile — riflesso in alto a sinistra, leggera
+  // vignettatura ai bordi e grana fine. Volutamente NON troppo scuro, così
+  // si legge come pelle e non come sfondo navy.
   const leather = {
-    backgroundColor: "#4a3626",
+    backgroundColor: "#6b4a2e",
     backgroundImage: [
-      "radial-gradient(115% 90% at 28% 15%, rgba(255,224,178,0.20), transparent 55%)",
-      "radial-gradient(120% 110% at 72% 92%, rgba(0,0,0,0.55), transparent 60%)",
-      "repeating-linear-gradient(48deg, rgba(0,0,0,0.05) 0 1px, transparent 1px 4px)",
-      "linear-gradient(155deg, #5c4531 0%, #3d2c1d 55%, #241811 100%)",
+      "radial-gradient(130% 100% at 25% 10%, rgba(255,216,166,0.30), transparent 55%)",
+      "radial-gradient(150% 130% at 50% 118%, rgba(38,20,8,0.45), transparent 55%)",
+      "repeating-linear-gradient(52deg, rgba(0,0,0,0.05) 0 1px, transparent 1px 3px)",
+      "repeating-linear-gradient(-40deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 4px)",
+      "linear-gradient(160deg, #855c38 0%, #5f4227 52%, #40290f 100%)",
     ].join(","),
     boxShadow:
-      "inset 0 2px 14px rgba(255,235,200,0.10), inset 0 -34px 80px rgba(0,0,0,0.55)",
+      "inset 0 3px 16px rgba(255,226,182,0.16), inset 0 -22px 56px rgba(0,0,0,0.40)",
   };
   const material = materialImage
     ? {
@@ -113,7 +116,7 @@ export function MenuBook({
         className="relative mx-auto w-full drop-shadow-[0_30px_60px_rgba(0,0,0,0.55)]"
         style={{
           maxWidth: isMobile
-            ? `min(94vw, calc(74vh * ${w} / ${h}))`
+            ? `min(98vw, calc(88vh * ${w} / ${h}))`
             : `min(92vw, 900px, calc(68vh * 2 * ${w} / ${h}))`,
         }}
       >
