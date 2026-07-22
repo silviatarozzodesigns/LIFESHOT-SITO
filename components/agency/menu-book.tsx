@@ -116,9 +116,9 @@ export function MenuBook({
   };
 
   const embossTitle = (
-    <div className="absolute inset-0 flex items-center justify-center p-8 text-center">
+    <div className="absolute inset-0 flex items-center justify-center p-5 text-center sm:p-8">
       <span
-        className="text-2xl font-semibold uppercase tracking-[0.18em] sm:text-3xl"
+        className="break-words text-base font-semibold uppercase tracking-[0.1em] sm:text-3xl sm:tracking-[0.18em]"
         style={{
           color: "#f2e6c8",
           textShadow:
@@ -130,9 +130,10 @@ export function MenuBook({
     </div>
   );
 
-  const maxWidth = isMobile
-    ? `min(98vw, calc(84vh * ${w} / ${h}))`
-    : `min(92vw, 900px, calc(66vh * 2 * ${w} / ${h}))`;
+  // Libro sempre a due pagine (anche su mobile), così la pagina sfogliata
+  // resta a sinistra come in un libro vero. Larghezza limitata perché
+  // l'altezza (rapporto 2w:h) stia nello schermo.
+  const maxWidth = `min(96vw, 940px, calc(70vh * 2 * ${w} / ${h}))`;
 
   return (
     <div className="relative w-full">
@@ -156,17 +157,17 @@ export function MenuBook({
                 width={baseW}
                 height={baseH}
                 size="stretch"
-                minWidth={260}
+                minWidth={130}
                 maxWidth={1000}
-                minHeight={Math.round((260 * h) / w)}
+                minHeight={Math.round((130 * h) / w)}
                 maxHeight={1500}
                 maxShadowOpacity={0.6}
                 drawShadow
                 showCover
-                usePortrait
+                usePortrait={false}
                 mobileScrollSupport
                 flippingTime={soft ? 800 : 550}
-                useMouseEvents={!isMobile}
+                useMouseEvents
                 disableFlipByClick={isMobile}
                 className="mx-auto"
                 style={{ margin: "0 auto" }}
