@@ -11,6 +11,7 @@ import {
   updatePhotoMeta,
 } from "@/app/actions/photos";
 import type { AdminPhotoDTO } from "@/lib/data/admin";
+import type { EventCategory } from "@/models/Event";
 import { TagInput } from "@/components/admin/tag-input";
 import { photoMatchesQuery } from "@/lib/tag-match";
 import { cn } from "@/lib/utils";
@@ -37,11 +38,17 @@ function sameTags(a: string[], b: string[]): boolean {
 export function PhotoAdminGrid({
   photos,
   sortable = false,
+  category = "motorsport",
 }: {
   photos: AdminPhotoDTO[];
   sortable?: boolean;
+  /** Categoria dell'evento: decide i campi taggabili sotto ogni foto */
+  category?: EventCategory;
 }) {
   const router = useRouter();
+  // Numeri di gara + nomi piloti solo nel motorsport; ristorazione/business
+  // hanno un unico campo "nome cliente".
+  const isMotorsport = category === "motorsport";
   const [query, setQuery] = useState("");
   const [ordine, setOrdine] = useState(photos);
   const [isSaving, startSaving] = useTransition();
@@ -89,7 +96,11 @@ export function PhotoAdminGrid({
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Filtra: numero di gara, senza numero, pilota o nome file…"
+            placeholder={
+              isMotorsport
+                ? "Filtra: numero di gara, senza numero, pilota o nome file…"
+                : "Filtra: nome cliente o nome file…"
+            }
             aria-label="Filtra foto"
             className="h-10 w-full rounded-lg border bg-background pl-9 pr-9 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
           />
@@ -165,7 +176,7 @@ export function PhotoAdminGrid({
                   <GripVertical className="h-3.5 w-3.5" />
                 </span>
               )}
-              <PhotoAdminCard photo={photo} />
+              <PhotoAdminCard photo={photo} isMotorsport={isMotorsport} />
             </div>
           ))}
         </div>
@@ -174,7 +185,13 @@ export function PhotoAdminGrid({
   );
 }
 
-function PhotoAdminCard({ photo }: { photo: AdminPhotoDTO }) {
+function PhotoAdminCard({
+  photo,
+  isMotorsport,
+}: {
+  photo: AdminPhotoDTO;
+  isMotorsport: boolean;
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [numbers, setNumbers] = useState<string[]>(photo.raceNumbers);
@@ -290,20 +307,33 @@ function PhotoAdminCard({ photo }: { photo: AdminPhotoDTO }) {
           </p>
           {saved && <Check className="h-3.5 w-3.5 shrink-0 text-primary" />}
         </div>
-        <TagInput
-          value={numbers}
-          onChange={setNumbers}
-          prefix="#"
-          placeholder="numeri di gara"
-          ariaLabel="Numeri di gara"
-        />
-        <TagInput
-          value={pilots}
-          onChange={setPilots}
-          prefix="P"
-          placeholder="nomi piloti"
-          ariaLabel="Nomi piloti"
-        />
+        {isMotorsport ? (
+          <>
+            <TagInput
+              value={numbers}
+              onChange={setNumbers}
+              prefix="#"
+              placeholder="numeri di gara"
+              ariaLabel="Numeri di gara"
+            />
+            <TagInput
+              value={pilots}
+              onChange={setPilots}
+              prefix="P"
+              placeholder="nomi piloti"
+              ariaLabel="Nomi piloti"
+            />
+          </>
+        ) : (
+          // Ristorazione/business: un solo campo "nome cliente" (salvato nel
+          // campo pilotNames, riusato come tag ricercabile del progetto).
+          <TagInput
+            value={pilots}
+            onChange={setPilots}
+            placeholder="nome cliente"
+            ariaLabel="Nome cliente"
+          />
+        )}
       </figcaption>
     </figure>
   );

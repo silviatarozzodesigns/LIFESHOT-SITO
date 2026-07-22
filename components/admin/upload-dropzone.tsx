@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { extractRaceNumber } from "@/lib/parse-filename";
 import { uploadFile, MAX_UPLOAD_BYTES } from "@/lib/upload-client";
+import type { EventCategory } from "@/models/Event";
 import { cn } from "@/lib/utils";
 
 type UploadStatus = "pending" | "uploading" | "done" | "error";
@@ -40,11 +41,17 @@ const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 export function UploadDropzone({
   eventId,
   featured = false,
+  category = "motorsport",
 }: {
   eventId: string;
   /** Se true, le foto caricate entrano in "Dietro l'obiettivo" (featured) */
   featured?: boolean;
+  /** Categoria dell'evento: il numero di gara si legge solo nel motorsport */
+  category?: EventCategory;
 }) {
+  // Numero di gara dal nome file: solo motorsport. Ristorazione/business
+  // sono progetti vetrina, taggati col "nome cliente" a mano.
+  const isMotorsport = category === "motorsport";
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -108,7 +115,7 @@ export function UploadDropzone({
         .map((file) => ({
           id: `${file.name}-${file.size}-${crypto.randomUUID()}`,
           file,
-          raceNumber: extractRaceNumber(file.name),
+          raceNumber: isMotorsport ? extractRaceNumber(file.name) : null,
           status: "pending" as const,
         }));
       if (!items.length) return;
@@ -116,7 +123,7 @@ export function UploadDropzone({
       pendingItems.current.push(...items);
       pump();
     },
-    [pump]
+    [pump, isMotorsport]
   );
 
   const doneCount = queue.filter((i) => i.status === "done").length;
@@ -241,12 +248,19 @@ export function UploadDropzone({
             Trascina qui le foto, o clicca per selezionarle
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            JPG, PNG, WebP o AVIF · fino a 5 GB per file · il numero di gara
-            viene letto dal nome file (es.{" "}
-            <code className="rounded bg-secondary px-1.5 py-0.5 text-xs">
-              evento_45_01.jpg
-            </code>{" "}
-            → #45)
+            JPG, PNG, WebP o AVIF · fino a 5 GB per file
+            {isMotorsport ? (
+              <>
+                {" "}
+                · il numero di gara viene letto dal nome file (es.{" "}
+                <code className="rounded bg-secondary px-1.5 py-0.5 text-xs">
+                  evento_45_01.jpg
+                </code>{" "}
+                → #45)
+              </>
+            ) : (
+              <> · il nome cliente si aggiunge a mano sotto ogni foto</>
+            )}
           </p>
         </div>
       </button>
@@ -299,7 +313,7 @@ export function UploadDropzone({
                   <span className="shrink-0 text-xs text-destructive">
                     {item.error}
                   </span>
-                ) : (
+                ) : isMotorsport ? (
                   <span
                     className={cn(
                       "inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
@@ -317,7 +331,7 @@ export function UploadDropzone({
                       "senza numero"
                     )}
                   </span>
-                )}
+                ) : null}
               </li>
             ))}
           </ul>

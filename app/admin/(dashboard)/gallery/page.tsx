@@ -124,7 +124,7 @@ export default async function AdminGalleryPage({
             qui è lo stesso che vedono i visitatori.
           </p>
           {photos.length > 0 ? (
-            <PhotoAdminGrid photos={photos} sortable />
+            <PhotoAdminGrid photos={photos} sortable category={active} />
           ) : (
             <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-dashed py-16 text-center">
               <Star className="h-8 w-8 text-muted-foreground" />

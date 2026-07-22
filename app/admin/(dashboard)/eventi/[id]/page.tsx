@@ -50,7 +50,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
             Carica foto
           </h2>
           <div className="mt-4">
-            <UploadDropzone eventId={event.id} />
+            <UploadDropzone eventId={event.id} category={event.category} />
           </div>
         </section>
       </FadeIn>
@@ -65,7 +65,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               ({photos.length})
             </span>
           </h2>
-          <PhotoAdminGrid photos={photos} />
+          <PhotoAdminGrid photos={photos} category={event.category} />
         </section>
       </FadeIn>
 
