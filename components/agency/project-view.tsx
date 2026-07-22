@@ -76,6 +76,7 @@ export function ProjectView({
               eyebrow="Galleria"
               title="Il progetto in immagini"
               returnPath={`/${category}/${project.slug}`}
+              navCtx={`e:${project.id}`}
             />
           </div>
         )}

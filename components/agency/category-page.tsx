@@ -76,6 +76,7 @@ export function CategoryPageView({
                 />
               }
               returnPath={`/${slug}`}
+              navCtx={`f:${slug}`}
             />
           ) : (
             <div className="container">

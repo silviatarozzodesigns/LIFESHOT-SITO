@@ -49,8 +49,11 @@ export function PhotoCard({
   return (
     <Link
       href={
-        backTo ? `/foto/${id}?ritorno=${encodeURIComponent(backTo)}` : `/foto/${id}`
+        backTo
+          ? `/foto/${id}?ritorno=${encodeURIComponent(backTo)}&ctx=g`
+          : `/foto/${id}`
       }
+      onContextMenu={(e) => e.preventDefault()}
       className={cn(
         "group block rounded-2xl bg-muted",
         "ring-1 ring-transparent transition-[transform,box-shadow,border-color] duration-500 ease-out",

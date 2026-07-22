@@ -70,6 +70,8 @@ export function HomeView({
           <div className="mt-16 sm:mt-24">
             <PhotoSlider
               items={marquee.map((p) => ({ id: p.id, raceNumber: p.raceNumber }))}
+              returnPath="/motorsport"
+              navCtx="f:motorsport"
             />
           </div>
         )}

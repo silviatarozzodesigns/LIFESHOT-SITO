@@ -32,6 +32,7 @@ export interface PhotoDTO {
     slug: string;
     date: string;
     location: string;
+    category: EventCategory;
   } | null;
 }
 
@@ -110,6 +111,7 @@ interface PopulatedEvent {
   /** Facoltativa: un evento può non avere una data */
   date?: Date | null;
   location?: string;
+  category?: EventCategory;
 }
 
 function toDTO(doc: {
@@ -133,6 +135,7 @@ function toDTO(doc: {
           slug: doc.event.slug,
           date: doc.event.date ? doc.event.date.toISOString() : "",
           location: doc.event.location ?? "",
+          category: doc.event.category ?? "motorsport",
         }
       : null;
   const { raceNumbers, pilotNames } = normalizeTags(doc);
@@ -458,7 +461,10 @@ export const getPhotoById = unstable_cache(
   try {
     await connectDB();
     const doc = await Photo.findById(id)
-      .populate<{ event: PopulatedEvent }>("event", "name slug date location")
+      .populate<{ event: PopulatedEvent }>(
+        "event",
+        "name slug date location category"
+      )
       .lean();
     return doc ? toDTO(doc) : null;
   } catch (error) {
@@ -469,6 +475,95 @@ export const getPhotoById = unstable_cache(
   ["photo-by-id"],
   { tags: [PHOTOS_TAG], revalidate: 120 }
 );
+
+export interface PhotoNeighbors {
+  prevId: string | null;
+  nextId: string | null;
+  /** Posizione 1-based nella sequenza (0 se la foto non è nel contesto) */
+  index: number;
+  total: number;
+}
+
+const NO_NEIGHBORS: PhotoNeighbors = {
+  prevId: null,
+  nextId: null,
+  index: 0,
+  total: 0,
+};
+
+/** Limite ampio: la navigazione copre l'intera sequenza del contesto. */
+const NAV_LIMIT = 2000;
+
+/**
+ * Sequenza ordinata di id per un "contesto" di navigazione, così il dettaglio
+ * foto sa cosa c'è prima e dopo lo scatto aperto. Il contesto (`ctx`) dice da
+ * quale lista si arriva:
+ *   g            → galleria/evento: filtri ricostruiti dall'URL di ritorno
+ *   e:<eventId>  → foto di un progetto (ristorazione/business)
+ *   f:<cat>      → galleria "In evidenza" (stelle) di una categoria
+ *   h:<cat>      → selezione "Galleria in homepage" di una categoria
+ */
+async function neighborOrder(
+  ctx: string | undefined,
+  ritorno: string | undefined
+): Promise<string[]> {
+  if (!ctx) return [];
+  try {
+    if (ctx === "g") {
+      // Ricostruisce evento/numero/pilota dall'URL di ritorno della galleria
+      if (!ritorno) return [];
+      const url = new URL(ritorno, "https://x");
+      const match = url.pathname.match(/^\/galleria\/([^/]+)/);
+      const eventSlug = match ? decodeURIComponent(match[1]) : undefined;
+      return getGalleryOrder({
+        eventSlug,
+        raceNumber: url.searchParams.get("numero") ?? undefined,
+        pilotName: url.searchParams.get("pilota") ?? undefined,
+      });
+    }
+    const [kind, arg] = ctx.split(":");
+    if (kind === "e" && arg) {
+      const photos = await getEventPhotos(arg, NAV_LIMIT);
+      return photos.map((p) => p.id);
+    }
+    if (kind === "f" && isCategory(arg)) {
+      const photos = await getFeaturedPhotos(NAV_LIMIT, arg);
+      return photos.map((p) => p.id);
+    }
+    if (kind === "h" && isCategory(arg)) {
+      const photos = await getHomepagePhotos(NAV_LIMIT, arg);
+      return photos.map((p) => p.id);
+    }
+    return [];
+  } catch (error) {
+    console.error("[lifeshot] ordine navigazione fallito:", error);
+    return [];
+  }
+}
+
+function isCategory(v: string | undefined): v is EventCategory {
+  return v === "motorsport" || v === "ristorazione" || v === "business";
+}
+
+/**
+ * Vicini (precedente/successivo) di una foto nel contesto da cui è stata
+ * aperta: alimenta le frecce di navigazione del dettaglio.
+ */
+export async function getPhotoNeighbors(
+  id: string,
+  ctx: string | undefined,
+  ritorno: string | undefined
+): Promise<PhotoNeighbors> {
+  const ids = await neighborOrder(ctx, ritorno);
+  const i = ids.indexOf(id);
+  if (i === -1) return { ...NO_NEIGHBORS, total: ids.length };
+  return {
+    prevId: i > 0 ? ids[i - 1] : null,
+    nextId: i < ids.length - 1 ? ids[i + 1] : null,
+    index: i + 1,
+    total: ids.length,
+  };
+}
 
 /**
  * Elenco leggero (id + data ultima modifica) di tutte le foto appartenenti a

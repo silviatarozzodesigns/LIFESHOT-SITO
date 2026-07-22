@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -9,22 +8,24 @@ import {
   Hash,
   Instagram,
   MapPin,
+  Sparkles,
   User,
 } from "lucide-react";
 import { site } from "@/lib/site";
-import { photoSrc } from "@/lib/utils";
 import { CopyCodeButton } from "@/components/gallery/copy-code-button";
+import { ProtectedImage } from "@/components/gallery/protected-image";
+import { PhotoNav } from "@/components/gallery/photo-nav";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
-import { getPhotoById } from "@/lib/data/photos";
+import { getPhotoById, getPhotoNeighbors } from "@/lib/data/photos";
 import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 interface PhotoPageProps {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ ritorno?: string }>;
+  searchParams: Promise<{ ritorno?: string; ctx?: string }>;
 }
 
 export async function generateMetadata({
@@ -45,8 +46,11 @@ export default async function PhotoPage({
   searchParams,
 }: PhotoPageProps) {
   const { id } = await params;
-  const { ritorno } = await searchParams;
-  const photo = await getPhotoById(id);
+  const { ritorno, ctx } = await searchParams;
+  const [photo, neighbors] = await Promise.all([
+    getPhotoById(id),
+    getPhotoNeighbors(id, ctx, ritorno),
+  ]);
   if (!photo) notFound();
 
   // Ritorno contestuale: rispetta da dove arriva l'utente (homepage o
@@ -58,6 +62,23 @@ export default async function PhotoPage({
   const backHref = safeReturn ?? "/galleria";
   const backLabel =
     safeReturn === "/" ? "Torna alla homepage" : "Torna alla galleria";
+
+  // Progetti vetrina (ristorazione/business): non si vendono, sono lì per
+  // mostrare il lavoro → niente codice scatto, CTA "Richiedi questo servizio".
+  const isShowcase =
+    photo.event?.category === "ristorazione" ||
+    photo.event?.category === "business";
+
+  // Le frecce riportano allo stesso scatto vicino, tenendo ritorno + contesto
+  const navHref = (target: string) => {
+    const p = new URLSearchParams();
+    if (safeReturn) p.set("ritorno", safeReturn);
+    if (ctx) p.set("ctx", ctx);
+    const q = p.toString();
+    return q ? `/foto/${target}?${q}` : `/foto/${target}`;
+  };
+  const prevHref = neighbors.prevId ? navHref(neighbors.prevId) : null;
+  const nextHref = neighbors.nextId ? navHref(neighbors.nextId) : null;
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -75,26 +96,25 @@ export default async function PhotoPage({
         </FadeIn>
 
         <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_360px]">
-          {/* Immagine ingrandita con filigrana */}
+          {/* Immagine ingrandita con filigrana + frecce di navigazione */}
           <FadeIn delay={0.05}>
             <div className="relative overflow-hidden rounded-2xl bg-muted">
-              {/* Sempre la rotta watermark protetta, mai l'URL del bucket */}
-              <Image
-                unoptimized
-                src={photoSrc(photo.id)}
-                alt={
-                  photo.event ? `Foto — ${photo.event.name}` : "Foto Lifeshot"
-                }
+              <ProtectedImage
+                id={photo.id}
+                alt={photo.event ? `Foto — ${photo.event.name}` : "Foto Lifeshot"}
                 width={photo.width ?? 1600}
                 height={photo.height ?? 1067}
-                priority
-                sizes="(max-width: 1024px) 100vw, 70vw"
-                className="h-auto w-full object-contain"
+              />
+              <PhotoNav
+                prevHref={prevHref}
+                nextHref={nextHref}
+                index={neighbors.index}
+                total={neighbors.total}
               />
             </div>
           </FadeIn>
 
-          {/* Pannello informazioni + acquisto */}
+          {/* Pannello informazioni + azione */}
           <FadeIn delay={0.12}>
             <aside className="lg:sticky lg:top-24">
               <div className="rounded-2xl border bg-card p-6">
@@ -137,42 +157,61 @@ export default async function PhotoPage({
                   )}
                 </dl>
 
-                {/* Codice di riferimento: nome file mostrato al cliente,
-                    da citare in DM per richiedere lo scatto giusto */}
-                <div className="mt-5 rounded-xl border border-dashed bg-background/50 p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      <FileImage className="h-3.5 w-3.5" />
-                      Codice scatto
+                {isShowcase ? (
+                  <>
+                    <div className="my-6 border-t" />
+                    <p className="text-sm text-muted-foreground">
+                      Ti piace questo scatto? Realizziamo servizi fotografici su
+                      misura per la tua attività.
                     </p>
-                    <CopyCodeButton code={photo.originalFilename} />
-                  </div>
-                  <p
-                    id="codice-scatto"
-                    className="mt-1 break-all font-mono text-sm text-foreground"
-                  >
-                    {photo.originalFilename}
-                  </p>
-                </div>
+                    <Link
+                      href="/contatti"
+                      className="group mt-5 inline-flex h-auto min-h-12 w-full items-center justify-center gap-3 whitespace-nowrap rounded-2xl bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] hover:shadow-primary/40 active:scale-95"
+                    >
+                      <Sparkles className="h-5 w-5 shrink-0 transition-transform group-hover:rotate-[8deg]" />
+                      Richiedi questo servizio
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    {/* Codice di riferimento: nome file mostrato al cliente,
+                        da citare in DM per richiedere lo scatto giusto */}
+                    <div className="mt-5 rounded-xl border border-dashed bg-background/50 p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          <FileImage className="h-3.5 w-3.5" />
+                          Codice scatto
+                        </p>
+                        <CopyCodeButton code={photo.originalFilename} />
+                      </div>
+                      <p
+                        id="codice-scatto"
+                        className="mt-1 break-all font-mono text-sm text-foreground"
+                      >
+                        {photo.originalFilename}
+                      </p>
+                    </div>
 
-                <div className="my-6 border-t" />
+                    <div className="my-6 border-t" />
 
-                <p className="text-sm text-muted-foreground">
-                  Original ad alta risoluzione, senza filigrana. Scrivici in DM
-                  con il codice qui sopra per riceverlo.
-                </p>
+                    <p className="text-sm text-muted-foreground">
+                      Original ad alta risoluzione, senza filigrana. Scrivici in
+                      DM con il codice qui sopra per riceverlo.
+                    </p>
 
-                <a
-                  href={site.instagramDmUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group mt-5 inline-flex h-auto min-h-12 w-full items-center justify-center gap-5 whitespace-nowrap rounded-2xl bg-primary px-5 py-3 text-center text-sm font-semibold leading-snug text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] hover:shadow-primary/40 active:scale-95"
-                >
-                  <Instagram className="h-6 w-6 shrink-0 transition-transform group-hover:rotate-[8deg]" />
-                  <span className="leading-tight text-center"> 
-                    Scrivici in DM per<br /> acquistare le tue foto 
-                  </span>
-                </a>
+                    <a
+                      href={site.instagramDmUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group mt-5 inline-flex h-auto min-h-12 w-full items-center justify-center gap-5 whitespace-nowrap rounded-2xl bg-primary px-5 py-3 text-center text-sm font-semibold leading-snug text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] hover:shadow-primary/40 active:scale-95"
+                    >
+                      <Instagram className="h-6 w-6 shrink-0 transition-transform group-hover:rotate-[8deg]" />
+                      <span className="leading-tight text-center">
+                        Scrivici in DM per<br /> acquistare le tue foto
+                      </span>
+                    </a>
+                  </>
+                )}
               </div>
             </aside>
           </FadeIn>

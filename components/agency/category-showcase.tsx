@@ -342,7 +342,8 @@ function Gallery({ cat }: { cat: ShowcaseCategory }) {
           >
             {m.kind === "photo" ? (
               <Link
-                href={`/foto/${m.id}?ritorno=%2F`}
+                href={`/foto/${m.id}?ritorno=%2F&ctx=h:${cat.id}`}
+                onContextMenu={(e) => e.preventDefault()}
                 className="group absolute inset-0"
               >
                 <Image

@@ -25,6 +25,7 @@ export function PhotoSlider({
   eyebrow = "Gallery",
   title,
   returnPath = "/",
+  navCtx,
 }: {
   items: SliderItem[];
   /** Occhiello sopra il titolo della sezione */
@@ -33,6 +34,8 @@ export function PhotoSlider({
   title?: React.ReactNode;
   /** Path di ritorno dal dettaglio foto (link "torna indietro") */
   returnPath?: string;
+  /** Contesto di navigazione per le frecce nel dettaglio (es. "f:motorsport") */
+  navCtx?: string;
 }) {
   const scroller = useRef<HTMLDivElement>(null);
   const cards = useRef<Array<HTMLElement | null>>([]);
@@ -146,7 +149,10 @@ export function PhotoSlider({
             ref={(node) => {
               cards.current[i] = node;
             }}
-            href={`/foto/${item.id}?ritorno=${encodeURIComponent(returnPath)}`}
+            href={`/foto/${item.id}?ritorno=${encodeURIComponent(returnPath)}${
+              navCtx ? `&ctx=${encodeURIComponent(navCtx)}` : ""
+            }`}
+            onContextMenu={(e) => e.preventDefault()}
             style={{
               transformStyle: "preserve-3d",
               willChange: "transform",
