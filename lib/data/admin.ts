@@ -2,7 +2,11 @@ import { Types } from "mongoose";
 import { connectDB } from "@/lib/db";
 import { Event } from "@/models/Event";
 import { Photo } from "@/models/Photo";
-import { BEHIND_LENS_SLUG } from "@/lib/site";
+import {
+  FEATURED_CONTAINER_NAMES,
+  FEATURED_CONTAINER_SLUGS,
+  FEATURED_CONTAINER_SLUG_LIST,
+} from "@/lib/site";
 import { normalizeTags } from "@/lib/data/photos";
 import { categoryFilter, type EventDTO } from "@/lib/data/events";
 import type { EventCategory } from "@/models/Event";
@@ -43,9 +47,9 @@ export async function getAllEventsAdmin(
 ): Promise<EventDTO[]> {
   try {
     await connectDB();
-    // Esclude l'evento di sistema "Dietro l'obiettivo" dalla lista eventi
+    // Esclude gli eventi-contenitore di sistema (In Evidenza) dalla lista
     const docs = await Event.find({
-      slug: { $ne: BEHIND_LENS_SLUG },
+      slug: { $nin: FEATURED_CONTAINER_SLUG_LIST },
       ...(category ? categoryFilter(category) : {}),
     })
       .sort({ date: -1, createdAt: -1 })
@@ -58,18 +62,21 @@ export async function getAllEventsAdmin(
 }
 
 /**
- * Ritorna (creandolo se serve) l'evento di sistema "Dietro l'obiettivo",
- * contenitore degli scatti curati caricati direttamente in homepage.
+ * Ritorna (creandolo se serve) l'evento-contenitore di sistema "In Evidenza"
+ * della categoria: raccoglie gli scatti curati caricati direttamente da
+ * GALLERY, senza legarli a un evento/progetto pubblico.
  */
-export async function getOrCreateBehindLensEventId(): Promise<string> {
+export async function getOrCreateFeaturedContainerEventId(
+  category: EventCategory
+): Promise<string> {
   await connectDB();
-  const existing = await Event.findOne({ slug: BEHIND_LENS_SLUG })
-    .select("_id")
-    .lean();
+  const slug = FEATURED_CONTAINER_SLUGS[category];
+  const existing = await Event.findOne({ slug }).select("_id").lean();
   if (existing) return String(existing._id);
   const created = await Event.create({
-    name: "Dietro l'obiettivo",
-    slug: BEHIND_LENS_SLUG,
+    name: FEATURED_CONTAINER_NAMES[category],
+    slug,
+    category,
     date: new Date(),
     published: false,
   });

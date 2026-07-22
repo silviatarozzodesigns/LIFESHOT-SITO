@@ -3,7 +3,7 @@ import { Home, ImageIcon, Star } from "lucide-react";
 import {
   getAllFeaturedPhotosAdmin,
   getAllHomeFeaturedPhotosAdmin,
-  getOrCreateBehindLensEventId,
+  getOrCreateFeaturedContainerEventId,
 } from "@/lib/data/admin";
 import type { EventCategory } from "@/models/Event";
 import { UploadDropzone } from "@/components/admin/upload-dropzone";
@@ -23,8 +23,8 @@ const SECTIONS: Array<{
 }> = [
   {
     id: "motorsport",
-    label: "Dietro l'obiettivo",
-    title: "Dietro l'obiettivo",
+    label: "In Evidenza — Motorsport",
+    title: "In Evidenza — Motorsport",
     where: "nella galleria della pagina Motorsport",
   },
   {
@@ -54,10 +54,10 @@ export default async function AdminGalleryPage({
   const active: EventCategory = isCategory(sezione) ? sezione : "motorsport";
   const section = SECTIONS.find((s) => s.id === active)!;
 
-  const [photos, homePhotos, behindLensEventId] = await Promise.all([
+  const [photos, homePhotos, containerEventId] = await Promise.all([
     getAllFeaturedPhotosAdmin(active),
     getAllHomeFeaturedPhotosAdmin(active),
-    active === "motorsport" ? getOrCreateBehindLensEventId() : null,
+    getOrCreateFeaturedContainerEventId(active),
   ]);
 
   return (
@@ -93,23 +93,25 @@ export default async function AdminGalleryPage({
         </div>
       </FadeIn>
 
-      {/* Upload diretto → solo per Dietro l'obiettivo (evento di sistema) */}
-      {behindLensEventId && (
-        <FadeIn delay={0.08}>
-          <section>
-            <h2 className="text-xl font-semibold tracking-tight">
-              Carica immagini dedicate
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Vanno direttamente in &laquo;Dietro l&apos;obiettivo&raquo;,
-              senza essere legate a un evento pubblico.
-            </p>
-            <div className="mt-4">
-              <UploadDropzone eventId={behindLensEventId} featured />
-            </div>
-          </section>
-        </FadeIn>
-      )}
+      {/* Upload diretto nell'evento-contenitore "In Evidenza" della categoria */}
+      <FadeIn delay={0.08}>
+        <section>
+          <h2 className="text-xl font-semibold tracking-tight">
+            Carica immagini dedicate
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Vanno direttamente in &laquo;{section.title}&raquo;, senza essere
+            legate a un evento o progetto pubblico.
+          </p>
+          <div className="mt-4">
+            <UploadDropzone
+              eventId={containerEventId}
+              featured
+              category={active}
+            />
+          </div>
+        </section>
+      </FadeIn>
 
       {/* Galleria in homepage: la selezione (icona casa) che appare nelle
           card della home. Se vuota, in home va la galleria in evidenza. */}

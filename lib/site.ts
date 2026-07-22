@@ -1,3 +1,5 @@
+import type { EventCategory } from "@/models/Event";
+
 /**
  * Canali ufficiali Lifeshot — un unico punto di modifica.
  */
@@ -29,9 +31,30 @@ export const company = {
 } as const;
 
 /**
- * Slug dell'evento di sistema "Dietro l'obiettivo": contenitore degli
- * scatti caricati direttamente nella sezione curata della homepage.
- * Non pubblicato → invisibile in liste/filtri pubblici. Prefisso "__"
- * per escluderlo anche dalla lista eventi dell'admin.
+ * Eventi di sistema "contenitore" per la galleria in evidenza di ogni
+ * categoria: raccolgono gli scatti caricati direttamente da GALLERY (senza
+ * legarli a un evento/progetto pubblico). Non pubblicati → invisibili in
+ * liste/filtri pubblici. Prefisso "__" per escluderli dalla lista eventi
+ * dell'admin. Lo slug del motorsport resta quello storico ("Dietro
+ * l'obiettivo") per continuità dei dati già caricati.
  */
-export const BEHIND_LENS_SLUG = "__dietro-l-obiettivo";
+export const FEATURED_CONTAINER_SLUGS: Record<EventCategory, string> = {
+  motorsport: "__dietro-l-obiettivo",
+  ristorazione: "__in-evidenza-ristorazione",
+  business: "__in-evidenza-business",
+};
+
+/** Nome interno dell'evento-contenitore (non mostrato nelle liste pubbliche). */
+export const FEATURED_CONTAINER_NAMES: Record<EventCategory, string> = {
+  motorsport: "In Evidenza — Motorsport",
+  ristorazione: "In Evidenza — Ristorazione",
+  business: "In Evidenza — Business",
+};
+
+/** Tutti gli slug contenitore, per escluderli in blocco dalle query. */
+export const FEATURED_CONTAINER_SLUG_LIST = Object.values(
+  FEATURED_CONTAINER_SLUGS
+);
+
+/** @deprecated Alias storico: usa FEATURED_CONTAINER_SLUGS.motorsport */
+export const BEHIND_LENS_SLUG = FEATURED_CONTAINER_SLUGS.motorsport;
