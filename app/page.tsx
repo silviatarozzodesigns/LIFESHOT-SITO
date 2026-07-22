@@ -1,5 +1,5 @@
 import { AgencyView } from "@/components/agency/agency-view";
-import { getFeaturedPhotos } from "@/lib/data/photos";
+import { getHomepagePhotos } from "@/lib/data/photos";
 import { getPublishedContent } from "@/lib/data/content";
 
 // ISR: la home è servita da cache (navigazione istantanea) e rigenerata
@@ -15,9 +15,9 @@ export const revalidate = 3600;
 export default async function HomePage() {
   const [content, motorsport, ristorazione, business] = await Promise.all([
     getPublishedContent(),
-    getFeaturedPhotos(8, "motorsport"),
-    getFeaturedPhotos(8, "ristorazione"),
-    getFeaturedPhotos(8, "business"),
+    getHomepagePhotos(8, "motorsport"),
+    getHomepagePhotos(8, "ristorazione"),
+    getHomepagePhotos(8, "business"),
   ]);
 
   return (

@@ -373,6 +373,46 @@ export const getFeaturedPhotos = unstable_cache(
 );
 
 /**
+ * Foto per le card della homepage, per categoria: prima la selezione
+ * "Galleria in homepage" (icona casa); se per quella categoria non ce n'è
+ * nessuna, ripiega sulla galleria delle stelle (featured). Così l'admin può
+ * mostrare in home solo una selezione, o lasciare tutta la vetrina.
+ */
+export const getHomepagePhotos = unstable_cache(
+  async (limit = 8, category?: EventCategory): Promise<PhotoDTO[]> => {
+    try {
+      await connectDB();
+      let eventFilter: Record<string, unknown> = {};
+      if (category) {
+        const events = await Event.find(categoryFilter(category))
+          .select("_id")
+          .lean();
+        eventFilter = { event: { $in: events.map((e) => e._id) } };
+      }
+      const pick = async (match: Record<string, unknown>, orderKey: string) =>
+        Photo.find({ ...match, ...eventFilter })
+          .sort({ [orderKey]: 1, createdAt: -1 })
+          .limit(limit)
+          .populate<{ event: PopulatedEvent }>(
+            "event",
+            "name slug date location"
+          )
+          .lean();
+      const homeDocs = await pick({ homeFeatured: true }, "homeFeaturedOrder");
+      const docs = homeDocs.length
+        ? homeDocs
+        : await pick({ featured: true }, "featuredOrder");
+      return docs.map(toDTO);
+    } catch (error) {
+      console.error("[lifeshot] foto homepage fallito:", error);
+      return [];
+    }
+  },
+  ["homepage-photos"],
+  { tags: [PHOTOS_TAG, EVENTS_TAG], revalidate: 120 }
+);
+
+/**
  * Tutte le foto di un progetto/evento pubblicato, in ordine di caricamento —
  * la galleria scorrevole della pagina progetto.
  */

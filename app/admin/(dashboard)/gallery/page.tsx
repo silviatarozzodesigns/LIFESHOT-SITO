@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ImageIcon, Star } from "lucide-react";
+import { Home, ImageIcon, Star } from "lucide-react";
 import {
   getAllFeaturedPhotosAdmin,
+  getAllHomeFeaturedPhotosAdmin,
   getOrCreateBehindLensEventId,
 } from "@/lib/data/admin";
 import type { EventCategory } from "@/models/Event";
@@ -53,8 +54,9 @@ export default async function AdminGalleryPage({
   const active: EventCategory = isCategory(sezione) ? sezione : "motorsport";
   const section = SECTIONS.find((s) => s.id === active)!;
 
-  const [photos, behindLensEventId] = await Promise.all([
+  const [photos, homePhotos, behindLensEventId] = await Promise.all([
     getAllFeaturedPhotosAdmin(active),
+    getAllHomeFeaturedPhotosAdmin(active),
     active === "motorsport" ? getOrCreateBehindLensEventId() : null,
   ]);
 
@@ -108,6 +110,43 @@ export default async function AdminGalleryPage({
           </section>
         </FadeIn>
       )}
+
+      {/* Galleria in homepage: la selezione (icona casa) che appare nelle
+          card della home. Se vuota, in home va la galleria in evidenza. */}
+      <FadeIn delay={0.1}>
+        <section>
+          <h2 className="flex items-center gap-2 text-xl font-semibold tracking-tight">
+            <Home className="h-5 w-5" />
+            Galleria in homepage
+            <span className="text-base font-normal text-muted-foreground">
+              ({homePhotos.length})
+            </span>
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Le foto che scegli qui — con l&apos;icona <Home className="inline h-3.5 w-3.5" />{" "}
+            sulla foto — sono le uniche a comparire nella card di questa
+            categoria in homepage. Se non ne selezioni nessuna, in homepage va
+            l&apos;intera galleria in evidenza qui sotto.
+          </p>
+          {homePhotos.length > 0 ? (
+            <PhotoAdminGrid
+              photos={homePhotos}
+              sortable
+              orderScope="home"
+              category={active}
+            />
+          ) : (
+            <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-dashed py-12 text-center">
+              <Home className="h-7 w-7 text-muted-foreground" />
+              <p className="max-w-md text-sm text-muted-foreground">
+                Nessuna selezione: in homepage compare la galleria in evidenza.
+                Passa il mouse su una foto qui sotto e premi l&apos;icona{" "}
+                <Home className="inline h-3.5 w-3.5" /> per metterla in homepage.
+              </p>
+            </div>
+          )}
+        </section>
+      </FadeIn>
 
       {/* Griglia foto in vetrina */}
       <FadeIn delay={0.12}>

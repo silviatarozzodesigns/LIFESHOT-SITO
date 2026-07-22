@@ -12,8 +12,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { EditableText } from "@/components/cms/editable-text";
-import { EditableImage } from "@/components/cms/editable-image";
-import type { PageSlug, TextStyle } from "@/lib/content";
+import type { TextStyle } from "@/lib/content";
 import { site } from "@/lib/site";
 import { cn, photoLoader, photoSrc } from "@/lib/utils";
 
@@ -31,10 +30,6 @@ export interface ShowcaseCategory {
   href?: string;
   linkLabel?: string;
   media: ShowcaseMedia[];
-  /** Pagina CMS delle immagini galleria (chip upload in edit mode) */
-  imagePage?: PageSlug;
-  /** Chiavi immagine CMS della galleria (chip upload in edit mode) */
-  imageKeys?: string[];
 }
 
 /**
@@ -194,8 +189,6 @@ export function CategoryShowcase({
     <div className="space-y-4" style={{ overflowAnchor: "none" }}>
       {categories.map((cat, i) => {
         const isActive = i === active;
-        // const locale → il narrowing di TS sopravvive dentro il JSX annidato
-        const imagePage = cat.imagePage;
         return (
           <article
             key={cat.id}
@@ -304,19 +297,6 @@ export function CategoryShowcase({
                       Richiedi info
                       <ArrowUpRight className="h-4 w-4" />
                     </a>
-                  )}
-                  {/* Chip upload immagini galleria (solo admin in edit mode) */}
-                  {imagePage && cat.imageKeys && cat.imageKeys.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {cat.imageKeys.map((k, n) => (
-                        <EditableImage
-                          key={k}
-                          page={imagePage}
-                          k={k}
-                          label={`Lavoro ${n + 1}`}
-                        />
-                      ))}
-                    </div>
                   )}
                 </div>
               </div>

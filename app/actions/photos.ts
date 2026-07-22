@@ -116,6 +116,64 @@ export async function reorderFeaturedPhotos(
   }
 }
 
+/**
+ * Marca/smarca una foto per la "Galleria in homepage" della sua categoria.
+ * È la selezione che appare nelle card della home: se una categoria non ha
+ * nessuna foto così marcata, la home ripiega sulla galleria delle stelle.
+ */
+export async function togglePhotoHomeFeatured(
+  id: string,
+  homeFeatured: boolean
+): Promise<PhotoActionResult> {
+  if (!(await isAdmin())) return UNAUTHORIZED;
+  if (!Types.ObjectId.isValid(id)) return { ok: false, error: "ID non valido." };
+
+  try {
+    await connectDB();
+    const updated = await Photo.findByIdAndUpdate(id, { homeFeatured });
+    if (!updated) return { ok: false, error: "Foto non trovata." };
+    revalidatePublicPages();
+    revalidatePath("/ristorazione");
+    revalidatePath("/business");
+    return { ok: true };
+  } catch (error) {
+    console.error("[lifeshot] togglePhotoHomeFeatured fallita:", error);
+    return { ok: false, error: "Errore durante l'aggiornamento." };
+  }
+}
+
+/**
+ * Salva l'ordine scelto a mano nella "Galleria in homepage" (gemella di
+ * reorderFeaturedPhotos, ma sul campo homeFeaturedOrder).
+ */
+export async function reorderHomeFeaturedPhotos(
+  ids: string[]
+): Promise<PhotoActionResult> {
+  if (!(await isAdmin())) return UNAUTHORIZED;
+  if (!Array.isArray(ids) || ids.length === 0) return { ok: true };
+  if (ids.some((id) => !Types.ObjectId.isValid(id)))
+    return { ok: false, error: "Elenco foto non valido." };
+
+  try {
+    await connectDB();
+    await Photo.bulkWrite(
+      ids.map((id, i) => ({
+        updateOne: {
+          filter: { _id: id },
+          update: { $set: { homeFeaturedOrder: i + 1 } },
+        },
+      }))
+    );
+    revalidatePublicPages();
+    revalidatePath("/ristorazione");
+    revalidatePath("/business");
+    return { ok: true };
+  } catch (error) {
+    console.error("[lifeshot] reorderHomeFeaturedPhotos fallita:", error);
+    return { ok: false, error: "Errore durante il salvataggio dell'ordine." };
+  }
+}
+
 /** Massimi per evitare abusi/payload enormi dai campi multi-tag. */
 const MAX_TAGS = 20;
 const MAX_TAG_LEN = 100;

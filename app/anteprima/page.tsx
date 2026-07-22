@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { AgencyView } from "@/components/agency/agency-view";
 import { requireAdmin } from "@/lib/auth";
-import { getFeaturedPhotos } from "@/lib/data/photos";
+import { getHomepagePhotos } from "@/lib/data/photos";
 import { getDraftContent } from "@/lib/data/content";
 
 // Anteprima riservata: contenuti BOZZA, sempre freschi, mai indicizzata.
@@ -18,9 +18,9 @@ export default async function AnteprimaPage() {
   await requireAdmin();
   const [content, motorsport, ristorazione, business] = await Promise.all([
     getDraftContent(),
-    getFeaturedPhotos(8, "motorsport"),
-    getFeaturedPhotos(8, "ristorazione"),
-    getFeaturedPhotos(8, "business"),
+    getHomepagePhotos(8, "motorsport"),
+    getHomepagePhotos(8, "ristorazione"),
+    getHomepagePhotos(8, "business"),
   ]);
 
   return (

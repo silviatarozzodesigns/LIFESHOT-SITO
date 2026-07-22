@@ -105,6 +105,32 @@ export async function getAllFeaturedPhotosAdmin(
   }
 }
 
+/**
+ * Foto marcate per la "Galleria in homepage" (icona casa), filtrate per
+ * categoria dell'evento: la selezione che appare nelle card della home.
+ */
+export async function getAllHomeFeaturedPhotosAdmin(
+  category?: EventCategory
+): Promise<AdminPhotoDTO[]> {
+  try {
+    await connectDB();
+    const filter: Record<string, unknown> = { homeFeatured: true };
+    if (category) {
+      const events = await Event.find(categoryFilter(category))
+        .select("_id")
+        .lean();
+      filter.event = { $in: events.map((e) => e._id) };
+    }
+    const docs = await Photo.find(filter)
+      .sort({ homeFeaturedOrder: 1, createdAt: -1 })
+      .lean();
+    return docs.map(photoToAdminDTO);
+  } catch (error) {
+    console.error("[lifeshot] getAllHomeFeaturedPhotosAdmin fallita:", error);
+    return [];
+  }
+}
+
 export async function getEventByIdAdmin(id: string): Promise<EventDTO | null> {
   if (!Types.ObjectId.isValid(id)) return null;
   try {
@@ -126,6 +152,10 @@ export interface AdminPhotoDTO {
   featured: boolean;
   /** Posizione scelta a mano nella gallery "In evidenza" (0 = mai ordinata) */
   featuredOrder: number;
+  /** Scelta per la "Galleria in homepage" della categoria */
+  homeFeatured: boolean;
+  /** Posizione scelta a mano nella "Galleria in homepage" (0 = mai ordinata) */
+  homeFeaturedOrder: number;
   createdAt: string;
 }
 
@@ -139,6 +169,8 @@ function photoToAdminDTO(doc: {
   originalFilename: string;
   featured?: boolean;
   featuredOrder?: number;
+  homeFeatured?: boolean;
+  homeFeaturedOrder?: number;
   createdAt?: Date;
 }): AdminPhotoDTO {
   const { raceNumbers, pilotNames } = normalizeTags(doc);
@@ -150,6 +182,8 @@ function photoToAdminDTO(doc: {
     originalFilename: doc.originalFilename,
     featured: Boolean(doc.featured),
     featuredOrder: doc.featuredOrder ?? 0,
+    homeFeatured: Boolean(doc.homeFeatured),
+    homeFeaturedOrder: doc.homeFeaturedOrder ?? 0,
     createdAt: doc.createdAt?.toISOString() ?? new Date().toISOString(),
   };
 }

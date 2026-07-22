@@ -65,27 +65,9 @@ export function AgencyView({
     return { key, url, position: settings.position, scale: settings.scale };
   }).filter((s) => s.url);
 
-  // Anteprima in home = i primi 4 "lavori" caricati sulla pagina categoria
-  const workMedia = (cat: "ristorazione" | "business") =>
-    [1, 2, 3, 4]
-      .map((n) => getImage(content, cat, `work${n}`))
-      .filter(Boolean)
-      .map((src) => ({ kind: "url" as const, src }));
-
-  const workKeys = [1, 2, 3, 4].map((n) => `work${n}`);
-
-  // La card di categoria mostra le foto "in evidenza" della sua categoria;
-  // se non ce ne sono, ricade sulle immagini "lavori" del CMS (che restano
-  // modificabili con i chip di upload in edit mode).
-  const showcaseMedia = (
-    cat: "ristorazione" | "business"
-  ): Pick<ShowcaseCategory, "media" | "imagePage" | "imageKeys"> => {
-    const photos = featuredPhotos[cat] ?? [];
-    return photos.length
-      ? { media: photoMedia(photos) }
-      : { media: workMedia(cat), imagePage: cat, imageKeys: workKeys };
-  };
-
+  // Ogni card mostra le foto della home della sua categoria: la selezione
+  // "Galleria in homepage" (icona casa) o, se vuota, la galleria delle stelle.
+  // La risoluzione avviene a monte in getHomepagePhotos.
   const categories: ShowcaseCategory[] = [
     {
       id: "ristorazione",
@@ -95,7 +77,7 @@ export function AgencyView({
       descriptionStyle: ts("cat.ristorazione.description"),
       href: "/ristorazione",
       linkLabel: "Scopri la ristorazione",
-      ...showcaseMedia("ristorazione"),
+      media: photoMedia(featuredPhotos.ristorazione),
     },
     {
       id: "motorsport",
@@ -115,7 +97,7 @@ export function AgencyView({
       descriptionStyle: ts("cat.business.description"),
       href: "/business",
       linkLabel: "Scopri il business",
-      ...showcaseMedia("business"),
+      media: photoMedia(featuredPhotos.business),
     },
   ];
 

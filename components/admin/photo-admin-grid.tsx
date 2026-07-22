@@ -3,11 +3,22 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Check, GripVertical, Loader2, Search, Star, Trash2, X } from "lucide-react";
+import {
+  Check,
+  GripVertical,
+  Home,
+  Loader2,
+  Search,
+  Star,
+  Trash2,
+  X,
+} from "lucide-react";
 import {
   deletePhoto,
   reorderFeaturedPhotos,
+  reorderHomeFeaturedPhotos,
   togglePhotoFeatured,
+  togglePhotoHomeFeatured,
   updatePhotoMeta,
 } from "@/app/actions/photos";
 import type { AdminPhotoDTO } from "@/lib/data/admin";
@@ -39,11 +50,14 @@ export function PhotoAdminGrid({
   photos,
   sortable = false,
   category = "motorsport",
+  orderScope = "featured",
 }: {
   photos: AdminPhotoDTO[];
   sortable?: boolean;
   /** Categoria dell'evento: decide i campi taggabili sotto ogni foto */
   category?: EventCategory;
+  /** Quale ordine salva il drag: la gallery in evidenza o quella in homepage */
+  orderScope?: "featured" | "home";
 }) {
   const router = useRouter();
   // Numeri di gara + nomi piloti solo nel motorsport; ristorazione/business
@@ -73,7 +87,9 @@ export function PhotoAdminGrid({
     next.splice(a, 0, presa);
     setOrdine(next); // ottimistico: la griglia si riordina subito
     startSaving(async () => {
-      const result = await reorderFeaturedPhotos(next.map((p) => p.id));
+      const reorder =
+        orderScope === "home" ? reorderHomeFeaturedPhotos : reorderFeaturedPhotos;
+      const result = await reorder(next.map((p) => p.id));
       if (!result.ok) setOrdine(photos); // rimetti com'era
       router.refresh();
     });
@@ -198,6 +214,7 @@ function PhotoAdminCard({
   const [pilots, setPilots] = useState<string[]>(photo.pilotNames);
   const [saved, setSaved] = useState(false);
   const [featured, setFeatured] = useState(photo.featured);
+  const [homeFeatured, setHomeFeatured] = useState(photo.homeFeatured);
 
   // Ultimo stato realmente salvato: per capire cosa autosalvare.
   const savedSnapshot = useRef({ numbers: photo.raceNumbers, pilotNames: photo.pilotNames });
@@ -208,6 +225,16 @@ function PhotoAdminCard({
     startTransition(async () => {
       const result = await togglePhotoFeatured(photo.id, next);
       if (!result.ok) setFeatured(!next);
+      else router.refresh();
+    });
+  }
+
+  function toggleHomeFeatured() {
+    const next = !homeFeatured;
+    setHomeFeatured(next); // ottimistico
+    startTransition(async () => {
+      const result = await togglePhotoHomeFeatured(photo.id, next);
+      if (!result.ok) setHomeFeatured(!next);
       else router.refresh();
     });
   }
@@ -295,6 +322,28 @@ function PhotoAdminCard({
           )}
         >
           <Star className={cn("h-4 w-4", featured && "fill-current")} />
+        </button>
+
+        {/* Casa: mette la foto nella "Galleria in homepage" della categoria */}
+        <button
+          type="button"
+          onClick={toggleHomeFeatured}
+          disabled={isPending}
+          aria-label={
+            homeFeatured
+              ? "Togli dalla galleria in homepage"
+              : "Metti nella galleria in homepage"
+          }
+          aria-pressed={homeFeatured}
+          title="Galleria in homepage"
+          className={cn(
+            "absolute left-2 top-12 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition-all focus-visible:opacity-100",
+            homeFeatured
+              ? "bg-primary text-primary-foreground opacity-100"
+              : "bg-black/55 text-white opacity-0 hover:bg-primary group-hover:opacity-100"
+          )}
+        >
+          <Home className="h-4 w-4" />
         </button>
       </div>
       <figcaption className="space-y-1.5 p-2.5">

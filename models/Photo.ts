@@ -87,6 +87,12 @@ const PhotoSchema = new Schema(
     // 0 = mai ordinata: quelle a pari merito restano in ordine di
     // caricamento, e una foto appena messa in vetrina compare per prima.
     featuredOrder: { type: Number, default: 0, index: true },
+    // Marca le foto scelte per la "Galleria in homepage" della loro categoria:
+    // è la selezione (sottoinsieme delle stelle) che appare nelle card della
+    // home. Se una categoria non ne ha nessuna, la home ripiega sulle featured.
+    homeFeatured: { type: Boolean, default: false, index: true },
+    // Posizione scelta a mano nella "Galleria in homepage" (0 = mai ordinata).
+    homeFeaturedOrder: { type: Number, default: 0, index: true },
     // Prezzo in centesimi per il futuro flusso d'acquisto (placeholder)
     priceCents: {
       type: Number,
