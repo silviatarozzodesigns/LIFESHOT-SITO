@@ -27,6 +27,8 @@ function eventToDTO(doc: {
   coverImage?: string;
   published?: boolean;
   photoCount?: number;
+  isMenu?: boolean;
+  menuCoverImage?: string;
 }): EventDTO {
   return {
     id: String(doc._id),
@@ -39,6 +41,8 @@ function eventToDTO(doc: {
     coverImage: doc.coverImage ?? "",
     published: doc.published ?? true,
     photoCount: doc.photoCount ?? 0,
+    isMenu: doc.isMenu ?? false,
+    menuCoverImage: doc.menuCoverImage ?? "",
   };
 }
 

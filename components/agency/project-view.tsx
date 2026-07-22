@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
 import { PhotoSlider } from "@/components/home/photo-slider";
+import { MenuBook } from "@/components/agency/menu-book";
 import type { EventDTO } from "@/lib/data/events";
 import type { PhotoDTO } from "@/lib/data/photos";
 import type { CategorySlug } from "@/components/agency/category-page";
@@ -68,17 +69,27 @@ export function ProjectView({
           </FadeIn>
         </section>
 
-        {/* GALLERIA SCORREVOLE — gli scatti del progetto */}
-        {photos.length > 0 && (
-          <div className="mt-6 sm:mt-10">
-            <PhotoSlider
-              items={photos.map((p) => ({ id: p.id, raceNumber: null }))}
-              eyebrow="Galleria"
-              title="Il progetto in immagini"
-              returnPath={`/${category}/${project.slug}`}
-              navCtx={`e:${project.id}`}
+        {/* MENÙ SFOGLIABILE — al posto della galleria, se è un progetto menù */}
+        {project.isMenu ? (
+          <div className="container mt-8 sm:mt-12">
+            <MenuBook
+              title={project.name}
+              coverImage={project.menuCoverImage || undefined}
+              pages={photos}
             />
           </div>
+        ) : (
+          photos.length > 0 && (
+            <div className="mt-6 sm:mt-10">
+              <PhotoSlider
+                items={photos.map((p) => ({ id: p.id, raceNumber: null }))}
+                eyebrow="Galleria"
+                title="Il progetto in immagini"
+                returnPath={`/${category}/${project.slug}`}
+                navCtx={`e:${project.id}`}
+              />
+            </div>
+          )
         )}
 
         {/* DESCRIZIONE — il racconto del progetto */}

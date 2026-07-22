@@ -35,6 +35,10 @@ export interface EventInput {
   description?: string;
   coverImage?: string;
   published?: boolean;
+  /** Progetto "menù sfogliabile" */
+  isMenu?: boolean;
+  /** Copertina personalizzata della fodera del menù (URL) */
+  menuCoverImage?: string;
 }
 
 export type ActionResult =
@@ -100,6 +104,8 @@ export async function createEvent(input: EventInput): Promise<ActionResult> {
       description: input.description?.trim() ?? "",
       coverImage: input.coverImage ?? "",
       published: input.published ?? true,
+      isMenu: input.isMenu ?? false,
+      menuCoverImage: input.menuCoverImage ?? "",
     });
     revalidatePublicPages();
     return { ok: true, id: String(event._id), slug: event.slug };
@@ -147,6 +153,11 @@ export async function updateEvent(
     const previousCover = event.coverImage;
     if (input.coverImage !== undefined) event.coverImage = input.coverImage;
     if (input.published !== undefined) event.published = input.published;
+    if (input.isMenu !== undefined) event.isMenu = input.isMenu;
+    // Copertina del menù: come la cover, la vecchia va rimossa se sostituita
+    const previousMenuCover = event.menuCoverImage;
+    if (input.menuCoverImage !== undefined)
+      event.menuCoverImage = input.menuCoverImage;
     await event.save();
 
     if (
@@ -155,6 +166,13 @@ export async function updateEvent(
       previousCover !== input.coverImage
     ) {
       await deleteByPublicUrl(previousCover);
+    }
+    if (
+      input.menuCoverImage !== undefined &&
+      previousMenuCover &&
+      previousMenuCover !== input.menuCoverImage
+    ) {
+      await deleteByPublicUrl(previousMenuCover);
     }
 
     revalidatePublicPages();

@@ -69,6 +69,18 @@ const EventSchema = new Schema(
       type: String,
       default: "",
     },
+    // Progetto "menù sfogliabile": la pagina del progetto mostra un menù
+    // realistico con fodera in pelle al posto della galleria a scorrimento.
+    // Le pagine del menù sono le foto caricate sull'evento, in ordine.
+    isMenu: {
+      type: Boolean,
+      default: false,
+    },
+    // Copertina personalizzata della fodera del menù (URL immagine).
+    menuCoverImage: {
+      type: String,
+      default: "",
+    },
     // Eventi non pubblicati restano visibili solo in dashboard
     published: {
       type: Boolean,

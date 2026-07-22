@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Loader2, Save } from "lucide-react";
 import { createEvent, updateEvent, type EventInput } from "@/app/actions/events";
-import { uploadFile } from "@/lib/upload-client";
+import { uploadFile, uploadAssetFile } from "@/lib/upload-client";
 import type { EventCategory, EventDTO } from "@/lib/data/events";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,13 @@ export function EventForm({ event, defaultCategory }: EventFormProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  const menuCoverInputRef = useRef<HTMLInputElement>(null);
+  const [category, setCategory] = useState<EventCategory>(
+    event?.category ?? defaultCategory ?? "motorsport"
+  );
+  const [isMenu, setIsMenu] = useState(event?.isMenu ?? false);
+  // Il menù sfogliabile ha senso solo per i progetti vetrina
+  const showMenuOption = category === "ristorazione" || category === "business";
 
   function handleSubmit(formData: FormData) {
     setError(null);
@@ -41,9 +48,26 @@ export function EventForm({ event, defaultCategory }: EventFormProps) {
       location: String(formData.get("location") ?? ""),
       description: String(formData.get("description") ?? ""),
       published: formData.get("published") === "on",
+      isMenu: showMenuOption && isMenu,
     };
 
     startTransition(async () => {
+      // Copertina della fodera del menù: caricata come asset (non serve l'id
+      // evento) e passata nell'input prima del salvataggio.
+      const menuCoverFile = menuCoverInputRef.current?.files?.[0];
+      if (input.isMenu && menuCoverFile) {
+        try {
+          input.menuCoverImage = await uploadAssetFile(menuCoverFile);
+        } catch (uploadError) {
+          setError(
+            uploadError instanceof Error
+              ? `Copertina del menù non caricata: ${uploadError.message}`
+              : "Caricamento della copertina del menù fallito."
+          );
+          return;
+        }
+      }
+
       const result = event
         ? await updateEvent(event.id, input)
         : await createEvent(input);
@@ -93,7 +117,8 @@ export function EventForm({ event, defaultCategory }: EventFormProps) {
           id="category"
           name="category"
           required
-          defaultValue={event?.category ?? defaultCategory ?? "motorsport"}
+          value={category}
+          onChange={(e) => setCategory(e.target.value as EventCategory)}
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           {(Object.keys(CATEGORY_LABELS) as EventCategory[]).map((c) => (
@@ -170,6 +195,56 @@ export function EventForm({ event, defaultCategory }: EventFormProps) {
             : "Facoltativa: mostrata nella griglia eventi in homepage."}
         </p>
       </div>
+
+      {showMenuOption && (
+        <div className="space-y-4 rounded-xl border border-dashed p-4">
+          <label className="flex w-fit cursor-pointer items-center gap-3 text-sm font-medium">
+            <input
+              type="checkbox"
+              name="isMenu"
+              checked={isMenu}
+              onChange={(e) => setIsMenu(e.target.checked)}
+              className="h-4 w-4 accent-foreground"
+            />
+            Progetto menù sfogliabile
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Attivo: la pagina del progetto mostra un menù realistico con fodera
+            in pelle. Le pagine del menù sono le foto che carichi qui sotto
+            (sezione «Carica foto»), nell&apos;ordine di caricamento.
+          </p>
+
+          {isMenu && (
+            <div className="space-y-2">
+              <Label htmlFor="menuCover">Copertina della fodera</Label>
+              {event?.menuCoverImage && (
+                <div className="relative mb-2 aspect-[3/4] w-40 overflow-hidden rounded-lg bg-muted">
+                  <Image
+                    src={event.menuCoverImage}
+                    alt="Copertina menù attuale"
+                    fill
+                    sizes="160px"
+                    className="object-cover"
+                  />
+                </div>
+              )}
+              <Input
+                id="menuCover"
+                name="menuCover"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                ref={menuCoverInputRef}
+              />
+              <p className="text-xs text-muted-foreground">
+                L&apos;immagine che appare sulla copertina del menù chiuso.
+                {event?.menuCoverImage
+                  ? " Seleziona un nuovo file per sostituirla."
+                  : " Senza copertina, sul menù chiuso compare il nome del progetto."}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       <label className="flex w-fit cursor-pointer items-center gap-3 text-sm">
         <input
