@@ -174,6 +174,37 @@ export async function reorderHomeFeaturedPhotos(
   }
 }
 
+/**
+ * Salva l'ordine scelto a mano nella galleria di un EVENTO/progetto (il
+ * trascinamento dalla scheda evento). Vale per ogni categoria: l'ordine si
+ * riflette dove le foto dell'evento sono mostrate in fila (progetti, pagine
+ * del menù, slider). Gemella di reorderFeaturedPhotos, ma sul campo `order`.
+ */
+export async function reorderEventPhotos(
+  ids: string[]
+): Promise<PhotoActionResult> {
+  if (!(await isAdmin())) return UNAUTHORIZED;
+  if (!Array.isArray(ids) || ids.length === 0) return { ok: true };
+  if (ids.some((id) => !Types.ObjectId.isValid(id)))
+    return { ok: false, error: "Elenco foto non valido." };
+
+  try {
+    await connectDB();
+    await Photo.bulkWrite(
+      ids.map((id, i) => ({
+        updateOne: { filter: { _id: id }, update: { $set: { order: i + 1 } } },
+      }))
+    );
+    revalidatePublicPages();
+    revalidatePath("/ristorazione");
+    revalidatePath("/business");
+    return { ok: true };
+  } catch (error) {
+    console.error("[lifeshot] reorderEventPhotos fallita:", error);
+    return { ok: false, error: "Errore durante il salvataggio dell'ordine." };
+  }
+}
+
 /** Massimi per evitare abusi/payload enormi dai campi multi-tag. */
 const MAX_TAGS = 20;
 const MAX_TAG_LEN = 100;

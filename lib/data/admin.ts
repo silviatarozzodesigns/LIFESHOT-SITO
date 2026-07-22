@@ -210,7 +210,9 @@ export async function getPhotosByEventAdmin(
   try {
     await connectDB();
     const docs = await Photo.find({ event: eventId })
-      .sort({ createdAt: -1 })
+      // Stesso ordine del sito (order, poi caricamento): così il trascinamento
+      // qui è lo specchio di come le foto appaiono nell'evento pubblicato.
+      .sort({ order: 1, createdAt: 1 })
       .lean();
     return docs.map(photoToAdminDTO);
   } catch (error) {

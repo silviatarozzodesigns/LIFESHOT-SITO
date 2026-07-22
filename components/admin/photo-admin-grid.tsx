@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import {
   deletePhoto,
+  reorderEventPhotos,
   reorderFeaturedPhotos,
   reorderHomeFeaturedPhotos,
   togglePhotoFeatured,
@@ -56,8 +57,8 @@ export function PhotoAdminGrid({
   sortable?: boolean;
   /** Categoria dell'evento: decide i campi taggabili sotto ogni foto */
   category?: EventCategory;
-  /** Quale ordine salva il drag: la gallery in evidenza o quella in homepage */
-  orderScope?: "featured" | "home";
+  /** Quale ordine salva il drag: in evidenza, in homepage, o la galleria evento */
+  orderScope?: "featured" | "home" | "event";
 }) {
   const router = useRouter();
   // Numeri di gara + nomi piloti solo nel motorsport; ristorazione/business
@@ -88,7 +89,11 @@ export function PhotoAdminGrid({
     setOrdine(next); // ottimistico: la griglia si riordina subito
     startSaving(async () => {
       const reorder =
-        orderScope === "home" ? reorderHomeFeaturedPhotos : reorderFeaturedPhotos;
+        orderScope === "home"
+          ? reorderHomeFeaturedPhotos
+          : orderScope === "event"
+            ? reorderEventPhotos
+            : reorderFeaturedPhotos;
       const result = await reorder(next.map((p) => p.id));
       if (!result.ok) setOrdine(photos); // rimetti com'era
       router.refresh();

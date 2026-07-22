@@ -65,7 +65,12 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               ({photos.length})
             </span>
           </h2>
-          <PhotoAdminGrid photos={photos} category={event.category} />
+          <PhotoAdminGrid
+            photos={photos}
+            category={event.category}
+            sortable
+            orderScope="event"
+          />
         </section>
       </FadeIn>
 

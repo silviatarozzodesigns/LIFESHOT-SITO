@@ -425,7 +425,9 @@ export const getEventPhotos = unstable_cache(
     try {
       await connectDB();
       const docs = await Photo.find({ event: eventId })
-        .sort({ createdAt: 1 })
+        // Ordine scelto a mano (order) e, a pari merito o senza ordine,
+        // per caricamento. Così il trascinamento nell'admin si riflette qui.
+        .sort({ order: 1, createdAt: 1 })
         .limit(limit)
         .populate<{ event: PopulatedEvent }>("event", "name slug date location")
         .lean();

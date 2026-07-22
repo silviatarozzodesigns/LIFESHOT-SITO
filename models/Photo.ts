@@ -93,6 +93,9 @@ const PhotoSchema = new Schema(
     homeFeatured: { type: Boolean, default: false, index: true },
     // Posizione scelta a mano nella "Galleria in homepage" (0 = mai ordinata).
     homeFeaturedOrder: { type: Number, default: 0, index: true },
+    // Posizione scelta a mano nella galleria dell'EVENTO/progetto (trascinamento
+    // dalla scheda evento). 0 = mai ordinata → resta in ordine di caricamento.
+    order: { type: Number, default: 0, index: true },
     // Prezzo in centesimi per il futuro flusso d'acquisto (placeholder)
     priceCents: {
       type: Number,
