@@ -125,10 +125,18 @@ export function PhotoViewer({
     current?.event?.category === "ristorazione" ||
     current?.event?.category === "business";
 
-  const aspect =
-    current?.width && current?.height
-      ? `${current.width} / ${current.height}`
-      : "3 / 2";
+  // Dimensioni reali della foto: servono a dare al box l'aspetto giusto e a
+  // limitarne l'altezza. Fallback 3:2 se mancano (foto vecchie senza misura).
+  const w = current?.width ?? initial.width ?? 3;
+  const h = current?.height ?? initial.height ?? 2;
+  // Cap altezza a 80vh: in orizzontale non morde mai (il box è largo), in
+  // verticale evita l'immagine gigante su desktop. maxWidth = 80vh * w/h fa sì
+  // che, con l'aspect-ratio, l'altezza non superi mai gli 80vh, e il box resta
+  // centrato nella colonna.
+  const stageStyle = {
+    aspectRatio: `${w} / ${h}`,
+    maxWidth: `calc(80vh * ${w} / ${h})`,
+  };
 
   const arrowClass =
     "absolute top-1/2 z-30 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm transition-all hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 disabled:pointer-events-none disabled:opacity-0";
@@ -137,8 +145,8 @@ export function PhotoViewer({
     <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
       {/* Immagine con filigrana, slide animata e frecce */}
       <div
-        className="relative select-none overflow-hidden rounded-2xl bg-muted [-webkit-touch-callout:none]"
-        style={{ aspectRatio: aspect }}
+        className="relative mx-auto w-full select-none overflow-hidden rounded-2xl bg-muted [-webkit-touch-callout:none]"
+        style={stageStyle}
         onContextMenu={(e) => e.preventDefault()}
         onDragStart={(e) => e.preventDefault()}
         onTouchStart={(e) => {
