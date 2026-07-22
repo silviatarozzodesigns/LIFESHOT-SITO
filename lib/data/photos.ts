@@ -476,21 +476,6 @@ export const getPhotoById = unstable_cache(
   { tags: [PHOTOS_TAG], revalidate: 120 }
 );
 
-export interface PhotoNeighbors {
-  prevId: string | null;
-  nextId: string | null;
-  /** Posizione 1-based nella sequenza (0 se la foto non è nel contesto) */
-  index: number;
-  total: number;
-}
-
-const NO_NEIGHBORS: PhotoNeighbors = {
-  prevId: null,
-  nextId: null,
-  index: 0,
-  total: 0,
-};
-
 /** Limite ampio: la navigazione copre l'intera sequenza del contesto. */
 const NAV_LIMIT = 2000;
 
@@ -546,23 +531,15 @@ function isCategory(v: string | undefined): v is EventCategory {
 }
 
 /**
- * Vicini (precedente/successivo) di una foto nel contesto da cui è stata
- * aperta: alimenta le frecce di navigazione del dettaglio.
+ * Sequenza ordinata completa di id per il contesto da cui si apre una foto:
+ * il visore del dettaglio la usa per scorrere prev/next lato client (niente
+ * navigazione di rotta, niente refresh).
  */
-export async function getPhotoNeighbors(
-  id: string,
+export async function getPhotoContextIds(
   ctx: string | undefined,
   ritorno: string | undefined
-): Promise<PhotoNeighbors> {
-  const ids = await neighborOrder(ctx, ritorno);
-  const i = ids.indexOf(id);
-  if (i === -1) return { ...NO_NEIGHBORS, total: ids.length };
-  return {
-    prevId: i > 0 ? ids[i - 1] : null,
-    nextId: i < ids.length - 1 ? ids[i + 1] : null,
-    index: i + 1,
-    total: ids.length,
-  };
+): Promise<string[]> {
+  return neighborOrder(ctx, ritorno);
 }
 
 /**

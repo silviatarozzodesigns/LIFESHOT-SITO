@@ -1,25 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  ArrowLeft,
-  Calendar,
-  FileImage,
-  Hash,
-  Instagram,
-  MapPin,
-  Sparkles,
-  User,
-} from "lucide-react";
-import { site } from "@/lib/site";
-import { CopyCodeButton } from "@/components/gallery/copy-code-button";
-import { ProtectedImage } from "@/components/gallery/protected-image";
-import { PhotoNav } from "@/components/gallery/photo-nav";
+import { ArrowLeft } from "lucide-react";
+import { PhotoViewer } from "@/components/gallery/photo-viewer";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
-import { getPhotoById, getPhotoNeighbors } from "@/lib/data/photos";
-import { formatDate } from "@/lib/utils";
+import { getPhotoById, getPhotoContextIds } from "@/lib/data/photos";
 
 export const dynamic = "force-dynamic";
 
@@ -47,9 +34,9 @@ export default async function PhotoPage({
 }: PhotoPageProps) {
   const { id } = await params;
   const { ritorno, ctx } = await searchParams;
-  const [photo, neighbors] = await Promise.all([
+  const [photo, ids] = await Promise.all([
     getPhotoById(id),
-    getPhotoNeighbors(id, ctx, ritorno),
+    getPhotoContextIds(ctx, ritorno),
   ]);
   if (!photo) notFound();
 
@@ -62,23 +49,6 @@ export default async function PhotoPage({
   const backHref = safeReturn ?? "/galleria";
   const backLabel =
     safeReturn === "/" ? "Torna alla homepage" : "Torna alla galleria";
-
-  // Progetti vetrina (ristorazione/business): non si vendono, sono lì per
-  // mostrare il lavoro → niente codice scatto, CTA "Richiedi questo servizio".
-  const isShowcase =
-    photo.event?.category === "ristorazione" ||
-    photo.event?.category === "business";
-
-  // Le frecce riportano allo stesso scatto vicino, tenendo ritorno + contesto
-  const navHref = (target: string) => {
-    const p = new URLSearchParams();
-    if (safeReturn) p.set("ritorno", safeReturn);
-    if (ctx) p.set("ctx", ctx);
-    const q = p.toString();
-    return q ? `/foto/${target}?${q}` : `/foto/${target}`;
-  };
-  const prevHref = neighbors.prevId ? navHref(neighbors.prevId) : null;
-  const nextHref = neighbors.nextId ? navHref(neighbors.nextId) : null;
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -95,127 +65,14 @@ export default async function PhotoPage({
           </Link>
         </FadeIn>
 
-        <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_360px]">
-          {/* Immagine ingrandita con filigrana + frecce di navigazione */}
-          <FadeIn delay={0.05}>
-            <div className="relative overflow-hidden rounded-2xl bg-muted">
-              <ProtectedImage
-                id={photo.id}
-                alt={photo.event ? `Foto — ${photo.event.name}` : "Foto Lifeshot"}
-                width={photo.width ?? 1600}
-                height={photo.height ?? 1067}
-              />
-              <PhotoNav
-                prevHref={prevHref}
-                nextHref={nextHref}
-                index={neighbors.index}
-                total={neighbors.total}
-              />
-            </div>
-          </FadeIn>
-
-          {/* Pannello informazioni + azione */}
-          <FadeIn delay={0.12}>
-            <aside className="lg:sticky lg:top-24">
-              <div className="rounded-2xl border bg-card p-6">
-                {photo.raceNumbers.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {photo.raceNumbers.map((n) => (
-                      <span
-                        key={n}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-sm font-semibold text-primary"
-                      >
-                        <Hash className="h-3.5 w-3.5" />
-                        {n}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                <h1 className="mt-4 text-2xl font-semibold tracking-tight">
-                  {photo.event?.name ?? "Foto Lifeshot"}
-                </h1>
-
-                <dl className="mt-4 space-y-2 text-sm text-muted-foreground">
-                  {photo.pilotNames.length > 0 && (
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 shrink-0" />
-                      <dd>{photo.pilotNames.join(", ")}</dd>
-                    </div>
-                  )}
-                  {photo.event?.date && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 shrink-0" />
-                      <dd>{formatDate(photo.event.date)}</dd>
-                    </div>
-                  )}
-                  {photo.event?.location && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 shrink-0" />
-                      <dd>{photo.event.location}</dd>
-                    </div>
-                  )}
-                </dl>
-
-                {isShowcase ? (
-                  <>
-                    <div className="my-6 border-t" />
-                    <p className="text-sm text-muted-foreground">
-                      Ti piace questo scatto? Realizziamo servizi fotografici su
-                      misura per la tua attività.
-                    </p>
-                    <Link
-                      href="/contatti"
-                      className="group mt-5 inline-flex h-auto min-h-12 w-full items-center justify-center gap-3 whitespace-nowrap rounded-2xl bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] hover:shadow-primary/40 active:scale-95"
-                    >
-                      <Sparkles className="h-5 w-5 shrink-0 transition-transform group-hover:rotate-[8deg]" />
-                      Richiedi questo servizio
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    {/* Codice di riferimento: nome file mostrato al cliente,
-                        da citare in DM per richiedere lo scatto giusto */}
-                    <div className="mt-5 rounded-xl border border-dashed bg-background/50 p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                          <FileImage className="h-3.5 w-3.5" />
-                          Codice scatto
-                        </p>
-                        <CopyCodeButton code={photo.originalFilename} />
-                      </div>
-                      <p
-                        id="codice-scatto"
-                        className="mt-1 break-all font-mono text-sm text-foreground"
-                      >
-                        {photo.originalFilename}
-                      </p>
-                    </div>
-
-                    <div className="my-6 border-t" />
-
-                    <p className="text-sm text-muted-foreground">
-                      Original ad alta risoluzione, senza filigrana. Scrivici in
-                      DM con il codice qui sopra per riceverlo.
-                    </p>
-
-                    <a
-                      href={site.instagramDmUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group mt-5 inline-flex h-auto min-h-12 w-full items-center justify-center gap-5 whitespace-nowrap rounded-2xl bg-primary px-5 py-3 text-center text-sm font-semibold leading-snug text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] hover:shadow-primary/40 active:scale-95"
-                    >
-                      <Instagram className="h-6 w-6 shrink-0 transition-transform group-hover:rotate-[8deg]" />
-                      <span className="leading-tight text-center">
-                        Scrivici in DM per<br /> acquistare le tue foto
-                      </span>
-                    </a>
-                  </>
-                )}
-              </div>
-            </aside>
-          </FadeIn>
-        </div>
+        <FadeIn delay={0.05} className="mt-6">
+          <PhotoViewer
+            initial={photo}
+            ids={ids}
+            ctx={ctx}
+            ritorno={safeReturn ?? undefined}
+          />
+        </FadeIn>
       </main>
 
       <SiteFooter />
