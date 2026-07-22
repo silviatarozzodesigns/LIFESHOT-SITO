@@ -18,7 +18,7 @@ export default async function AnteprimaPage() {
   await requireAdmin();
   const [content, motorsportPhotos] = await Promise.all([
     getDraftContent(),
-    getFeaturedPhotos(8),
+    getFeaturedPhotos(8, "motorsport"),
   ]);
 
   return <AgencyView content={content} motorsportPhotos={motorsportPhotos} />;

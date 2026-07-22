@@ -15,7 +15,7 @@ export const revalidate = 3600;
 export default async function HomePage() {
   const [content, motorsportPhotos] = await Promise.all([
     getPublishedContent(),
-    getFeaturedPhotos(8),
+    getFeaturedPhotos(8, "motorsport"),
   ]);
 
   return <AgencyView content={content} motorsportPhotos={motorsportPhotos} />;
