@@ -20,15 +20,6 @@ import { photoSrc } from "@/lib/utils";
 const NOISE_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`;
 const NOISE = `data:image/svg+xml;utf8,${encodeURIComponent(NOISE_SVG)}`;
 
-const WOOD: React.CSSProperties = {
-  backgroundColor: "#2b1e14",
-  backgroundImage: [
-    "repeating-linear-gradient(90deg, rgba(0,0,0,0.34) 0 2px, rgba(255,255,255,0.02) 2px 3px, transparent 3px 190px)",
-    "repeating-linear-gradient(0deg, rgba(255,225,180,0.02) 0 2px, transparent 2px 6px)",
-    "radial-gradient(120% 95% at 50% 28%, #4c3624 0%, #2c1e13 55%, #160e08 100%)",
-  ].join(","),
-};
-
 interface FlipApi {
   pageFlip: () => { flipNext: () => void; flipPrev: () => void };
 }
@@ -144,24 +135,8 @@ export function MenuBook({
     : `min(92vw, 900px, calc(66vh * 2 * ${w} / ${h}))`;
 
   return (
-    <div className="relative w-full overflow-hidden" style={WOOD}>
-      {/* grana del legno */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.28] mix-blend-overlay"
-        style={{ backgroundImage: `url("${NOISE}")`, backgroundSize: "240px 240px" }}
-      />
-      {/* luce d'ambiente calda dietro il menù */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-[42%] h-[78%] w-[72%] -translate-x-1/2 -translate-y-1/2"
-        style={{
-          background:
-            "radial-gradient(closest-side, rgba(255,214,160,0.20), rgba(255,214,160,0) 72%)",
-        }}
-      />
-
-      <div className="relative mx-auto flex flex-col items-center gap-6 px-4 py-14 sm:py-20">
+    <div className="relative w-full">
+      <div className="relative mx-auto flex flex-col items-center gap-6 px-4 py-8 sm:py-10">
         <div
           className="relative mx-auto w-full drop-shadow-[0_28px_50px_rgba(0,0,0,0.6)]"
           style={{ maxWidth }}
