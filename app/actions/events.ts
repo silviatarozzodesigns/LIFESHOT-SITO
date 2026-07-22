@@ -39,6 +39,10 @@ export interface EventInput {
   isMenu?: boolean;
   /** Copertina personalizzata della fodera del menù (URL) */
   menuCoverImage?: string;
+  /** Materiale/fondo della fodera (URL texture) */
+  menuMaterialImage?: string;
+  /** Sfoglio pagine: true = morbido, false = rigido */
+  menuSoftFlip?: boolean;
 }
 
 export type ActionResult =
@@ -106,6 +110,8 @@ export async function createEvent(input: EventInput): Promise<ActionResult> {
       published: input.published ?? true,
       isMenu: input.isMenu ?? false,
       menuCoverImage: input.menuCoverImage ?? "",
+      menuMaterialImage: input.menuMaterialImage ?? "",
+      menuSoftFlip: input.menuSoftFlip ?? true,
     });
     revalidatePublicPages();
     return { ok: true, id: String(event._id), slug: event.slug };
@@ -154,10 +160,15 @@ export async function updateEvent(
     if (input.coverImage !== undefined) event.coverImage = input.coverImage;
     if (input.published !== undefined) event.published = input.published;
     if (input.isMenu !== undefined) event.isMenu = input.isMenu;
-    // Copertina del menù: come la cover, la vecchia va rimossa se sostituita
+    if (input.menuSoftFlip !== undefined) event.menuSoftFlip = input.menuSoftFlip;
+    // Copertina e materiale della fodera: come la cover, i vecchi file vanno
+    // rimossi se sostituiti.
     const previousMenuCover = event.menuCoverImage;
     if (input.menuCoverImage !== undefined)
       event.menuCoverImage = input.menuCoverImage;
+    const previousMenuMaterial = event.menuMaterialImage;
+    if (input.menuMaterialImage !== undefined)
+      event.menuMaterialImage = input.menuMaterialImage;
     await event.save();
 
     if (
@@ -173,6 +184,13 @@ export async function updateEvent(
       previousMenuCover !== input.menuCoverImage
     ) {
       await deleteByPublicUrl(previousMenuCover);
+    }
+    if (
+      input.menuMaterialImage !== undefined &&
+      previousMenuMaterial &&
+      previousMenuMaterial !== input.menuMaterialImage
+    ) {
+      await deleteByPublicUrl(previousMenuMaterial);
     }
 
     revalidatePublicPages();

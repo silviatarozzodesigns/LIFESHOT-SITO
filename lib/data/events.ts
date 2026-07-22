@@ -41,6 +41,10 @@ export interface EventDTO {
   isMenu: boolean;
   /** Copertina personalizzata della fodera del menù */
   menuCoverImage: string;
+  /** Materiale/fondo della fodera (texture): pelle, legno, stoffa… */
+  menuMaterialImage: string;
+  /** Sfoglio pagine: true = morbido, false = rigido */
+  menuSoftFlip: boolean;
 }
 
 function toDTO(doc: {
@@ -56,6 +60,8 @@ function toDTO(doc: {
   photoCount?: number;
   isMenu?: boolean;
   menuCoverImage?: string;
+  menuMaterialImage?: string;
+  menuSoftFlip?: boolean;
 }): EventDTO {
   return {
     id: String(doc._id),
@@ -70,6 +76,8 @@ function toDTO(doc: {
     photoCount: doc.photoCount ?? 0,
     isMenu: doc.isMenu ?? false,
     menuCoverImage: doc.menuCoverImage ?? "",
+    menuMaterialImage: doc.menuMaterialImage ?? "",
+    menuSoftFlip: doc.menuSoftFlip ?? true,
   };
 }
 

@@ -75,6 +75,8 @@ export function ProjectView({
             <MenuBook
               title={project.name}
               coverImage={project.menuCoverImage || undefined}
+              materialImage={project.menuMaterialImage || undefined}
+              soft={project.menuSoftFlip}
               pages={photos}
             />
           </div>

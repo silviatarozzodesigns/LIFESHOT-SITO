@@ -31,10 +31,12 @@ export function EventForm({ event, defaultCategory }: EventFormProps) {
   const [error, setError] = useState<string | null>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const menuCoverInputRef = useRef<HTMLInputElement>(null);
+  const menuMaterialInputRef = useRef<HTMLInputElement>(null);
   const [category, setCategory] = useState<EventCategory>(
     event?.category ?? defaultCategory ?? "motorsport"
   );
   const [isMenu, setIsMenu] = useState(event?.isMenu ?? false);
+  const [menuSoftFlip, setMenuSoftFlip] = useState(event?.menuSoftFlip ?? true);
   // Il menù sfogliabile ha senso solo per i progetti vetrina
   const showMenuOption = category === "ristorazione" || category === "business";
 
@@ -49,20 +51,25 @@ export function EventForm({ event, defaultCategory }: EventFormProps) {
       description: String(formData.get("description") ?? ""),
       published: formData.get("published") === "on",
       isMenu: showMenuOption && isMenu,
+      menuSoftFlip,
     };
 
     startTransition(async () => {
-      // Copertina della fodera del menù: caricata come asset (non serve l'id
-      // evento) e passata nell'input prima del salvataggio.
+      // Copertina e materiale della fodera: caricati come asset (non serve
+      // l'id evento) e passati nell'input prima del salvataggio.
       const menuCoverFile = menuCoverInputRef.current?.files?.[0];
-      if (input.isMenu && menuCoverFile) {
+      const menuMaterialFile = menuMaterialInputRef.current?.files?.[0];
+      if (input.isMenu) {
         try {
-          input.menuCoverImage = await uploadAssetFile(menuCoverFile);
+          if (menuCoverFile)
+            input.menuCoverImage = await uploadAssetFile(menuCoverFile);
+          if (menuMaterialFile)
+            input.menuMaterialImage = await uploadAssetFile(menuMaterialFile);
         } catch (uploadError) {
           setError(
             uploadError instanceof Error
-              ? `Copertina del menù non caricata: ${uploadError.message}`
-              : "Caricamento della copertina del menù fallito."
+              ? `Immagine del menù non caricata: ${uploadError.message}`
+              : "Caricamento di un'immagine del menù fallito."
           );
           return;
         }
@@ -242,6 +249,47 @@ export function EventForm({ event, defaultCategory }: EventFormProps) {
                   : " Senza copertina, sul menù chiuso compare il nome del progetto."}
               </p>
             </div>
+          )}
+
+          {isMenu && (
+            <div className="space-y-2">
+              <Label htmlFor="menuMaterial">Materiale della fodera (fondo)</Label>
+              {event?.menuMaterialImage && (
+                <div className="relative mb-2 h-16 w-40 overflow-hidden rounded-lg bg-muted">
+                  <Image
+                    src={event.menuMaterialImage}
+                    alt="Materiale fodera attuale"
+                    fill
+                    sizes="160px"
+                    className="object-cover"
+                  />
+                </div>
+              )}
+              <Input
+                id="menuMaterial"
+                name="menuMaterial"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                ref={menuMaterialInputRef}
+              />
+              <p className="text-xs text-muted-foreground">
+                La texture della fodera (pelle, legno, stoffa…): riveste
+                copertina e retro. Senza immagine si usa una pelle scura di
+                default.
+              </p>
+            </div>
+          )}
+
+          {isMenu && (
+            <label className="flex w-fit cursor-pointer items-center gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={menuSoftFlip}
+                onChange={(e) => setMenuSoftFlip(e.target.checked)}
+                className="h-4 w-4 accent-foreground"
+              />
+              Sfoglio morbido (pagina che si curva); disattiva per pagine rigide
+            </label>
           )}
         </div>
       )}

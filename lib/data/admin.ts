@@ -29,6 +29,8 @@ function eventToDTO(doc: {
   photoCount?: number;
   isMenu?: boolean;
   menuCoverImage?: string;
+  menuMaterialImage?: string;
+  menuSoftFlip?: boolean;
 }): EventDTO {
   return {
     id: String(doc._id),
@@ -43,6 +45,8 @@ function eventToDTO(doc: {
     photoCount: doc.photoCount ?? 0,
     isMenu: doc.isMenu ?? false,
     menuCoverImage: doc.menuCoverImage ?? "",
+    menuMaterialImage: doc.menuMaterialImage ?? "",
+    menuSoftFlip: doc.menuSoftFlip ?? true,
   };
 }
 

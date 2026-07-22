@@ -81,6 +81,18 @@ const EventSchema = new Schema(
       type: String,
       default: "",
     },
+    // Materiale/fondo della fodera (URL immagine di una texture: pelle, legno,
+    // stoffa…). Se assente, si usa la pelle disegnata via CSS.
+    menuMaterialImage: {
+      type: String,
+      default: "",
+    },
+    // Sfoglio delle pagine del menù: true = morbido (pagina che si curva),
+    // false = rigido (pagina dura, come una copertina).
+    menuSoftFlip: {
+      type: Boolean,
+      default: true,
+    },
     // Eventi non pubblicati restano visibili solo in dashboard
     published: {
       type: Boolean,
