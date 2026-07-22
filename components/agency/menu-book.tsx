@@ -39,8 +39,17 @@ export function MenuBook({
   const bookRef = useRef<FlipApi | null>(null);
   const [mounted, setMounted] = useState(false);
   const [page, setPage] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
   // react-pageflip tocca il DOM: si monta solo lato client
   useEffect(() => setMounted(true), []);
+  // Su mobile lo sfoglio è SOLO con le frecce (niente trascinamento col dito)
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   if (pages.length === 0) {
     return (
@@ -56,16 +65,26 @@ export function MenuBook({
   const baseW = 480;
   const baseH = Math.round((baseW * h) / w);
 
+  // Pelle di default (usata quando non c'è un'immagine di materiale): tono
+  // caldo, riflesso in alto a sinistra, vignettatura scura e grana sottile.
+  const leather = {
+    backgroundColor: "#4a3626",
+    backgroundImage: [
+      "radial-gradient(115% 90% at 28% 15%, rgba(255,224,178,0.20), transparent 55%)",
+      "radial-gradient(120% 110% at 72% 92%, rgba(0,0,0,0.55), transparent 60%)",
+      "repeating-linear-gradient(48deg, rgba(0,0,0,0.05) 0 1px, transparent 1px 4px)",
+      "linear-gradient(155deg, #5c4531 0%, #3d2c1d 55%, #241811 100%)",
+    ].join(","),
+    boxShadow:
+      "inset 0 2px 14px rgba(255,235,200,0.10), inset 0 -34px 80px rgba(0,0,0,0.55)",
+  };
   const material = materialImage
     ? {
         backgroundImage: `url(${materialImage})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }
-    : {
-        background:
-          "radial-gradient(120% 80% at 30% 20%, #3a2b22 0%, #241a15 55%, #140d0a 100%)",
-      };
+    : leather;
 
   const density = soft ? "soft" : "hard";
   const total = pages.length + 2; // + copertina + retro
@@ -81,35 +100,42 @@ export function MenuBook({
     return (
       <div
         className="mx-auto animate-pulse rounded-[10px] bg-muted"
-        style={{ aspectRatio: `${w} / ${h}`, maxWidth: `calc(80vh * ${w} / ${h})` }}
+        style={{ aspectRatio: `${w} / ${h}`, maxWidth: `calc(68vh * ${w} / ${h})` }}
       />
     );
   }
 
   return (
     <div className="flex flex-col items-center gap-4">
-      {/* Larghezza limitata così l'ALTEZZA del libro (aperto a due pagine,
-          rapporto 2w:h) non superi ~82vh: sta intero su ogni schermo. */}
+      {/* Dimensione contenuta: su desktop il libro aperto (2 pagine, rapporto
+          2w:h) non supera ~68vh d'altezza né ~900px, così non è gigante. */}
       <div
-        className="relative mx-auto w-full"
-        style={{ maxWidth: `min(95vw, calc(82vh * 2 * ${w} / ${h}))` }}
+        className="relative mx-auto w-full drop-shadow-[0_30px_60px_rgba(0,0,0,0.55)]"
+        style={{
+          maxWidth: isMobile
+            ? `min(94vw, calc(74vh * ${w} / ${h}))`
+            : `min(92vw, 900px, calc(68vh * 2 * ${w} / ${h}))`,
+        }}
       >
         {/* @ts-expect-error react-pageflip: tipi del wrapper non completi */}
         <HTMLFlipBook
+          key={isMobile ? "mobile" : "desktop"}
           ref={bookRef}
           width={baseW}
           height={baseH}
           size="stretch"
-          minWidth={280}
+          minWidth={260}
           maxWidth={1000}
-          minHeight={Math.round((280 * h) / w)}
+          minHeight={Math.round((260 * h) / w)}
           maxHeight={1500}
           maxShadowOpacity={0.5}
           drawShadow
           showCover
+          usePortrait
           mobileScrollSupport
           flippingTime={soft ? 800 : 550}
-          useMouseEvents
+          useMouseEvents={!isMobile}
+          disableFlipByClick={isMobile}
           className="mx-auto"
           style={{ margin: "0 auto" }}
           onFlip={(e: { data: number }) => setPage(e.data)}
