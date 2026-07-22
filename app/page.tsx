@@ -13,10 +13,17 @@ export const revalidate = 3600;
  * vive nella sua pagina dedicata /motorsport.
  */
 export default async function HomePage() {
-  const [content, motorsportPhotos] = await Promise.all([
+  const [content, motorsport, ristorazione, business] = await Promise.all([
     getPublishedContent(),
     getFeaturedPhotos(8, "motorsport"),
+    getFeaturedPhotos(8, "ristorazione"),
+    getFeaturedPhotos(8, "business"),
   ]);
 
-  return <AgencyView content={content} motorsportPhotos={motorsportPhotos} />;
+  return (
+    <AgencyView
+      content={content}
+      featuredPhotos={{ motorsport, ristorazione, business }}
+    />
+  );
 }

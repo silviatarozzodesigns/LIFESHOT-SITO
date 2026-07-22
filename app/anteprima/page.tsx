@@ -16,10 +16,17 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  */
 export default async function AnteprimaPage() {
   await requireAdmin();
-  const [content, motorsportPhotos] = await Promise.all([
+  const [content, motorsport, ristorazione, business] = await Promise.all([
     getDraftContent(),
     getFeaturedPhotos(8, "motorsport"),
+    getFeaturedPhotos(8, "ristorazione"),
+    getFeaturedPhotos(8, "business"),
   ]);
 
-  return <AgencyView content={content} motorsportPhotos={motorsportPhotos} />;
+  return (
+    <AgencyView
+      content={content}
+      featuredPhotos={{ motorsport, ristorazione, business }}
+    />
+  );
 }

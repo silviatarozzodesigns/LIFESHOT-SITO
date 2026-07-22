@@ -6,11 +6,13 @@ import { ServicesRibbon } from "@/components/agency/services-ribbon";
 import {
   CategoryShowcase,
   type ShowcaseCategory,
+  type ShowcaseMedia,
 } from "@/components/agency/category-showcase";
 import { CmsTestimonials } from "@/components/agency/cms-testimonials";
 import { ContactSection } from "@/components/agency/contact-section";
 import { EditableText } from "@/components/cms/editable-text";
 import type { PhotoDTO } from "@/lib/data/photos";
+import type { EventCategory } from "@/models/Event";
 import {
   getImage,
   getImageSettings,
@@ -41,13 +43,21 @@ const SLIDE_KEYS = [
  */
 export function AgencyView({
   content,
-  motorsportPhotos,
+  featuredPhotos,
 }: {
   content: CmsData;
-  motorsportPhotos: PhotoDTO[];
+  /** Foto "in evidenza" (stella dell'admin) per ogni categoria */
+  featuredPhotos: Record<EventCategory, PhotoDTO[]>;
 }) {
   const t = (key: string) => getText(content, "agenzia", key);
   const ts = (key: string) => getTextStyle(content, "agenzia", key);
+
+  const photoMedia = (photos: PhotoDTO[]): ShowcaseMedia[] =>
+    photos.map((p) => ({
+      kind: "photo" as const,
+      id: p.id,
+      raceNumber: p.raceNumber,
+    }));
 
   const slides: HeroSlide[] = SLIDE_KEYS.map((key) => {
     const url = getImage(content, "agenzia", key);
@@ -64,6 +74,18 @@ export function AgencyView({
 
   const workKeys = [1, 2, 3, 4].map((n) => `work${n}`);
 
+  // La card di categoria mostra le foto "in evidenza" della sua categoria;
+  // se non ce ne sono, ricade sulle immagini "lavori" del CMS (che restano
+  // modificabili con i chip di upload in edit mode).
+  const showcaseMedia = (
+    cat: "ristorazione" | "business"
+  ): Pick<ShowcaseCategory, "media" | "imagePage" | "imageKeys"> => {
+    const photos = featuredPhotos[cat] ?? [];
+    return photos.length
+      ? { media: photoMedia(photos) }
+      : { media: workMedia(cat), imagePage: cat, imageKeys: workKeys };
+  };
+
   const categories: ShowcaseCategory[] = [
     {
       id: "ristorazione",
@@ -73,9 +95,7 @@ export function AgencyView({
       descriptionStyle: ts("cat.ristorazione.description"),
       href: "/ristorazione",
       linkLabel: "Scopri la ristorazione",
-      media: workMedia("ristorazione"),
-      imagePage: "ristorazione",
-      imageKeys: workKeys,
+      ...showcaseMedia("ristorazione"),
     },
     {
       id: "motorsport",
@@ -85,11 +105,7 @@ export function AgencyView({
       descriptionStyle: ts("cat.motorsport.description"),
       href: "/motorsport",
       linkLabel: "Entra nel motorsport",
-      media: motorsportPhotos.map((p) => ({
-        kind: "photo" as const,
-        id: p.id,
-        raceNumber: p.raceNumber,
-      })),
+      media: photoMedia(featuredPhotos.motorsport),
     },
     {
       id: "business",
@@ -99,9 +115,7 @@ export function AgencyView({
       descriptionStyle: ts("cat.business.description"),
       href: "/business",
       linkLabel: "Scopri il business",
-      media: workMedia("business"),
-      imagePage: "business",
-      imageKeys: workKeys,
+      ...showcaseMedia("business"),
     },
   ];
 
