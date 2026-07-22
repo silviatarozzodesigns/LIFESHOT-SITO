@@ -31,12 +31,15 @@ export function EventForm({ event, defaultCategory }: EventFormProps) {
   const [error, setError] = useState<string | null>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const menuCoverInputRef = useRef<HTMLInputElement>(null);
-  const menuMaterialInputRef = useRef<HTMLInputElement>(null);
+  const menuBackInputRef = useRef<HTMLInputElement>(null);
   const [category, setCategory] = useState<EventCategory>(
     event?.category ?? defaultCategory ?? "motorsport"
   );
   const [isMenu, setIsMenu] = useState(event?.isMenu ?? false);
   const [menuSoftFlip, setMenuSoftFlip] = useState(event?.menuSoftFlip ?? true);
+  const [menuLeatherColor, setMenuLeatherColor] = useState(
+    event?.menuLeatherColor ?? "#8a5a2b"
+  );
   // Il menù sfogliabile ha senso solo per i progetti vetrina
   const showMenuOption = category === "ristorazione" || category === "business";
 
@@ -52,19 +55,20 @@ export function EventForm({ event, defaultCategory }: EventFormProps) {
       published: formData.get("published") === "on",
       isMenu: showMenuOption && isMenu,
       menuSoftFlip,
+      menuLeatherColor,
     };
 
     startTransition(async () => {
-      // Copertina e materiale della fodera: caricati come asset (non serve
-      // l'id evento) e passati nell'input prima del salvataggio.
+      // Copertina (fronte) e fondo (retro) della fodera: caricati come asset
+      // (non serve l'id evento) e passati nell'input prima del salvataggio.
       const menuCoverFile = menuCoverInputRef.current?.files?.[0];
-      const menuMaterialFile = menuMaterialInputRef.current?.files?.[0];
+      const menuBackFile = menuBackInputRef.current?.files?.[0];
       if (input.isMenu) {
         try {
           if (menuCoverFile)
             input.menuCoverImage = await uploadAssetFile(menuCoverFile);
-          if (menuMaterialFile)
-            input.menuMaterialImage = await uploadAssetFile(menuMaterialFile);
+          if (menuBackFile)
+            input.menuBackImage = await uploadAssetFile(menuBackFile);
         } catch (uploadError) {
           setError(
             uploadError instanceof Error
@@ -223,7 +227,7 @@ export function EventForm({ event, defaultCategory }: EventFormProps) {
 
           {isMenu && (
             <div className="space-y-2">
-              <Label htmlFor="menuCover">Copertina della fodera</Label>
+              <Label htmlFor="menuCover">Copertina (fronte)</Label>
               {event?.menuCoverImage && (
                 <div className="relative mb-2 aspect-[3/4] w-40 overflow-hidden rounded-lg bg-muted">
                   <Image
@@ -243,22 +247,22 @@ export function EventForm({ event, defaultCategory }: EventFormProps) {
                 ref={menuCoverInputRef}
               />
               <p className="text-xs text-muted-foreground">
-                L&apos;immagine che appare sulla copertina del menù chiuso.
+                Riveste TUTTO il fronte del menù chiuso (a tutta pagina).
                 {event?.menuCoverImage
                   ? " Seleziona un nuovo file per sostituirla."
-                  : " Senza copertina, sul menù chiuso compare il nome del progetto."}
+                  : " Senza immagine, il fronte è in pelle del colore scelto sotto."}
               </p>
             </div>
           )}
 
           {isMenu && (
             <div className="space-y-2">
-              <Label htmlFor="menuMaterial">Materiale della fodera (fondo)</Label>
-              {event?.menuMaterialImage && (
-                <div className="relative mb-2 h-16 w-40 overflow-hidden rounded-lg bg-muted">
+              <Label htmlFor="menuBack">Fondo (retro)</Label>
+              {event?.menuBackImage && (
+                <div className="relative mb-2 aspect-[3/4] w-40 overflow-hidden rounded-lg bg-muted">
                   <Image
-                    src={event.menuMaterialImage}
-                    alt="Materiale fodera attuale"
+                    src={event.menuBackImage}
+                    alt="Retro menù attuale"
                     fill
                     sizes="160px"
                     className="object-cover"
@@ -266,16 +270,39 @@ export function EventForm({ event, defaultCategory }: EventFormProps) {
                 </div>
               )}
               <Input
-                id="menuMaterial"
-                name="menuMaterial"
+                id="menuBack"
+                name="menuBack"
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/avif"
-                ref={menuMaterialInputRef}
+                ref={menuBackInputRef}
               />
               <p className="text-xs text-muted-foreground">
-                La texture della fodera (pelle, legno, stoffa…): riveste
-                copertina e retro. Senza immagine si usa una pelle scura di
-                default.
+                Riveste TUTTO il retro del menù (a tutta pagina).
+                {event?.menuBackImage
+                  ? " Seleziona un nuovo file per sostituirlo."
+                  : " Senza immagine, il retro è in pelle del colore scelto sotto."}
+              </p>
+            </div>
+          )}
+
+          {isMenu && (
+            <div className="space-y-2">
+              <Label htmlFor="menuLeatherColor">Colore della pelle</Label>
+              <div className="flex items-center gap-3">
+                <input
+                  id="menuLeatherColor"
+                  type="color"
+                  value={menuLeatherColor}
+                  onChange={(e) => setMenuLeatherColor(e.target.value)}
+                  className="h-10 w-16 cursor-pointer rounded-md border bg-background p-1"
+                />
+                <span className="font-mono text-xs text-muted-foreground">
+                  {menuLeatherColor}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Usato dove non c&apos;è un&apos;immagine (fronte/retro). La pelle
+                è disegnata con questo colore, resa realistica.
               </p>
             </div>
           )}

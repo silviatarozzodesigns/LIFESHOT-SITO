@@ -39,10 +39,12 @@ export interface EventDTO {
   photoCount: number;
   /** Progetto "menù sfogliabile" (fodera in pelle + pagine caricate) */
   isMenu: boolean;
-  /** Copertina personalizzata della fodera del menù */
+  /** Copertina (fronte) della fodera del menù, a tutta pagina */
   menuCoverImage: string;
-  /** Materiale/fondo della fodera (texture): pelle, legno, stoffa… */
-  menuMaterialImage: string;
+  /** Fondo (retro) della fodera del menù, a tutta pagina */
+  menuBackImage: string;
+  /** Colore della pelle quando non c'è un'immagine (esadecimale) */
+  menuLeatherColor: string;
   /** Sfoglio pagine: true = morbido, false = rigido */
   menuSoftFlip: boolean;
 }
@@ -60,7 +62,8 @@ function toDTO(doc: {
   photoCount?: number;
   isMenu?: boolean;
   menuCoverImage?: string;
-  menuMaterialImage?: string;
+  menuBackImage?: string;
+  menuLeatherColor?: string;
   menuSoftFlip?: boolean;
 }): EventDTO {
   return {
@@ -76,7 +79,8 @@ function toDTO(doc: {
     photoCount: doc.photoCount ?? 0,
     isMenu: doc.isMenu ?? false,
     menuCoverImage: doc.menuCoverImage ?? "",
-    menuMaterialImage: doc.menuMaterialImage ?? "",
+    menuBackImage: doc.menuBackImage ?? "",
+    menuLeatherColor: doc.menuLeatherColor ?? "#8a5a2b",
     menuSoftFlip: doc.menuSoftFlip ?? true,
   };
 }

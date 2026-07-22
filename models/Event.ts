@@ -76,16 +76,21 @@ const EventSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    // Copertina personalizzata della fodera del menù (URL immagine).
+    // Copertina (fronte) della fodera del menù (URL immagine a tutta pagina).
+    // Se assente, si usa la pelle disegnata via CSS (colorabile).
     menuCoverImage: {
       type: String,
       default: "",
     },
-    // Materiale/fondo della fodera (URL immagine di una texture: pelle, legno,
-    // stoffa…). Se assente, si usa la pelle disegnata via CSS.
-    menuMaterialImage: {
+    // Fondo (retro) della fodera del menù (URL immagine a tutta pagina).
+    menuBackImage: {
       type: String,
       default: "",
+    },
+    // Colore della pelle quando non c'è un'immagine (fronte/retro): esadecimale.
+    menuLeatherColor: {
+      type: String,
+      default: "#8a5a2b",
     },
     // Sfoglio delle pagine del menù: true = morbido (pagina che si curva),
     // false = rigido (pagina dura, come una copertina).

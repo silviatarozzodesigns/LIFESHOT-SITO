@@ -69,13 +69,15 @@ export function ProjectView({
           </FadeIn>
         </section>
 
-        {/* MENÙ SFOGLIABILE — al posto della galleria, se è un progetto menù */}
+        {/* MENÙ SFOGLIABILE — al posto della galleria, se è un progetto menù.
+            A tutta larghezza: il "tavolo" riveste l'intera sezione. */}
         {project.isMenu ? (
-          <div className="container mt-8 sm:mt-12">
+          <div className="mt-8 sm:mt-12">
             <MenuBook
               title={project.name}
               coverImage={project.menuCoverImage || undefined}
-              materialImage={project.menuMaterialImage || undefined}
+              backImage={project.menuBackImage || undefined}
+              leatherColor={project.menuLeatherColor}
               soft={project.menuSoftFlip}
               pages={photos}
             />

@@ -37,10 +37,12 @@ export interface EventInput {
   published?: boolean;
   /** Progetto "menù sfogliabile" */
   isMenu?: boolean;
-  /** Copertina personalizzata della fodera del menù (URL) */
+  /** Copertina (fronte) della fodera del menù (URL) */
   menuCoverImage?: string;
-  /** Materiale/fondo della fodera (URL texture) */
-  menuMaterialImage?: string;
+  /** Fondo (retro) della fodera del menù (URL) */
+  menuBackImage?: string;
+  /** Colore della pelle quando non c'è un'immagine (esadecimale) */
+  menuLeatherColor?: string;
   /** Sfoglio pagine: true = morbido, false = rigido */
   menuSoftFlip?: boolean;
 }
@@ -110,7 +112,8 @@ export async function createEvent(input: EventInput): Promise<ActionResult> {
       published: input.published ?? true,
       isMenu: input.isMenu ?? false,
       menuCoverImage: input.menuCoverImage ?? "",
-      menuMaterialImage: input.menuMaterialImage ?? "",
+      menuBackImage: input.menuBackImage ?? "",
+      menuLeatherColor: input.menuLeatherColor ?? "#8a5a2b",
       menuSoftFlip: input.menuSoftFlip ?? true,
     });
     revalidatePublicPages();
@@ -161,14 +164,16 @@ export async function updateEvent(
     if (input.published !== undefined) event.published = input.published;
     if (input.isMenu !== undefined) event.isMenu = input.isMenu;
     if (input.menuSoftFlip !== undefined) event.menuSoftFlip = input.menuSoftFlip;
-    // Copertina e materiale della fodera: come la cover, i vecchi file vanno
-    // rimossi se sostituiti.
+    if (input.menuLeatherColor !== undefined)
+      event.menuLeatherColor = input.menuLeatherColor;
+    // Copertina (fronte) e fondo (retro) della fodera: come la cover, i vecchi
+    // file vanno rimossi se sostituiti.
     const previousMenuCover = event.menuCoverImage;
     if (input.menuCoverImage !== undefined)
       event.menuCoverImage = input.menuCoverImage;
-    const previousMenuMaterial = event.menuMaterialImage;
-    if (input.menuMaterialImage !== undefined)
-      event.menuMaterialImage = input.menuMaterialImage;
+    const previousMenuBack = event.menuBackImage;
+    if (input.menuBackImage !== undefined)
+      event.menuBackImage = input.menuBackImage;
     await event.save();
 
     if (
@@ -186,11 +191,11 @@ export async function updateEvent(
       await deleteByPublicUrl(previousMenuCover);
     }
     if (
-      input.menuMaterialImage !== undefined &&
-      previousMenuMaterial &&
-      previousMenuMaterial !== input.menuMaterialImage
+      input.menuBackImage !== undefined &&
+      previousMenuBack &&
+      previousMenuBack !== input.menuBackImage
     ) {
-      await deleteByPublicUrl(previousMenuMaterial);
+      await deleteByPublicUrl(previousMenuBack);
     }
 
     revalidatePublicPages();
