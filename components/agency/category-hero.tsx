@@ -79,7 +79,7 @@ export function CategoryHero({
         {/* CTA — verso i lavori in pagina + canale DM */}
         <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
           <AnchorLink
-            href="#lavori"
+            href="#progetti"
             className="group inline-flex items-center justify-center gap-2.5 whitespace-nowrap rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:scale-[1.03] hover:shadow-primary/40 active:scale-95"
           >
             <EditableText
