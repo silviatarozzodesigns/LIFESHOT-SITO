@@ -457,26 +457,46 @@ export async function getMarqueePhotos(limit = 16): Promise<PhotoDTO[]> {
   }
 }
 
-export const getPhotoById = unstable_cache(
-  async (id: string): Promise<PhotoDTO | null> => {
+/**
+ * Lettura grezza di una foto. NON cattura gli errori: un guasto momentaneo del
+ * DB deve propagarsi, mai trasformarsi in "null" (che significherebbe "non
+ * esiste"). È la differenza che causava i 404 a intermittenza: il null da
+ * errore finiva in cache e la foto risultava inesistente per due minuti.
+ */
+async function readPhotoById(id: string): Promise<PhotoDTO | null> {
   if (!Types.ObjectId.isValid(id)) return null;
+  await connectDB();
+  const doc = await Photo.findById(id)
+    .populate<{ event: PopulatedEvent }>(
+      "event",
+      "name slug date location category"
+    )
+    .lean();
+  return doc ? toDTO(doc) : null;
+}
+
+/**
+ * Lettura cache-ata. Solo un vero "non trovato" viene messo in cache: gli
+ * errori rilanciano, così non restano congelati come 404.
+ */
+export const getPhotoById = unstable_cache(readPhotoById, ["photo-by-id"], {
+  tags: [PHOTOS_TAG],
+  revalidate: 120,
+});
+
+/**
+ * Lettura fresca, mai dalla cache: serve a CONFERMARE un "non trovato" prima
+ * di rispondere 404, così un null vecchio o un errore momentaneo non fanno
+ * sparire una foto che esiste.
+ */
+export async function getPhotoByIdFresh(id: string): Promise<PhotoDTO | null> {
   try {
-    await connectDB();
-    const doc = await Photo.findById(id)
-      .populate<{ event: PopulatedEvent }>(
-        "event",
-        "name slug date location category"
-      )
-      .lean();
-    return doc ? toDTO(doc) : null;
+    return await readPhotoById(id);
   } catch (error) {
-    console.error("[lifeshot] lettura foto fallita:", error);
+    console.error("[lifeshot] lettura foto (fresca) fallita:", error);
     return null;
   }
-  },
-  ["photo-by-id"],
-  { tags: [PHOTOS_TAG], revalidate: 120 }
-);
+}
 
 /** Limite ampio: la navigazione copre l'intera sequenza del contesto. */
 const NAV_LIMIT = 2000;

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getPhotoById } from "@/lib/data/photos";
+import { getPhotoById, getPhotoByIdFresh } from "@/lib/data/photos";
 
 /**
  * Metadati pubblici di una foto (evento, numeri, pilota, nome file) in JSON.
@@ -14,7 +14,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const photo = await getPhotoById(id);
+  // Come nella pagina: un "non trovato" viene riconfermato con una lettura
+  // fresca, così un guasto momentaneo finito in cache non fa sparire la foto.
+  const cached = await getPhotoById(id).catch(() => null);
+  const photo = cached ?? (await getPhotoByIdFresh(id));
   if (!photo) {
     return NextResponse.json({ ok: false }, { status: 404 });
   }

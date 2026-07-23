@@ -6,7 +6,11 @@ import { PhotoViewer } from "@/components/gallery/photo-viewer";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { FadeIn } from "@/components/motion/fade-in";
-import { getPhotoById, getPhotoContextIds } from "@/lib/data/photos";
+import {
+  getPhotoById,
+  getPhotoByIdFresh,
+  getPhotoContextIds,
+} from "@/lib/data/photos";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +23,7 @@ export async function generateMetadata({
   params,
 }: PhotoPageProps): Promise<Metadata> {
   const { id } = await params;
-  const photo = await getPhotoById(id);
+  const photo = await getPhotoById(id).catch(() => null);
   if (!photo) return { title: "Foto non trovata" };
   return {
     title: photo.event
@@ -34,10 +38,13 @@ export default async function PhotoPage({
 }: PhotoPageProps) {
   const { id } = await params;
   const { ritorno, ctx } = await searchParams;
-  const [photo, ids] = await Promise.all([
-    getPhotoById(id),
+  const [cached, ids] = await Promise.all([
+    getPhotoById(id).catch(() => null),
     getPhotoContextIds(ctx, ritorno),
   ]);
+  // Un "non trovato" può venire da un guasto momentaneo finito in cache:
+  // riconferma con una lettura fresca prima di rispondere 404.
+  const photo = cached ?? (await getPhotoByIdFresh(id));
   if (!photo) notFound();
 
   // Ritorno contestuale: rispetta da dove arriva l'utente (homepage o
