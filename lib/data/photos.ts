@@ -11,6 +11,27 @@ import { isNoNumberQuery, NO_NUMBER_REGEX } from "@/lib/tag-match";
 /** Tag cache foto pubbliche (rivalidato a upload/modifica/eliminazione) */
 export const PHOTOS_TAG = "photos";
 
+/**
+ * Esegue una query cache-ata catturando l'errore QUI, cioè FUORI dalla cache.
+ *
+ * Se il DB ha un intoppo momentaneo (avvio a freddo, limite di connessioni) la
+ * query rilancia: così il risultato di ripiego (lista vuota) vale solo per
+ * questa richiesta e non finisce memorizzato per minuti, che è ciò che faceva
+ * comparire gallerie vuote — o foto "inesistenti" — a intermittenza.
+ */
+async function safeQuery<T>(
+  promise: Promise<T>,
+  what: string,
+  fallback: T
+): Promise<T> {
+  try {
+    return await promise;
+  } catch (error) {
+    console.error(`[lifeshot] ${what} fallita:`, error);
+    return fallback;
+  }
+}
+
 export interface PhotoDTO {
   id: string;
   /** Tutti i numeri di gara taggati (multi-tag) */
@@ -237,28 +258,27 @@ async function buildPhotoFilter({
  * mischia tutte le foto del filtro e le alterna per soggetto così che la
  * paginazione resti coerente tra le pagine.
  */
-const getGalleryOrder = unstable_cache(
+const getGalleryOrderCached = unstable_cache(
   async (params: Omit<PhotoSearchParams, "page" | "perPage">): Promise<string[]> => {
-    try {
-      await connectDB();
-      const filter = await buildPhotoFilter(params);
-      if (!filter) return [];
+    await connectDB();
+    const filter = await buildPhotoFilter(params);
+    if (!filter) return [];
 
-      const docs = await Photo.find(filter)
-        .select("_id raceNumbers pilotNames raceNumber pilotName")
-        .lean();
+    const docs = await Photo.find(filter)
+      .select("_id raceNumbers pilotNames raceNumber pilotName")
+      .lean();
 
-      return interleaveByKey(shuffle(docs), subjectKey).map((d) =>
-        String(d._id)
-      );
-    } catch (error) {
-      console.error("[lifeshot] ordine galleria fallito:", error);
-      return [];
-    }
+    return interleaveByKey(shuffle(docs), subjectKey).map((d) => String(d._id));
   },
   ["gallery-order"],
   { tags: [PHOTOS_TAG], revalidate: 120 }
 );
+
+async function getGalleryOrder(
+  params: Omit<PhotoSearchParams, "page" | "perPage">
+): Promise<string[]> {
+  return safeQuery(getGalleryOrderCached(params), "ordine galleria", []);
+}
 
 /**
  * Motore di ricerca della galleria: filtra per evento / numero / pilota,
@@ -271,40 +291,35 @@ async function searchPhotosUncached({
   page = 1,
   perPage = 24,
 }: PhotoSearchParams): Promise<PhotoSearchResult> {
-  try {
-    await connectDB();
+  await connectDB();
 
-    const orderedIds = await getGalleryOrder({ eventSlug, raceNumber, pilotName });
-    const total = orderedIds.length;
-    if (total === 0) return EMPTY_RESULT;
+  const orderedIds = await getGalleryOrder({ eventSlug, raceNumber, pilotName });
+  const total = orderedIds.length;
+  if (total === 0) return EMPTY_RESULT;
 
-    const currentPage = Math.max(1, page);
-    const slice = orderedIds.slice(
-      (currentPage - 1) * perPage,
-      currentPage * perPage
-    );
+  const currentPage = Math.max(1, page);
+  const slice = orderedIds.slice(
+    (currentPage - 1) * perPage,
+    currentPage * perPage
+  );
 
-    const docs = await Photo.find({ _id: { $in: slice } })
-      .populate<{ event: PopulatedEvent }>("event", "name slug date location")
-      .lean();
+  const docs = await Photo.find({ _id: { $in: slice } })
+    .populate<{ event: PopulatedEvent }>("event", "name slug date location")
+    .lean();
 
-    // Rispetta l'ordine dello shuffle (il $in non garantisce l'ordine).
-    const byId = new Map(docs.map((d) => [String(d._id), d]));
-    const photos = slice
-      .map((id) => byId.get(id))
-      .filter((d): d is NonNullable<typeof d> => Boolean(d))
-      .map(toDTO);
+  // Rispetta l'ordine dello shuffle (il $in non garantisce l'ordine).
+  const byId = new Map(docs.map((d) => [String(d._id), d]));
+  const photos = slice
+    .map((id) => byId.get(id))
+    .filter((d): d is NonNullable<typeof d> => Boolean(d))
+    .map(toDTO);
 
-    return {
-      photos,
-      total,
-      page: currentPage,
-      totalPages: Math.ceil(total / perPage),
-    };
-  } catch (error) {
-    console.error("[lifeshot] ricerca foto fallita:", error);
-    return EMPTY_RESULT;
-  }
+  return {
+    photos,
+    total,
+    page: currentPage,
+    totalPages: Math.ceil(total / perPage),
+  };
 }
 
 /**
@@ -312,11 +327,17 @@ async function searchPhotosUncached({
  * nome pilota (usata dalla barra hero). Numerico → match anche su "045".
  */
 /** Ricerca galleria — cache-ata per combinazione di filtri (tag PHOTOS_TAG) */
-export const searchPhotos = unstable_cache(
+const searchPhotosCached = unstable_cache(
   searchPhotosUncached,
   ["search-photos"],
   { tags: [PHOTOS_TAG], revalidate: 120 }
 );
+
+export async function searchPhotos(
+  params: PhotoSearchParams
+): Promise<PhotoSearchResult> {
+  return safeQuery(searchPhotosCached(params), "ricerca foto", EMPTY_RESULT);
+}
 
 export async function searchPhotosByQuery(
   q: string,
@@ -346,34 +367,40 @@ export async function searchPhotosByQuery(
  * "In evidenza" su ristorazione/business. Senza categoria mostra i
  * preferiti di tutto il sito (slide della homepage agenzia).
  */
-export const getFeaturedPhotos = unstable_cache(
+const getFeaturedPhotosCached = unstable_cache(
   async (limit = 12, category?: EventCategory): Promise<PhotoDTO[]> => {
-    try {
-      await connectDB();
-      const filter: Record<string, unknown> = { featured: true };
-      if (category) {
-        // Le foto non hanno categoria propria: la ereditano dall'evento
-        const events = await Event.find(categoryFilter(category))
-          .select("_id")
-          .lean();
-        filter.event = { $in: events.map((e) => e._id) };
-      }
-      // L'ordine lo decide l'admin da Gallery (featuredOrder); a pari merito
-      // (mai ordinate = 0) valgono le più recenti.
-      const docs = await Photo.find(filter)
-        .sort({ featuredOrder: 1, createdAt: -1 })
-        .limit(limit)
-        .populate<{ event: PopulatedEvent }>("event", "name slug date location")
+    await connectDB();
+    const filter: Record<string, unknown> = { featured: true };
+    if (category) {
+      // Le foto non hanno categoria propria: la ereditano dall'evento
+      const events = await Event.find(categoryFilter(category))
+        .select("_id")
         .lean();
-      return docs.map(toDTO);
-    } catch (error) {
-      console.error("[lifeshot] foto featured fallito:", error);
-      return [];
+      filter.event = { $in: events.map((e) => e._id) };
     }
+    // L'ordine lo decide l'admin da Gallery (featuredOrder); a pari merito
+    // (mai ordinate = 0) valgono le più recenti.
+    const docs = await Photo.find(filter)
+      .sort({ featuredOrder: 1, createdAt: -1 })
+      .limit(limit)
+      .populate<{ event: PopulatedEvent }>("event", "name slug date location")
+      .lean();
+    return docs.map(toDTO);
   },
   ["featured-photos"],
   { tags: [PHOTOS_TAG, EVENTS_TAG], revalidate: 120 }
 );
+
+export async function getFeaturedPhotos(
+  limit = 12,
+  category?: EventCategory
+): Promise<PhotoDTO[]> {
+  return safeQuery(
+    getFeaturedPhotosCached(limit, category),
+    "foto in evidenza",
+    []
+  );
+}
 
 /**
  * Foto per le card della homepage, per categoria: prima la selezione
@@ -381,65 +408,74 @@ export const getFeaturedPhotos = unstable_cache(
  * nessuna, ripiega sulla galleria delle stelle (featured). Così l'admin può
  * mostrare in home solo una selezione, o lasciare tutta la vetrina.
  */
-export const getHomepagePhotos = unstable_cache(
+const getHomepagePhotosCached = unstable_cache(
   async (limit = 8, category?: EventCategory): Promise<PhotoDTO[]> => {
-    try {
-      await connectDB();
-      let eventFilter: Record<string, unknown> = {};
-      if (category) {
-        const events = await Event.find(categoryFilter(category))
-          .select("_id")
-          .lean();
-        eventFilter = { event: { $in: events.map((e) => e._id) } };
-      }
-      const pick = async (match: Record<string, unknown>, orderKey: string) =>
-        Photo.find({ ...match, ...eventFilter })
-          .sort({ [orderKey]: 1, createdAt: -1 })
-          .limit(limit)
-          .populate<{ event: PopulatedEvent }>(
-            "event",
-            "name slug date location"
-          )
-          .lean();
-      const homeDocs = await pick({ homeFeatured: true }, "homeFeaturedOrder");
-      const docs = homeDocs.length
-        ? homeDocs
-        : await pick({ featured: true }, "featuredOrder");
-      return docs.map(toDTO);
-    } catch (error) {
-      console.error("[lifeshot] foto homepage fallito:", error);
-      return [];
+    await connectDB();
+    let eventFilter: Record<string, unknown> = {};
+    if (category) {
+      const events = await Event.find(categoryFilter(category))
+        .select("_id")
+        .lean();
+      eventFilter = { event: { $in: events.map((e) => e._id) } };
     }
+    const pick = async (match: Record<string, unknown>, orderKey: string) =>
+      Photo.find({ ...match, ...eventFilter })
+        .sort({ [orderKey]: 1, createdAt: -1 })
+        .limit(limit)
+        .populate<{ event: PopulatedEvent }>("event", "name slug date location")
+        .lean();
+    const homeDocs = await pick({ homeFeatured: true }, "homeFeaturedOrder");
+    const docs = homeDocs.length
+      ? homeDocs
+      : await pick({ featured: true }, "featuredOrder");
+    return docs.map(toDTO);
   },
   ["homepage-photos"],
   { tags: [PHOTOS_TAG, EVENTS_TAG], revalidate: 120 }
 );
 
+export async function getHomepagePhotos(
+  limit = 8,
+  category?: EventCategory
+): Promise<PhotoDTO[]> {
+  return safeQuery(
+    getHomepagePhotosCached(limit, category),
+    "foto homepage",
+    []
+  );
+}
+
 /**
  * Tutte le foto di un progetto/evento pubblicato, in ordine di caricamento —
  * la galleria scorrevole della pagina progetto.
  */
-export const getEventPhotos = unstable_cache(
+const getEventPhotosCached = unstable_cache(
   async (eventId: string, limit = 60): Promise<PhotoDTO[]> => {
     if (!Types.ObjectId.isValid(eventId)) return [];
-    try {
-      await connectDB();
-      const docs = await Photo.find({ event: eventId })
-        // Ordine scelto a mano (order) e, a pari merito o senza ordine,
-        // per caricamento. Così il trascinamento nell'admin si riflette qui.
-        .sort({ order: 1, createdAt: 1 })
-        .limit(limit)
-        .populate<{ event: PopulatedEvent }>("event", "name slug date location")
-        .lean();
-      return docs.map(toDTO);
-    } catch (error) {
-      console.error("[lifeshot] foto progetto fallito:", error);
-      return [];
-    }
+    await connectDB();
+    const docs = await Photo.find({ event: eventId })
+      // Ordine scelto a mano (order) e, a pari merito o senza ordine,
+      // per caricamento. Così il trascinamento nell'admin si riflette qui.
+      .sort({ order: 1, createdAt: 1 })
+      .limit(limit)
+      .populate<{ event: PopulatedEvent }>("event", "name slug date location")
+      .lean();
+    return docs.map(toDTO);
   },
   ["event-photos"],
   { tags: [PHOTOS_TAG], revalidate: 120 }
 );
+
+export async function getEventPhotos(
+  eventId: string,
+  limit = 60
+): Promise<PhotoDTO[]> {
+  return safeQuery(
+    getEventPhotosCached(eventId, limit),
+    "foto progetto",
+    []
+  );
+}
 
 /** Foto più recenti, per il marquee auto-scroll della homepage. */
 export async function getMarqueePhotos(limit = 16): Promise<PhotoDTO[]> {

@@ -101,40 +101,68 @@ async function safe<T>(fallback: T, query: () => Promise<T>): Promise<T> {
 }
 
 /**
+ * Come `safe`, ma pensato per le query CACHE-ATE: l'errore va catturato FUORI
+ * dalla cache, altrimenti la lista vuota di un guasto momentaneo resta
+ * memorizzata per minuti e la sezione appare vuota anche a DB tornato a posto.
+ */
+async function safeCached<T>(promise: Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await promise;
+  } catch (error) {
+    console.error("[lifeshot] query eventi (cache) fallita:", error);
+    return fallback;
+  }
+}
+
+/**
  * Eventi/progetti recenti pubblicati di una categoria (cache-ati):
  * griglia eventi su /motorsport, "Progetti recenti" su ristorazione/business.
  */
-export const getRecentEvents = unstable_cache(
-  async (limit = 6, category: EventCategory = "motorsport"): Promise<EventDTO[]> =>
-    safe([], async () => {
-      const docs = await Event.find({
-        published: true,
-        ...categoryFilter(category),
-      })
-        .sort({ date: -1, createdAt: -1 })
-        .limit(limit)
-        .lean();
-      return docs.map(toDTO);
-    }),
+const getRecentEventsCached = unstable_cache(
+  async (
+    limit = 6,
+    category: EventCategory = "motorsport"
+  ): Promise<EventDTO[]> => {
+    await connectDB();
+    const docs = await Event.find({
+      published: true,
+      ...categoryFilter(category),
+    })
+      .sort({ date: -1, createdAt: -1 })
+      .limit(limit)
+      .lean();
+    return docs.map(toDTO);
+  },
   ["recent-events"],
   { tags: [EVENTS_TAG], revalidate: 120 }
 );
 
+export async function getRecentEvents(
+  limit = 6,
+  category: EventCategory = "motorsport"
+): Promise<EventDTO[]> {
+  return safeCached(getRecentEventsCached(limit, category), []);
+}
+
 /** Eventi motorsport pubblicati (nome + slug), per la combobox dei filtri */
-export const getEventsForFilter = unstable_cache(
-  async (): Promise<EventDTO[]> =>
-    safe([], async () => {
-      const docs = await Event.find({
-        published: true,
-        ...categoryFilter("motorsport"),
-      })
-        .sort({ date: -1, createdAt: -1 })
-        .lean();
-      return docs.map(toDTO);
-    }),
+const getEventsForFilterCached = unstable_cache(
+  async (): Promise<EventDTO[]> => {
+    await connectDB();
+    const docs = await Event.find({
+      published: true,
+      ...categoryFilter("motorsport"),
+    })
+      .sort({ date: -1, createdAt: -1 })
+      .lean();
+    return docs.map(toDTO);
+  },
   ["events-for-filter"],
   { tags: [EVENTS_TAG], revalidate: 120 }
 );
+
+export async function getEventsForFilter(): Promise<EventDTO[]> {
+  return safeCached(getEventsForFilterCached(), []);
+}
 
 export async function getEventBySlug(slug: string): Promise<EventDTO | null> {
   return safe(null, async () => {
