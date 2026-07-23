@@ -81,7 +81,10 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
             Dettagli evento
           </h2>
           <div className="mt-4">
-            <EventForm event={event} />
+            {/* key = id evento: rimonta il form quando cambi evento, così lo
+                stato locale (categoria, opzioni menù) non resta "fotografato"
+                dall'evento precedente e non riscrive la categoria al salvataggio. */}
+            <EventForm key={event.id} event={event} />
           </div>
         </section>
       </FadeIn>
