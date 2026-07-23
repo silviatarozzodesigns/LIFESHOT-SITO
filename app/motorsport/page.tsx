@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function MotorsportPage() {
   const [events, marquee, content, videos] = await Promise.all([
-    getRecentEvents(6),
+    getRecentEvents(0),
     getFeaturedPhotos(12, "motorsport"),
     getPublishedContent(),
     getPublishedVideos("motorsport", 4),

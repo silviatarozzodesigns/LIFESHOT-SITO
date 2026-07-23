@@ -29,7 +29,7 @@ export default async function BusinessPage({
   const [content, featured, projects, videos] = await Promise.all([
     getViewContent(preview === "1"),
     getFeaturedPhotos(12, "business"),
-    getRecentEvents(12, "business"),
+    getRecentEvents(0, "business"),
     getPublishedVideos("business", 4),
   ]);
   return (

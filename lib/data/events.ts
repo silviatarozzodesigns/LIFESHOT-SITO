@@ -120,17 +120,18 @@ async function safeCached<T>(promise: Promise<T>, fallback: T): Promise<T> {
  */
 const getRecentEventsCached = unstable_cache(
   async (
+    // `limit = 0` → nessun tetto: mostra TUTTI gli eventi pubblicati della
+    // categoria (le pagine categoria non devono avere un massimo).
     limit = 6,
     category: EventCategory = "motorsport"
   ): Promise<EventDTO[]> => {
     await connectDB();
-    const docs = await Event.find({
+    const query = Event.find({
       published: true,
       ...categoryFilter(category),
-    })
-      .sort({ date: -1, createdAt: -1 })
-      .limit(limit)
-      .lean();
+    }).sort({ date: -1, createdAt: -1 });
+    if (limit > 0) query.limit(limit);
+    const docs = await query.lean();
     return docs.map(toDTO);
   },
   ["recent-events"],

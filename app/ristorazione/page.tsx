@@ -29,7 +29,7 @@ export default async function RistorazionePage({
   const [content, featured, projects, videos] = await Promise.all([
     getViewContent(preview === "1"),
     getFeaturedPhotos(12, "ristorazione"),
-    getRecentEvents(12, "ristorazione"),
+    getRecentEvents(0, "ristorazione"),
     getPublishedVideos("ristorazione", 4),
   ]);
   return (

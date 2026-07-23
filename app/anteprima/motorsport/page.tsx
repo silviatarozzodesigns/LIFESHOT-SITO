@@ -17,7 +17,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 export default async function AnteprimaMotorsportPage() {
   await requireAdmin();
   const [events, marquee, content, videos] = await Promise.all([
-    getRecentEvents(6),
+    getRecentEvents(0),
     getFeaturedPhotos(12, "motorsport"),
     getDraftContent(),
     getPublishedVideos("motorsport", 4),
