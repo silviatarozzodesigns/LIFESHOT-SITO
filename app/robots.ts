@@ -10,8 +10,11 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: "/",
-      // Aree non pubbliche: pannello admin e API interne
+      // Le foto sono servite da /api/images: vanno lasciate leggere a Google
+      // (compaiono su Google Immagini). Regola più specifica di "/api",
+      // quindi ha la precedenza (i crawler usano il match più lungo).
+      allow: ["/", "/api/images"],
+      // Aree non pubbliche: pannello admin e altre API interne
       disallow: ["/admin", "/api"],
     },
     sitemap: `${BASE}/sitemap.xml`,
