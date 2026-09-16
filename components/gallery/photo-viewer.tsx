@@ -287,8 +287,8 @@ export function PhotoViewer({
                   <div className="my-6 border-t" />
 
                   <p className="text-sm text-muted-foreground">
-                    Original ad alta risoluzione, senza filigrana. Scrivici in DM
-                    con il codice qui sopra per riceverlo.
+                    Vuoi l'originale in alta risoluzione e senza filigrana?
+                    Inviaci il codice qui sopra e te lo prepariamo.
                   </p>
 
                   <a
