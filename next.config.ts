@@ -44,6 +44,20 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/**": ["./node_modules/@img/**/*"],
   },
+  // Reindirizzamenti permanenti (301) da vecchi URL non più esistenti,
+  // così non restano 404 in Search Console e il valore SEO viene trasferito.
+  async redirects() {
+    return [
+      // Il progetto "Ristorante Pais" è stato suddiviso in 3 progetti
+      // dedicati (carta-aperitivo, menu, servizio-fotografico-social):
+      // il vecchio slug unico ora manda all'elenco Ristorazione.
+      {
+        source: "/ristorazione/ristorante-pais",
+        destination: "/ristorazione",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
