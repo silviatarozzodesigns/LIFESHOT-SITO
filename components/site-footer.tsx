@@ -18,6 +18,9 @@ export function SiteFooter() {
           <Link href="/cookie-policy" className={linkClass}>
             Cookie Policy
           </Link>
+          <Link href="/licenza-immagini" className={linkClass}>
+            Licenza immagini
+          </Link>
           <CookieSettingsButton className={linkClass} />
         </nav>
 

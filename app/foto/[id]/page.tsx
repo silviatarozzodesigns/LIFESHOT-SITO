@@ -122,10 +122,9 @@ export default async function PhotoPage({
     creditText: "Lifeshot",
     creator: { "@type": "Organization", name: "Lifeshot" },
     copyrightNotice: "© Lifeshot",
-    // Campi "immagine licenziabile": abilitano il badge "Licenziabile" su
-    // Google Immagini, che rimanda alla pagina Contatti per richiedere/usare
-    // la foto. Entrambi puntano ai Contatti (nessuna pagina nuova).
-    license: `${BASE}/contatti`,
+    // Campi "immagine licenziabile" (badge "Licenziabile" su Google Immagini):
+    // `license` rimanda alle condizioni d'uso, `acquireLicensePage` ai Contatti.
+    license: `${BASE}/licenza-immagini`,
     acquireLicensePage: `${BASE}/contatti`,
     datePublished: photo.createdAt,
     representativeOfPage: true,
